@@ -1,7 +1,22 @@
-
+batch_size: 64
+batch_window: 50
+checkpoint_dir: checkpoints/MLP
+checkpoint_every: 20
+comet_project: deep-learning-applications
+config: config.yaml
 dataset: MNIST
-seed: null
+device: cuda
+experiment_key: null
+experiment_name: MLP
+learning_rate: 0.01
+log_every: 20
+lr_decay: 0.95
+model_name: MLP
+momentum: 0.9
+num_epochs: 20
+num_workers: 0
+resume_checkpoint: null
+seed: 42
 test_size: 0.2
 val_size: 0.1
-batch_size: 64
-num_workers: 0
+weight_decay: 0.0005

@@ -10,35 +10,33 @@ from torch.utils.data import Dataset, DataLoader, random_split
 
 class MyMNIST(Dataset):
     """ Wrapper for MNIST Dataset class """
-
     def __init__(self, opts):
         # TODO: add data augmentation (maybe another class)
         self.opts = opts
 
         # Get fill MNIST dataset
         # (X, y) train: N=60000 ; test: N=10000
-        base_transforms = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])
         trainset = datasets.MNIST(
-            root="../../data", train=True, download=True, transform=base_transforms)
+            root="../../data", train=True, download=True)
         testset = datasets.MNIST(
-            root="../../data", train=False, download=True, transform=base_transforms)
+            root="../../data", train=False, download=True)
+
+        # Combine train and test sets
         X_train, y_train = trainset.data, trainset.targets
         X_test, y_test = testset.data, testset.targets
 
-        # All images
-        self.X = torch.cat((X_train, X_test), 0)
-        # Change target to one-hot
-        self.num_classes = 10
-        self.y = self._one_hot(torch.cat((y_train, y_test), 0))
+        # All images and all targets
+        X = np.vstack((X_train, X_test))  # [70000, 28, 28]
+        y = np.hstack((y_train, y_test))  # [70000]
 
-    def _one_hot(self, y):
-        """ Givent int y, return one-hot encoded y """
-        EYE = torch.eye(self.num_classes)  # [10, 10]
-        y_oh = EYE[y]  # extract rows
-        return y_oh  # tensor
+        # Prepare data
+        self.X = torch.tensor(X).unsqueeze(1) / 255.0  # [N, 1, 28, 28] in [0,1]
+        self.y = torch.tensor(y)  # [N]
+
+        # Normalize data over channels
+        self.mean = self.X.mean()
+        self.std = self.X.std()
+        self.X = transforms.Normalize(self.mean, self.std)(self.X)
 
     def __len__(self):
         return self.X.shape[0]
@@ -47,7 +45,7 @@ class MyMNIST(Dataset):
         """
         returns:
             X: [C, W, H] (tensor)
-            y: [num_classes] (one-hot encoded)
+            y: [] (tensor)
         """
         return self.X[idx], self.y[idx]
 
@@ -89,12 +87,23 @@ class MakeDataLoaders():
 def main(opts):
     data = MyMNIST(opts)
     print(f"Dataset size: X={data.X.shape}, y={data.y.shape}")
+    print(f"Mean: {data.mean}, Std: {data.std}")
     mnist = MakeDataLoaders(opts, data)
     train_loader = mnist.train_loader
 
     # Check data
     X, y = next(iter(train_loader))
     print("Data shape:", f"X={X.shape}", f"y={y.shape}")
+
+    # Print first batch
+    import os
+    os.makedirs("plots", exist_ok=True)
+    import matplotlib.pyplot as plt
+    from torchvision.utils import make_grid
+    grid = make_grid(X, nrow=8, padding=2, normalize=True)
+    plt.imshow(grid.permute(1, 2, 0))
+    plt.axis("off")
+    plt.savefig("plots/mnist.png")
 
 
 if __name__ == "__main__":
