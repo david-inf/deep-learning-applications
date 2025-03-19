@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 /lab1/checkpoints
 /lab1/experiments
+lab1/run_exps.sh

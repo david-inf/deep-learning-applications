@@ -29,8 +29,8 @@ def save_checkpoint(opts, model, optimizer, scheduler, epoch, step, loss, runtim
     torch.save(info, fname)
     # Update yaml file with checkpoint name
     update_yaml(opts, "resume_checkpoint", fname)
-    LOG.info(
-        f"Saved checkpoint {fname} at epoch {epoch}, step {step}, runtime {runtime:.2f}s")
+    LOG.info(f"Saved checkpoint {fname} at epoch {epoch}, "
+             f"step {step}, runtime {runtime:.2f}s")
 
 
 def load_checkpoint(checkpoint_path, model, optimizer, scheduler):

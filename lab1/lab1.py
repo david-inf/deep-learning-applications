@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 from mnist import MyMNIST, MakeDataLoaders
-from models import MLP
+from models.mlp import BaseMLP, SkipMLP
 
 from train import train_loop, test
 from utils import LOG, update_yaml
@@ -31,8 +31,10 @@ def get_loaders(opts):
 
 
 def get_model(opts):
-    if opts.model_name == "MLP":
-        model = MLP([128])
+    if opts.model_name == "BaseMLP":
+        model = BaseMLP()
+    elif opts.model_name == "SkipMLP":
+        model = SkipMLP()
 
     model = model.to(opts.device)
     return model
@@ -40,6 +42,7 @@ def get_model(opts):
 
 def update_opts(opts, args):
     # update yaml file with updated and new attributes from opts
+    # Configs yaml file
     opts.config = args.config  # keep the yaml file name
 
     # Device
@@ -59,6 +62,10 @@ def update_opts(opts, args):
     else:
         opts.checkpoint_every = opts.num_epochs
         LOG.info(f"Checkpointing at the end of training")
+    # checkpoints directory
+    ckp_dir = os.path.join("checkpoints", opts.model_name)
+    os.makedirs(ckp_dir, exist_ok=True)  # output dir not tracked by git
+    opts.checkpoint_dir = ckp_dir  # for saving and loading ckps
 
     # Update yaml file
     with open(opts.config, "w") as f:
@@ -70,25 +77,15 @@ def main(opts, experiment):
     # opts: SimpleNmamespace object
     # experiment: comet_ml.Experiment object
     set_seeds(opts.seed)
-
     # Data loaders
     train_loader, val_loader, test_loader = get_loaders(opts)
-
     # Model
     model = get_model(opts)
-
-    # Training & checkpointing
-    ckp_dir = os.path.join("checkpoints", opts.model_name)
-    os.makedirs(ckp_dir, exist_ok=True)  # output dir not tracked by git
-    opts.checkpoint_dir = ckp_dir  # for saving and loading ckps
-
+    # Training
     with experiment.train():
         LOG.info(f"Running {opts.experiment_name}")
-        train_loop(
-            opts, model, train_loader, val_loader,
-            experiment, opts.resume_checkpoint
-        )
-
+        train_loop(opts, model, train_loader, val_loader,
+                   experiment, opts.resume_checkpoint)
     # Testing
     with experiment.test():
         test_acc = test(opts, model, test_loader)
@@ -106,7 +103,7 @@ if __name__ == "__main__":
         description="Run an experiment and log to comet_ml")
     parser.add_argument("--config", default="config.yaml",
                         help="YAML configuration file")
-    parser.add_argument("--epochs", default=10, type=int,
+    parser.add_argument("--epochs", default=20, type=int,
                         help="Number of epochs, increase when resuming")
     parser.add_argument("--ckping", type=int, default=None,
                         help="Specify checkpointing frequency with epochs")
@@ -121,23 +118,17 @@ if __name__ == "__main__":
         # try resuming an experiment if experiment_key is provided
         # otherwise start a new experiment
         if not opts.experiment_key:
-            experiment = start(
-                project_name=opts.comet_project,
-                experiment_config=ExperimentConfig(
-                    name=opts.experiment_name
-                )
-            )
+            experiment = start(project_name=opts.comet_project,
+                               experiment_config=ExperimentConfig(
+                                   name=opts.experiment_name))
             # Update with experiment key for resuming
             update_yaml(opts, "experiment_key", experiment.get_key())
         else:
             # Resume using provided experiment key and checkpoint
             # the key is set above
             # the checkpoint is set with save_checkpoint in train_loop()
-            experiment = start(
-                project_name=opts.comet_project,
-                mode="get",
-                experiment_key=opts.experiment_key,
-            )
+            experiment = start(project_name=opts.comet_project,
+                               mode="get", experiment_key=opts.experiment_key,)
         main(opts, experiment)
         experiment.log_parameters(vars(opts))
         experiment.end()

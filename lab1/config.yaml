@@ -1,22 +1,36 @@
-batch_size: 64
-batch_window: 50
-checkpoint_dir: checkpoints/MLP
-checkpoint_every: 20
-comet_project: deep-learning-applications
-config: config.yaml
-dataset: MNIST
-device: cuda
-experiment_key: null
-experiment_name: MLP
-learning_rate: 0.01
-log_every: 20
-lr_decay: 0.95
-model_name: MLP
-momentum: 0.9
-num_epochs: 20
-num_workers: 0
-resume_checkpoint: null
+# Template for the configuration file
+# first options are common, mostly, between experiments
+# so one can try to merge common options with the specific ones
+
+# seed ensures proper reproducibility, especially when resuming
 seed: 42
-test_size: 0.2
+
+test_size: 0.2  # train-test split
 val_size: 0.1
+batch_size: 128
+num_workers: 0  # 0 when no augmentations are used
+
+learning_rate: 0.01
+momentum: 0.9
 weight_decay: 0.0005
+lr_decay: 0.95  # exponential decay at each epoch
+
+log_every: 20  # compute metrics and log to comet_ml after ... batches
+batch_window: 50  # use the previous ... batches to compute the metrics
+
+checkpoint_every: null  # save the model every ... epochs
+
+comet_project: deep-learning-applications
+
+model_name: BaseMLP
+num_epochs: 20
+
+resume_checkpoint: null
+
+experiment_name: null
+experiment_key: null
+
+# when resuming make sure about to update:
+# num_epochs
+# resume_checkpoint
+# experiment_key
