@@ -3,12 +3,14 @@
 # so one can try to merge common options with the specific ones
 
 # seed ensures proper reproducibility, especially when resuming
+dataset: MNIST
 seed: 42
+device: cuda
 
 test_size: 0.2  # train-test split
 val_size: 0.1
 batch_size: 128
-num_workers: 0  # 0 when no augmentations are used
+num_workers: 2
 
 learning_rate: 0.01
 momentum: 0.9
@@ -22,7 +24,7 @@ checkpoint_every: null  # save the model every ... epochs
 
 comet_project: deep-learning-applications
 
-model_name: BaseMLP
+model_name: MLP
 num_epochs: 20
 
 resume_checkpoint: null

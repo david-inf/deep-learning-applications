@@ -4,62 +4,51 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-## *********************************** ##
+class BasicBlock(nn.Module):
+    """ Building block for MLPs """
 
-class BaseMLP(nn.Module):
-    """ Simple MLP for MNIST with variable layers """
-    def __init__(self, layer_sizes=[768]*3, num_classes=10):
+    def __init__(self, in_features=512, out_features=512, skip=False):
         super().__init__()
-
-        sizes = [784] + layer_sizes + [num_classes]
-        layers = []
-        for size in range(len(sizes) - 2):
-            layers.append(nn.Linear(sizes[size], sizes[size+1]))
-            layers.append(nn.ReLU(inplace=True))
-        self.mlp = nn.Sequential(*layers)
-        self.head = nn.Linear(sizes[-2], sizes[-1])
-
-    def forward(self, x):
-        # N x 28 x 28
-        x = x.flatten(1)
-        x = self.mlp(x)
-        x = self.head(x)  # logits
-        return x
-
-## *********************************** ##
-
-class SkipMLPBlock(nn.Module):
-    """ Building block for SkipMLP """
-    def __init__(self, in_features=768, out_features=768):
-        super().__init__()
+        self.skip = skip
         self.fc1 = nn.Linear(in_features, out_features)
         self.fc2 = nn.Linear(out_features, in_features)
+        self.relu = nn.ReLU(inplace=True)
 
     def forward(self, x):
-        f = F.relu(self.fc1(x))
-        f = F.relu(self.fc2(f))
-        return f + x
+        identity = x
+
+        out = self.fc1(x)
+        out = self.relu(out)
+
+        out = self.fc2(out)
+        if self.skip:
+            out += identity
+        out = self.relu(out)
+
+        return out
 
 
-class SkipMLP(nn.Module):
-    """ MLP with skip connections for residual learning """
-    def __init__(self, hidden_size=768, n_blocks=1, num_classes=10):
+class MLP(nn.Module):
+    """ Simple MLP with variable layers and optional skip connections """
+
+    def __init__(self, input_size, hidden_size=512, n_blocks=2, skip=False, num_classes=10):
         super().__init__()
 
-        self.input_adapter = nn.Linear(784, hidden_size)
-        self.blocks = nn.Sequential(
-            *[SkipMLPBlock(hidden_size, hidden_size)]*n_blocks
+        self.input_adapter = nn.Linear(input_size, hidden_size)
+        self.mlp = nn.Sequential(
+            *[BasicBlock(hidden_size, hidden_size, skip) for _ in range(n_blocks)]
         )
+        self.flatten = nn.Flatten()
         self.head = nn.Linear(hidden_size, num_classes)
 
     def forward(self, x):
-        x = x.flatten(1)
-        x = F.relu(self.input_adapter(x))
-        x = self.blocks(x)
-        x = self.head(x)
+        # N x C x 28 x 28
+        x = self.flatten(x)
+        x = self.input_adapter(x)  # hidden_size
+        x = self.mlp(x)  # blocks
+        x = self.head(x)  # logits
         return x
 
-## *********************************** ##
 
 def visualize(model, model_name, input_data):
     from torchinfo import summary
@@ -86,25 +75,35 @@ def visualize(model, model_name, input_data):
         verbose=0,
     )
     console.print(model_stats)
+    return model_stats.total_params
 
 
 def main(args):
-    if args.model == "BaseMLP":
-        model = BaseMLP()
-    elif args.model == "SkipMLP":
-        model = SkipMLP()
+    if args.dataset.lower() == "mnist":
+        input_data = torch.randn(128, 1, 28, 28)
+        input_size = 28*28*1
+    elif args.dataset.lower() == "cifar10":
+        input_data = torch.randn(128, 3, 28, 28)
+        input_size = 28*28*3
 
-    input_data = torch.randn(64, 1, 28, 28)
-    visualize(model, args.model, input_data)
+    model = MLP(input_size, hidden_size=args.hidden_size,
+                n_blocks=args.n_blocks, skip=args.skip)
+
+    visualize(model, "MLP", input_data)
 
 
 if __name__ == "__main__":
     from ipdb import launch_ipdb_on_exception
     import argparse
+    import yaml
+    from types import SimpleNamespace
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="BaseMLP")
+    parser.add_argument("--config", help="YAML configuration file")
     args = parser.parse_args()
+    with open(args.config, "r") as f:
+        configs = yaml.load(f, Loader=yaml.SafeLoader)  # dict
+    opts = SimpleNamespace(**configs)
 
     with launch_ipdb_on_exception():
-        main(args)
+        main(opts)

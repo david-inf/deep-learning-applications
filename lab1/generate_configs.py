@@ -2,10 +2,20 @@
 
 import os
 import yaml
+from types import SimpleNamespace
 from ipdb import launch_ipdb_on_exception
+import torch
+from torchinfo import summary
+from lab1 import get_model
 
 
-MODELS = ("BaseMLP", "SkipMLP", "BaseCNN", "SkipCNN")
+MODELS = ("MLP", "CNN")
+
+INPUT_SIZE = {
+    "MNIST": torch.randn(128, 1, 28, 28),
+    "CIFAR10": torch.randn(128, 3, 28, 28)
+}
+
 
 def generate_config(new_params):
     # new_params may contain updated and new parameters
@@ -13,58 +23,54 @@ def generate_config(new_params):
     with open("config.yaml", "r") as f:
         base_config = yaml.safe_load(f)  # dict
 
-    # Automate few parameters
-    new_params["experiment_name"] = f"{new_params["model_name"]}"
-
     # Update with new parameters
     base_config.update(new_params)
+
+    # Automate naming
+    _prefix = ("skip" if base_config["skip"]
+               else "") + base_config["model_name"]
+    _dataset = base_config["dataset"].lower()
+    _opts = SimpleNamespace(**base_config)
+    _model_stats = summary(get_model(_opts), verbose=0)
+    _params = f"{_model_stats.total_params/10**6:.2f}M"
+    base_config["experiment_name"] = f"{_prefix}_{_params}_{_dataset}"
 
     # Dump new configuration file
     output_dir = "experiments"
     os.makedirs(output_dir, exist_ok=True)
 
-    fname = new_params["experiment_name"] + ".yaml"
+    fname = base_config["experiment_name"] + ".yaml"
     output_path = os.path.join(output_dir, fname)
     with open(output_path, "w") as f:
         yaml.dump(base_config, f)
 
     print(f"Generated config: {output_path}")
-    print(f"Parameters: {new_params}")
-    print(f"Experiment name: {new_params["experiment_name"]}")
+    print(f"Parameters: {base_config}")
+    print(f"Experiment name: {base_config["experiment_name"]}")
 
 
 if __name__ == "__main__":
-    num_workers = 2
-    # add layer sizes
-    configs = {
-        "BaseMLP": {
-            "model_name": "BaseMLP",
-            "num_epochs": 20,
-            "learning_rate": 0.01,
-            "num_workers": num_workers,
-        },
-        "SkipMLP": {
-            "model_name": "SkipMLP",
-            "num_epochs": 20,
-            "learning_rate": 0.01,
-            "num_workers": num_workers,
-        },
-        "BaseCNN": {
-            "model_name": "BaseCNN",
-            "num_epochs": 20,
-            "learning_rate": 0.01,
-            "num_workers": num_workers,
-        },
-        "SkipCNN": {
-            "model_name": "SkipCNN",
-            "num_epochs": 20,
-            "learning_rate": 0.01,
-            "num_workers": num_workers,
-        },
-    }
-    for model, params in configs.items():
+    configs = [  # list of params (dict)
+        {"model_name": "MLP", "dataset": "MNIST", "skip": False,
+         "n_blocks": 2, "hidden_size": 512, },
+        {"model_name": "MLP", "dataset": "MNIST", "skip": True,
+         "n_blocks": 2, "hidden_size": 512, },
+        {"model_name": "MLP", "dataset": "CIFAR10", "skip": False,
+         "n_blocks": 3, "hidden_size": 512, },
+        {"model_name": "MLP", "dataset": "CIFAR10", "skip": True,
+         "n_blocks": 3, "hidden_size": 512, },
+        ## **** ##
+        {"model_name": "CNN", "dataset": "MNIST", "skip": False,
+         "num_filters": 32, },
+        {"model_name": "CNN", "dataset": "MNIST", "skip": True,
+         "num_filters": 32, },
+        {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
+         "num_filters": 64, },
+        {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
+         "num_filters": 64, },
+    ]
+    for params in configs:
         with launch_ipdb_on_exception():
-            print(f"Generating configurations for {model}")
             generate_config(params)
             print()
     print("Done")

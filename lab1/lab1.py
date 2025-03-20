@@ -1,14 +1,15 @@
 
 import os
 
-from comet_ml import start, ExperimentConfig
+from comet_ml import start
 
 import random
 import numpy as np
 import torch
 
-from mnist import MyMNIST, MakeDataLoaders
-from models.mlp import BaseMLP, SkipMLP
+from mydata import MyMNIST, MyCIFAR10, MakeDataLoaders
+from models.mlp import MLP
+from models.cnn import CNN
 
 from train import train_loop, test
 from utils import LOG, update_yaml
@@ -22,19 +23,41 @@ def set_seeds(seed):
 
 
 def get_loaders(opts):
-    data = MyMNIST(opts)
-    mnist = MakeDataLoaders(opts, data)
-    train_loader = mnist.train_loader
-    val_loader = mnist.val_loader
-    test_loader = mnist.test_loader
+    if opts.dataset.lower() == "mnist":
+        data = MyMNIST(opts)
+    elif opts.dataset.lower() == "cifar10":
+        data = MyCIFAR10(opts)
+    else:
+        raise ValueError(f"Unknown dataset: {opts.dataset}")
+    loaders = MakeDataLoaders(opts, data)
+    train_loader = loaders.train_loader
+    val_loader = loaders.val_loader
+    test_loader = loaders.test_loader
     return train_loader, val_loader, test_loader
 
 
 def get_model(opts):
-    if opts.model_name == "BaseMLP":
-        model = BaseMLP()
-    elif opts.model_name == "SkipMLP":
-        model = SkipMLP()
+    # Input size
+    if opts.dataset.lower() == "mnist":
+        in_channels = 1
+        input_size = 28*28 * in_channels
+    elif opts.dataset.lower() == "cifar10":
+        in_channels = 3
+        input_size = 28*28 * in_channels
+
+    # Skip connections
+    skip = opts.skip if hasattr(opts, "skip") else False
+
+    if opts.model_name == "MLP":
+        blocks = opts.n_blocks if hasattr(opts, "n_blocks") else 2
+        hidden = opts.hidden_size if hasattr(opts, "hidden_size") else 512
+        model = MLP(input_size, n_blocks=blocks,
+                    hidden_size=hidden, skip=opts.skip)
+    elif opts.model_name == "CNN":
+        filters = opts.num_filters if hasattr(opts, "num_filters") else 64
+        model = CNN(in_channels, num_filters=filters, skip=skip)
+    else:
+        raise ValueError(f"Unknown model: {opts.model_name}")
 
     model = model.to(opts.device)
     return model
@@ -118,11 +141,11 @@ if __name__ == "__main__":
         # try resuming an experiment if experiment_key is provided
         # otherwise start a new experiment
         if not opts.experiment_key:
-            experiment = start(project_name=opts.comet_project,
-                               experiment_config=ExperimentConfig(
-                                   name=opts.experiment_name))
+            experiment = start(project_name=opts.comet_project)
+            experiment.set_name(opts.experiment_name)
             # Update with experiment key for resuming
             update_yaml(opts, "experiment_key", experiment.get_key())
+            LOG.info("Added experiment key for resuming")
         else:
             # Resume using provided experiment key and checkpoint
             # the key is set above

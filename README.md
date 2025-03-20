@@ -2,11 +2,11 @@
 
 Repository to host the laboratories from the course on deep learning applications
 
-# Lab1 - Convolutional Neural Networks
+## Lab1 - Convolutional Neural Networks
 
 Feel for working with deep models
 
-## Exercise 1
+### Exercise 1
 
 Reproducing on a small scale the results from the ResNet paper, using MNIST dataset, an MLP and the a CNN.
 
@@ -17,24 +17,38 @@ Reproducing on a small scale the results from the ResNet paper, using MNIST data
 <details>
 <summary>Baseline MLP `BaseMLP`</summary>
 
-Simple MLP with 3 hidden units of size 768, 1,800,000 params
-</details>
+MLP with variable number of blocks:
+- `BasicBlock`: 2 fully connected layers with `hidden_size=512` and relu
+- Optional skip connection in each block by setting `skip=True`
 
-<details>
-<summary>Adding skip connections `SkipMLP`</summary>
-
-Previous models with a skip connections from first hidden unit to the last one, 1,800,000 params
+Datasets:
+- `MNIST`: 
+- `CIFAR10`: 
 </details>
 
 <details>
 <summary>Baseline CNN `BaseCNN`</summary>
 
+- `input_adapter`: conv + batchnorm + relu that exits with `num_filters`
+- `layer`: sequence of `BasicBlock` layers
+    - Two modules of conv + batchnorm + relu
+    - Optional shortcut in each block by setting `skip=True`
+- `avgpool`: ends with a (1, 1) feature map
+- `fc`: classification head
+
+Datasets:
+- `MNIST`: 4,800,000 params
+- `CIFAR10`: 4,800,000 params
 </details>
+
+**Experiment** | **Results**
+-------------- | -----------
+description | plot
+
+### Exercise 2
 
 <details>
-<summary>Adding skip connections `SkipCNN`</summary>
+<summary>Distillation</summary>
+
 
 </details>
-
-## Exercise 2
-
