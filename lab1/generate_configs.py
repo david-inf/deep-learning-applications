@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from ipdb import launch_ipdb_on_exception
 import torch
 from torchinfo import summary
-from lab1 import get_model
+from lab1.lab1 import get_model
 
 
 MODELS = ("MLP", "CNN")
@@ -17,10 +17,10 @@ INPUT_SIZE = {
 }
 
 
-def generate_config(new_params):
+def gen_configs(new_params, base_yaml="config.yaml"):
     # new_params may contain updated and new parameters
     # Load base configuration file
-    with open("config.yaml", "r") as f:
+    with open(base_yaml, "r") as f:
         base_config = yaml.safe_load(f)  # dict
 
     # Update with new parameters
@@ -51,26 +51,35 @@ def generate_config(new_params):
 
 if __name__ == "__main__":
     configs = [  # list of params (dict)
-        {"model_name": "MLP", "dataset": "MNIST", "skip": False,
-         "n_blocks": 2, "hidden_size": 512, },
-        {"model_name": "MLP", "dataset": "MNIST", "skip": True,
-         "n_blocks": 2, "hidden_size": 512, },
-        {"model_name": "MLP", "dataset": "CIFAR10", "skip": False,
-         "n_blocks": 3, "hidden_size": 512, },
-        {"model_name": "MLP", "dataset": "CIFAR10", "skip": True,
-         "n_blocks": 3, "hidden_size": 512, },
+        # {"model_name": "MLP", "dataset": "MNIST", "skip": False,
+        #  "n_blocks": 2, "hidden_size": 512, },
+        # {"model_name": "MLP", "dataset": "MNIST", "skip": True,
+        #  "n_blocks": 2, "hidden_size": 512, },
+        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": False,
+        #  "n_blocks": 1, "hidden_size": 512, },
+        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": True,
+        #  "n_blocks": 1, "hidden_size": 512, },
         ## **** ##
-        {"model_name": "CNN", "dataset": "MNIST", "skip": False,
-         "num_filters": 32, },
-        {"model_name": "CNN", "dataset": "MNIST", "skip": True,
-         "num_filters": 32, },
-        {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-         "num_filters": 64, },
-        {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
-         "num_filters": 64, },
+        # {"model_name": "CNN", "dataset": "MNIST", "skip": False,
+        #  "num_filters": 32, },
+        # {"model_name": "CNN", "dataset": "MNIST", "skip": True,
+        #  "num_filters": 32, },
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
+        #  "num_filters": 64, },
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
+        #  "num_filters": 64, },
+
+        ## **** ##
+
+        {
+            "teacher": {
+                "model_name": "CNN",
+                "num_filters": 32,
+            }
+        }
     ]
     for params in configs:
         with launch_ipdb_on_exception():
-            generate_config(params)
+            gen_configs(params)
             print()
     print("Done")

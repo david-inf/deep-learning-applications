@@ -1,5 +1,6 @@
 
 import os
+import yaml
 
 from comet_ml import start
 
@@ -120,7 +121,6 @@ if __name__ == "__main__":
     from types import SimpleNamespace
     from ipdb import launch_ipdb_on_exception
     import argparse
-    import yaml
 
     parser = argparse.ArgumentParser(
         description="Run an experiment and log to comet_ml")

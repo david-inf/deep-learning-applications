@@ -5,6 +5,8 @@ import numpy as np
 from tqdm import tqdm
 
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import ExponentialLR
 
@@ -109,19 +111,15 @@ def validate(opts, model, val_loader):
     return val_loss, val_acc
 
 
-def train_loop(opts, model, train_loader, val_loader=None,
-               experiment=None, resume_from=None):
+def train_loop(opts, model, train_loader, val_loader=None, experiment=None, resume_from=None):
     """
     Training loop with with resuming routine. This accounts for training
     ended before the number of epochs is reached or when one wants
     to train the model further.
     """
-
     criterion = torch.nn.CrossEntropyLoss()  # expects logits and labels
-    optimizer = optim.SGD(
-        model.parameters(), lr=opts.learning_rate,
-        momentum=opts.momentum, weight_decay=opts.weight_decay
-    )
+    optimizer = optim.SGD(model.parameters(), lr=opts.learning_rate,
+                          momentum=opts.momentum, weight_decay=opts.weight_decay)
     scheduler = ExponentialLR(optimizer, gamma=opts.lr_decay)
 
     start_epoch, step = 1, 0  # last training epoch and step
@@ -133,8 +131,8 @@ def train_loop(opts, model, train_loader, val_loader=None,
             resume_from, model, optimizer, scheduler)
         start_epoch += last_epoch
         step += last_step
-        LOG.info(
-            f"Resuming training from epoch {start_epoch}, step {step}, previous runtime {prev_runtime:.2f}s")
+        LOG.info(f"Resuming training from epoch {start_epoch}, step {step},"
+                 f" previous runtime {prev_runtime:.2f}s")
 
     for epoch in range(start_epoch, opts.num_epochs + 1):
         experiment.log_current_epoch(epoch)
@@ -189,6 +187,88 @@ def train_loop(opts, model, train_loader, val_loader=None,
             ckp_runtime = prev_runtime + time.time() - start_time  # add duration of this run
             save_checkpoint(opts, model, optimizer, scheduler,
                             epoch, step, loss, ckp_runtime)
+
+    # add this run duration to the previous one
+    runtime = time.time() - start_time
+    LOG.info(f"Training completed in {runtime:.2f}s")
+    prev_runtime += runtime
+    experiment.log_metric("runtime", prev_runtime)
+
+
+def train_loop_distill(opts, teacher, student, train_loader, val_loader=None, experiment=None, resume_from=None):
+    """
+    Training loop for distillation
+
+    Args:
+        Teacher : torch.nn.Module
+            teacher model with frozen parameters
+        Student : torch.nn.Module
+            student model to be distilled
+    """
+    ce_loss = nn.CrossEntropyLoss()
+    kl_div = nn.KLDivLoss(log_target=True)
+    optimizer = optim.SGD(student.parameters(), lr=opts.learning_rate,
+                          momentum=opts.momentum, weight_decay=opts.weight_decay)
+    scheduler = ExponentialLR(optimizer, gamma=opts.lr_decay)
+
+    start_epoch, step = 1, 0  # last training epoch and step
+    start_time, prev_runtime = time.time(), 0.
+
+    for epoch in range(start_epoch, opts.num_epochs + 1):
+        # experiment.log_current_epoch(epoch)
+        losses, accs = [], []
+        with tqdm(train_loader, unit="batch") as tepoch:
+            for batch_idx, (X, y) in enumerate(tepoch):
+                student.train()
+                tepoch.set_description(f"{epoch:03d}")
+
+                # -----
+                # move data to device
+                X = X.to(opts.device)  # [N, C, W, H]
+                y = y.to(opts.device)  # hard targets [N]
+                # forward pass
+                optimizer.zero_grad()
+                s_logits = student(X)  # student logits: [N, K]
+                with torch.no_grad():
+                    t_logits = teacher(X)  # teacher logits: [N, K]
+                # compute loss
+                soft_targets = F.log_softmax(t_logits / opts.temp, dim=-1)
+                soft_prob = F.log_softmax(s_logits / opts.temp, dim=-1)
+                loss1 = kl_div(soft_prob, soft_targets)  # soft targets loss
+                loss2 = ce_loss(s_logits, y)
+                loss = opts.w1 * loss1 + opts.w2 * loss2
+                # backward pass
+                loss.backward()   # backprop
+                optimizer.step()  # update model
+                # metrics
+                losses.append(N(loss))  # add loss for current batch
+                acc = np.mean(np.argmax(N(s_logits), axis=1) == N(y))
+                accs.append(acc)  # add accuracy for current batch
+                # -----
+
+                if batch_idx % opts.log_every == 0:
+                    # Compute training metrics and log to comet_ml
+                    train_loss = np.mean(losses[-opts.batch_window:])
+                    train_acc = np.mean(accs[-opts.batch_window:])
+                    # experiment.log_metrics({
+                    #     "loss": train_loss,
+                    #     "acc": train_acc,
+                    # }, step=step)
+                    # Compute validation metrics and log to comet_ml
+                    # with experiment.validate():
+                    #     val_loss, val_acc = validate(opts, student, val_loader)
+                    #     experiment.log_metrics({
+                    #         "loss": val_loss,
+                    #         "acc": val_acc,
+                    #     }, step=step)
+                    # Log to console
+                    tepoch.set_postfix(train_loss=train_loss, train_acc=train_acc,
+                                       #    val_loss=val_loss, val_acc=val_acc
+                                       )
+                    tepoch.update()
+                    step += 1
+
+        scheduler.step()  # update learning rate at each epoch
 
     # add this run duration to the previous one
     runtime = time.time() - start_time
