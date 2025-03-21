@@ -1,15 +1,15 @@
+""" Main script for distillation """
 
 import os
 from types import SimpleNamespace
-import yaml
 
 from comet_ml import start
 
 import torch
 
-from lab1.lab1 import set_seeds, get_loaders, get_model, update_opts
 from train import train_loop_distill, test
-from utils import LOG, update_yaml
+from utils import (LOG, update_yaml, set_seeds,
+                   get_loaders, get_model)
 
 
 def get_teacher(opts):
@@ -49,6 +49,8 @@ def main(opts):
     train_loader, val_loader, test_loader = get_loaders(opts)
     # Teacher & Student
     teacher, student = get_teacher_student(opts)
+    print(teacher)
+    print(student)
 
     # Training
     # with experiment.train():
@@ -63,23 +65,9 @@ def main(opts):
 
 
 if __name__ == "__main__":
+    import cmd_args
     from ipdb import launch_ipdb_on_exception
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description="Run an experiment and log to comet_ml")
-    parser.add_argument("--config", default="config-distill.yaml",
-                        help="YAML configuration file")
-    parser.add_argument("--epochs", default=20, type=int,
-                        help="Number of epochs, increase when resuming")
-    parser.add_argument("--ckping", type=int, default=None,
-                        help="Specify checkpointing frequency with epochs")
-
-    args = parser.parse_args()
-    with open(args.config, "r") as f:
-        configs = yaml.load(f, Loader=yaml.SafeLoader)  # dict
-    opts = SimpleNamespace(**configs)
-    update_opts(opts, args)
+    opts = cmd_args.parse_args()
 
     with launch_ipdb_on_exception():
         main(opts)

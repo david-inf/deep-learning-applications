@@ -35,7 +35,7 @@ student:
   resume_checkpoint: null
   device: cuda
 
-model_name: Distill  # compatibility with code
+model_name: Distill
 num_epochs: 20
 learning_rate: 0.01
 momentum: 0.9

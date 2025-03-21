@@ -50,46 +50,27 @@ class MLP(nn.Module):
         return x
 
 
-def visualize(model, model_name, input_data):
-    from torchinfo import summary
-    from rich.console import Console
-    out = model(input_data)
 
-    console = Console()
-    console.print(f"Model {model_name}, computed output shape = {out.shape}")
-
-    model_stats = summary(
-        model,
-        input_data=input_data,
-        col_names=[
-            "input_size",
-            "output_size",
-            "num_params",
-            # "params_percent",
-            # "kernel_size",
-            # "mult_adds",
-        ],
-        row_settings=("var_names",),
-        col_width=18,
-        depth=8,
-        verbose=0,
-    )
-    console.print(model_stats)
-    return model_stats.total_params
-
-
-def main(args):
-    if args.dataset.lower() == "mnist":
+def build_mlp(opts):
+    if opts.dataset.lower() == "mnist":
         input_data = torch.randn(128, 1, 28, 28)
         input_size = 28*28*1
-    elif args.dataset.lower() == "cifar10":
+    elif opts.dataset.lower() == "cifar10":
         input_data = torch.randn(128, 3, 28, 28)
         input_size = 28*28*3
 
-    model = MLP(input_size, hidden_size=args.hidden_size,
-                n_blocks=args.n_blocks, skip=args.skip)
+    n_blocks = opts.n_blocks if hasattr(opts, "n_blocks") else 2
+    hidden_size = opts.hidden_size if hasattr(opts, "hidden_size") else 512
+    skip = opts.skip if hasattr(opts, "skip") else False
+    model = MLP(input_size, n_blocks=n_blocks,
+                hidden_size=hidden_size, skip=skip)
 
-    visualize(model, "MLP", input_data)
+    return model, input_data
+
+
+def main(opts):
+    model, input_data = build_mlp(opts)
+    visualize(model, f"{opts.model_name} on {opts.dataset}", input_data)
 
 
 if __name__ == "__main__":

@@ -8,29 +8,33 @@ Feel for working with deep models
 
 ### Code organization
 
-Inside folder `lab1/` you have the main script `lab1.py` see
-```{bash}
-python lab1.py --help
-```
+Inside folder `lab1/` you have the follwing programs:
+- `checkpoints` folder that will be automatically created for storing model checkpoints
+- `experiments` folder that will be automatically created for storing yaml configurations files for each experiment
+- `models/` folder with MLPs (`mlp.py`) and CNNs (`cnn.py`) definitions
+- `cmd_args.py` arguments for main programs
+- `config-train.yaml` `config-distill.yaml` base configuration files
+- `generate_configs.py` program for generating yaml configuration files automatically
+- Main programs:
+  - `main-train.py` main script for training a single model
+  - `main-distill.py` main script for distilling knowledge
+  - `main-models.py` main script for inspecting models defined in `models/` folder
+- `mydata.py` wrappers for MNIST and CIFAR10 datasets
+- `train.py` and `utils.py` are utilities
 
-You should see
-```{bash}
-030: 100%|██████████████████████| 338/338 [00:02<00:00, 112.93batch/s, train_acc=0.997, train_loss=0.0669, val_acc=0.538, val_loss=1.97]
-031: 100%|██████████████████████| 338/338 [00:03<00:00, 112.49batch/s, train_acc=0.998, train_loss=0.0619, val_acc=0.533, val_loss=1.97]
-032: 100%|██████████████████████| 338/338 [00:03<00:00, 106.86batch/s, train_acc=0.998, train_loss=0.0583, val_acc=0.534, val_loss=1.98]
-```
-
-After generating configs with `generate_config`, run a program with
+After generating configs, run a program with
 ```{bash}
 python lab1.py experiments/CNN_4.83M_cifar10.yaml
 ```
 
 It will automatically save checkpoints and log to `comet_ml`. If the experiment have already been runned, you may run the same command with more epochs (`--epochs 40`) and the experiment will be resumed (checkpoint path and experiment key are automatically dumped in the configuration file).
 
-- `models/` folder with `mlp.py` and `cnn.py`
-- `config.yaml` base configuration file
-- `mydata.py` wrappers for MNIST and CIFAR10 datasets
-- `train.py` and `utils.py` are utilities
+When running a program you should see
+```{bash}
+030: 100%|██████████████████████| 338/338 [00:02<00:00, 112.93batch/s, train_acc=0.997, train_loss=0.0669, val_acc=0.538, val_loss=1.97]
+031: 100%|██████████████████████| 338/338 [00:03<00:00, 112.49batch/s, train_acc=0.998, train_loss=0.0619, val_acc=0.533, val_loss=1.97]
+032: 100%|██████████████████████| 338/338 [00:03<00:00, 106.86batch/s, train_acc=0.998, train_loss=0.0583, val_acc=0.534, val_loss=1.98]
+```
 
 ### Exercise 1
 
