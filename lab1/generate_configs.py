@@ -1,20 +1,8 @@
 """ Script for generating YAML configuration files for experiments """
 
 import os
-import yaml
-from types import SimpleNamespace
-from ipdb import launch_ipdb_on_exception
-import torch
 from torchinfo import summary
-from lab1 import get_model
-
-
-MODELS = ("MLP", "CNN")
-
-INPUT_SIZE = {
-    "MNIST": torch.randn(128, 1, 28, 28),
-    "CIFAR10": torch.randn(128, 3, 28, 28)
-}
+from utils import get_model
 
 
 def count_params(configs):
@@ -31,7 +19,7 @@ def gen_configs(new_params):
         with open("config-distill.yaml", "r") as f:
             base_config = yaml.safe_load(f)  # dict
     else:
-        with open("config.yaml", "r") as f:
+        with open("config-train.yaml", "r") as f:
             base_config = yaml.safe_load(f)  # dict
 
     # Update with new parameters
@@ -49,7 +37,7 @@ def gen_configs(new_params):
         _prefix = "Distill_" + _teacher_prefix + \
             "_" + _student_prefix
     else:
-        output_dir = "experiments/train"
+        output_dir = os.path.join("experiments", base_config["model_name"])
         os.makedirs(output_dir, exist_ok=True)
         _prefix = base_config["model_name"] + ("skip" if base_config["skip"]
                                                else "")
@@ -74,19 +62,60 @@ if __name__ == "__main__":
         #  "n_blocks": 2, "hidden_size": 512, },
         # {"model_name": "MLP", "dataset": "MNIST", "skip": True,
         #  "n_blocks": 2, "hidden_size": 512, },
+
+        # # MLP Tiny
         # {"model_name": "MLP", "dataset": "CIFAR10", "skip": False,
-        #  "n_blocks": 1, "hidden_size": 512, },
+        #  "n_blocks": 1, "hidden_size": 32, },
         # {"model_name": "MLP", "dataset": "CIFAR10", "skip": True,
-        #  "n_blocks": 1, "hidden_size": 512, },
-        ## **** ##
+        #  "n_blocks": 1, "hidden_size": 32, },
+        # # MLP Small
+        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": False,
+        #  "n_blocks": 1, "hidden_size": 128, },
+        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": True,
+        #  "n_blocks": 1, "hidden_size": 128, },
+        # # MLP Large
+        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": False,
+        #  "n_blocks": 4, "hidden_size": 256, },
+        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": True,
+        #  "n_blocks": 4, "hidden_size": 256, },
+
         # {"model_name": "CNN", "dataset": "MNIST", "skip": False,
         #  "num_filters": 32, "n_blocks": 4, },
         # {"model_name": "CNN", "dataset": "MNIST", "skip": True,
         #  "num_filters": 32, "n_blocks": 4, },
+
+        # # CNN Little - 0.00M
         # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-        #  "num_filters": 64, "n_blocks": 4},
+        #  "num_filters": 8, "n_blocks": 1, "size_type": "little"},
+        # # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
+        # #  "num_filters": 8, "n_blocks": 1, "size_type": "little"},
+        # # CNN Tiny - 0.02M
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
+        #  "num_filters": 8, "n_blocks": 2, "size_type": "tiny"},
+        # # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
+        # #  "num_filters": 8, "n_blocks": 2, "size_type": "tiny"},
+        # # CNN Medium - 0.08M - For distillation
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
+        #  "num_filters": 8, "n_blocks": 3, "size_type": "medium"},
+        # # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
+        # #  "num_filters": 8, "n_blocks": 3, "size_type": "medium"},
+        # # CNN Large - 0.31M
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
+        #  "num_filters": 8, "n_blocks": 4, "size_type": "large"},
+        # # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
+        # #  "num_filters": 8, "n_blocks": 4, "size_type": "large"},
+        # # CNN Big - 1.23M
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
+        #  "num_filters": 8, "n_blocks": 5, "size_type": "big"},
         # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
-        #  "num_filters": 64, "n_blocks": 4},
+        #  "num_filters": 8, "n_blocks": 5, "size_type": "big"},
+        # # CNN Huge - 4.90M
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
+        #  "num_filters": 8, "n_blocks": 6, "size_type": "huge", "augmentation": True,
+        #  "early_stopping": {"patience": 3, "threshold": 0.01}},
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
+        #  "num_filters": 8, "n_blocks": 6, "size_type": "huge", "augmentation": True,
+        #  "early_stopping": {"patience": 3, "threshold": 0.01}},
 
         ## **** ##
 
@@ -94,23 +123,26 @@ if __name__ == "__main__":
          "teacher": {
              "model_name": "CNN",
              "dataset": "CIFAR10",
-             "num_filters": 64,
-             "n_blocks": 4,
+             "num_filters": 8,
+             "n_blocks": 6,
              "skip": True,
-             "ckp": "checkpoints/CNN/e_020_CNNskip_4.83M_cifar10.pt",
+             "ckp": "checkpoints/CNN/e_018_CNNskip4.90M_cifar10_best.pt",
              "device": "cuda",
          },
          "student": {
              "model_name": "CNN",
              "dataset": "CIFAR10",
-             "num_filters": 16,
-             "n_blocks": 2,
-             "skip": True,
+             "num_filters": 8,
+             "n_blocks": 1,
+             "skip": False,
              "device": "cuda",
          }
          }
     ]
 
+    import yaml
+    from types import SimpleNamespace
+    from ipdb import launch_ipdb_on_exception
     for params in configs:
         with launch_ipdb_on_exception():
             gen_configs(params)

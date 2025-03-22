@@ -18,9 +18,9 @@ parser.add_argument("--epochs", default=20, type=int,
 parser.add_argument("--ckping", type=int, default=None,
                     help="Specify checkpointing frequency with epochs")
 
-parser.add_argument("--log-every", type=int, default=30,
-                    help="Metrics logging frequency")
-parser.add_argument("--batch-window", type=int, default=60,
+parser.add_argument("--logging", type=int, default=40,
+                    help="Metrics logging frequency in batches")
+parser.add_argument("--window", type=int, default=60,
                     help="Number of previous batches when computing metrics")
 
 
@@ -38,6 +38,8 @@ def update_opts(opts, args):
         prev = opts.num_epochs
         opts.num_epochs = args.epochs
         LOG.info(f"Updated number of epochs to {opts.num_epochs} from {prev}")
+    else:
+        LOG.info(f"Training to {opts.num_epochs} epochs")
 
     # Model checkpointing
     if args.ckping:
@@ -50,6 +52,13 @@ def update_opts(opts, args):
     ckp_dir = os.path.join("checkpoints", opts.model_name)
     os.makedirs(ckp_dir, exist_ok=True)  # output dir not tracked by git
     opts.checkpoint_dir = ckp_dir  # for saving and loading ckps
+
+    # Early stopping
+    if hasattr(opts, "early_stopping"):
+        patience = opts.early_stopping["patience"]
+        threshold = opts.early_stopping["threshold"]
+        LOG.info(f"Early stopping activated with patience {patience}, "
+                 f"threshold {threshold}")
 
     # Update opts with new attributes from args
     opts.__dict__.update(vars(args))

@@ -23,14 +23,12 @@ batch_window: 50  # use the previous ... batches to compute the metrics
 checkpoint_every: null  # save the model every ... epochs
 
 comet_project: deep-learning-applications
-
-model_name: MLP
-num_epochs: 20
-
-resume_checkpoint: null
-
 experiment_name: null
 experiment_key: null
+
+resume_checkpoint: null
+model_name: MLP
+num_epochs: 20
 
 # when resuming make sure about to update:
 # num_epochs

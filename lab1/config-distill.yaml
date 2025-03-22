@@ -13,7 +13,6 @@ batch_window: 50  # use the previous ... batches to compute the metrics
 checkpoint_every: null  # save the model every ... epochs
 
 comet_project: deep-learning-applications
-
 experiment_name: null
 experiment_key: null
 
@@ -43,5 +42,5 @@ weight_decay: 0.0005
 lr_decay: 0.95
 
 temp: 5.0  # scaling student and teacher logits
-w1: 1.0  # weight for soft targets loss
-w2: 1.0  # weight for hard targets loss
+w1: 100.0  # weight for soft targets loss
+w2: 0.5  # weight for hard targets loss

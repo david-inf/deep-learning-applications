@@ -6,7 +6,8 @@ Repository to host the laboratories from the course on deep learning application
 
 Feel for working with deep models
 
-### Code organization
+<details>
+<summary>Code organization</summary>
 
 Inside folder `lab1/` you have the follwing programs:
 - `checkpoints` folder that will be automatically created for storing model checkpoints
@@ -14,7 +15,7 @@ Inside folder `lab1/` you have the follwing programs:
 - `models/` folder with MLPs (`mlp.py`) and CNNs (`cnn.py`) definitions
 - `cmd_args.py` arguments for main programs
 - `config-train.yaml` `config-distill.yaml` base configuration files
-- `generate_configs.py` program for generating yaml configuration files automatically
+- `generate_configs.py` program for generating yaml configuration files automatically from base configuration files and given options
 - Main programs:
   - `main-train.py` main script for training a single model
   - `main-distill.py` main script for distilling knowledge
@@ -22,6 +23,10 @@ Inside folder `lab1/` you have the follwing programs:
 - `mydata.py` wrappers for MNIST and CIFAR10 datasets
 - `train.py` and `utils.py` are utilities
 
+</details>
+
+<details>
+<summary>Running the main script</summary>
 After generating configs, run a program with
 ```{bash}
 python lab1.py experiments/CNN_4.83M_cifar10.yaml
@@ -36,45 +41,45 @@ When running a program you should see
 032: 100%|██████████████████████| 338/338 [00:03<00:00, 106.86batch/s, train_acc=0.998, train_loss=0.0583, val_acc=0.534, val_loss=1.98]
 ```
 
+</details>
+
 ### Exercise 1
 
 Reproducing on a small scale the results from the ResNet paper, using MNIST and CIFAR10 datasets, an MLP and a CNN.
 
 > Deep Residual Learning for Image Recognition, Kaiming He and Xiangyu Zhang and Shaoqing Ren and Jian Sun, 2015. [https://arxiv.org/abs/1512.03385].
 
-> Deeper networks do not guarantee more reduction in training loss
+> Deeper networks, i.e. more stacked layers, do not guarantee more reduction in training loss
+
+So the point of this exercise is to abstract a model definition so that one can add a given number of layers (blocks), and then see how the performance are affected
 
 <details>
-<summary>Baseline MLP `BaseMLP`</summary>
+<summary>MLP</summary>
 
-MLP with variable number of blocks:
-- `BasicBlock`: 2 fully connected layers with `hidden_size=512` and relu
+MLP with variable number of blocks `n_blocks`:
+- `BasicBlock`: 2 fully connected layers with given `hidden_size` and relu
 - Optional skip connection in each block by setting `skip=True`
 
-Datasets:
-- `MNIST`:
-- `CIFAR10`:
+Models:
 
 </details>
 
 <details>
-<summary>Baseline CNN `BaseCNN`</summary>
+<summary>CNN</summary>
 
 - `input_adapter`: conv + batchnorm + relu that exits with `num_filters`
-- `layer`: sequence of `BasicBlock` layers
-  - Two modules of conv + batchnorm + relu
+- `blocks`: sequence of `BasicBlock` layers
+  - Each one contains two modules of conv + batchnorm + relu
   - Optional shortcut in each block by setting `skip=True`
 - `avgpool`: ends with a (1, 1) feature map
 - `fc`: classification head
 
-Datasets:
-- `MNIST`: 4,800,000 params
-- `CIFAR10`: 4,800,000 params
+Models:
 
 </details>
 
-**Experiment** | **Results**
--------------- | -----------
+**Description** | **Results**
+--------------- | -----------
 description | plot
 
 ### Exercise 2
@@ -88,12 +93,18 @@ Reproducing on a small scale the results from the distillation paper, using MNIS
 
 For a given $x$ the frozen teacher and trainable students both produce logits, the idea is to align the student's output with the teachers' one
 
-Teachers:
-- 
-Students:
-- 
+Teacher:
+- Flagship MLP: 
+- Flagship CNN: 
+Student:
+- Tiny MLP: 
+- Tiny: CNN: 
 
 Loss:
 - Soft targets loss: `KLDivLoss(log_target=True)(soft_prob, soft_targets)`
 - Hard targets loss: `CrossEntropyLoss()(student_logits, labels)`
 </details>
+
+**Description** | **Results**
+--------------- | -----------
+description | plot

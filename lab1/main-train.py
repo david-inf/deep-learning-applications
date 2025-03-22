@@ -26,9 +26,9 @@ def main(opts, experiment):
                    experiment, opts.resume_checkpoint)
     # Testing
     with experiment.test():
-        test_acc = test(opts, model, test_loader)
+        _, test_acc = test(opts, model, test_loader)
+        experiment.log_metric("acc", test_acc)
         LOG.info(f"Test accuracy: {100.*test_acc:.1f}%")
-        experiment.log_metrics({"acc": test_acc, "error": 1. - test_acc})
 
 
 if __name__ == "__main__":

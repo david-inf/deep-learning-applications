@@ -7,6 +7,20 @@ from torchvision import datasets
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset, DataLoader, random_split
 
+
+# Full MNIST dataset
+# (X, y) train: N=60000 ; test: N=10000 -> 70000
+MNIST_TRAIN = datasets.MNIST(
+    root="../../data", train=True, download=True)
+MNIST_TEST = datasets.MNIST(
+    root="../../data", train=False, download=True)
+
+# Full CIFAR10 dataset
+# (X, y) train: N=50000 ; test: N=10000 -> 60000
+CIFAR10_TRAIN = datasets.CIFAR10(
+    root="../../data", train=True, download=True)
+CIFAR10_TEST = datasets.CIFAR10(
+    root="../../data", train=False, download=True)
 CIFAR10_CLASSES = ('plane', 'car', 'bird', 'cat',
                    'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
@@ -17,17 +31,11 @@ class MyMNIST(Dataset):
     def __init__(self, opts):
         # TODO: add data augmentation (maybe another class)
         self.opts = opts
-
-        # Get fill MNIST dataset
-        # (X, y) train: N=60000 ; test: N=10000
-        trainset = datasets.MNIST(
-            root="../../data", train=True, download=True)
-        testset = datasets.MNIST(
-            root="../../data", train=False, download=True)
+        self.num_classes = 10
 
         # Combine train and test sets
-        X_train, y_train = trainset.data, trainset.targets
-        X_test, y_test = testset.data, testset.targets
+        X_train, y_train = MNIST_TRAIN.data, MNIST_TRAIN.targets
+        X_test, y_test = MNIST_TEST.data, MNIST_TEST.targets
 
         # All images and all targets
         X = np.vstack((X_train, X_test))  # [70000, 28, 28]
@@ -60,20 +68,11 @@ class MyCIFAR10(Dataset):
 
     def __init__(self, opts=None, crop=True):
         self.opts = opts
-
-        # Get full CIFAR10 dataset, first separated
-        # (X, y) train: N=50000 ; test: N=10000
-        trainset = datasets.CIFAR10(
-            root="../../data", train=True, download=True)
-        testset = datasets.CIFAR10(
-            root="../../data", train=False, download=True)
         self.num_classes = len(CIFAR10_CLASSES)
 
         # Combine train and test sets
-        # so that corruption can be applied to both at the same time
-        # PIL Image <> numpy array ; int <> list
-        X_train, y_train = trainset.data, trainset.targets
-        X_test, y_test = testset.data, testset.targets
+        X_train, y_train = CIFAR10_TRAIN.data, CIFAR10_TRAIN.targets
+        X_test, y_test = CIFAR10_TEST.data, CIFAR10_TEST.targets
 
         X = np.vstack((X_train, X_test))  # [60000, 32, 32, 3]
         y = np.hstack((y_train, y_test))  # [60000]
@@ -101,12 +100,37 @@ class MyCIFAR10(Dataset):
             X: [C, W, H] (tensor)
             y: [] (tensor)
         """
-        return self.X[idx], self.y[idx]
+        image, target = self.X[idx], self.y[idx]
+        return image, target
 
 
-class MakeDataLoaders():
+class MyAugmentedCIFAR10(MyCIFAR10):
+    def __init__(self, opts):
+        from torchvision.transforms import v2
+        super().__init__(opts, crop=False)
+            
+        self.augmentation_pipeline = v2.Compose([
+            v2.RandomHorizontalFlip(p=0.5),
+            v2.RandomCrop(size=32, padding=4),
+        ])
+
+    def __getitem__(self, idx):
+        return self.augmentation_pipeline(self.X[idx]), self.y[idx]
+
+
+class MakeDataLoaders:
+    """
+    Create train, val, test data loaders
+
+    Args:
+        opts: SimpleNamespace object
+        data: Dataset object, i.e. the full dataset
+    """
+
     def __init__(self, opts, data):
         generator = torch.Generator().manual_seed(opts.seed)
+        # 1) Split data into train, val and test
+        # train, train_full, val and test are Dataset objects
         train_full, test = random_split(
             data, lengths=[1-opts.test_size, opts.test_size],
             generator=generator
@@ -116,6 +140,7 @@ class MakeDataLoaders():
             generator=generator
         )
 
+        # 2) Create data loaders
         def seed_worker(worker_id):
             worker_seed = torch.initial_seed() % 2**32
             np.random.seed(worker_seed)
@@ -161,14 +186,19 @@ def main_mnist(opts):
 
 
 def main_cifar10(opts):
-    data = MyCIFAR10(opts)
-    print(f"Dataset size: X={data.X.shape}, y={data.y.shape}")
-    print(f"Mean: {data.mean}, Std: {data.std}")
-    cifar10 = MakeDataLoaders(opts, data)
-    train_loader = cifar10.train_loader
+    base_cifar10 = MyCIFAR10(opts)
+    print(f"Dataset size: X={base_cifar10.X.shape}, y={base_cifar10.y.shape}")
+    print(f"Mean: {base_cifar10.mean}, Std: {base_cifar10.std}")
+    cifar10_loaders = MakeDataLoaders(opts, base_cifar10)
+    train_loader = cifar10_loaders.train_loader
+
+    augmented_cifar10 = MyAugmentedCIFAR10(opts)
+    augmented_cifar10_loaders = MakeDataLoaders(opts, augmented_cifar10)
+    train_loader_augmented = augmented_cifar10_loaders.train_loader
 
     # Check data
     X, y = next(iter(train_loader))
+    X_aug, y_aug = next(iter(train_loader_augmented))
     print("Data shape:", f"X={X.shape}", f"y={y.shape}")
 
     # Print first batch
@@ -181,17 +211,24 @@ def main_cifar10(opts):
     plt.axis("off")
     plt.savefig("plots/cifar10.png")
 
+    grid = make_grid(X_aug, nrow=8, padding=2, normalize=True)
+    plt.imshow(grid.permute(1, 2, 0))
+    plt.axis("off")
+    plt.savefig("plots/cifar10_augmented.png")
+
 
 if __name__ == "__main__":
     from ipdb import launch_ipdb_on_exception
     from types import SimpleNamespace
+    from utils import set_seeds
 
     config = dict(seed=42, test_size=0.2, val_size=0.1,
                   batch_size=64, num_workers=2)
     opts = SimpleNamespace(**config)
+    set_seeds(opts.seed)
 
     with launch_ipdb_on_exception():
-        print("MNIST")
-        main_mnist(opts)
+        # print("MNIST")
+        # main_mnist(opts)
         print("\nCIFAR10")
         main_cifar10(opts)

@@ -47,11 +47,14 @@ def set_seeds(seed):
 
 
 def get_loaders(opts):
-    from mydata import MyMNIST, MyCIFAR10, MakeDataLoaders
+    from mydata import MyMNIST, MyCIFAR10, MyAugmentedCIFAR10, MakeDataLoaders
     if opts.dataset.lower() == "mnist":
         data = MyMNIST(opts)
     elif opts.dataset.lower() == "cifar10":
-        data = MyCIFAR10(opts)
+        if hasattr(opts, "augmentation") and opts.augmentation:
+            data = MyAugmentedCIFAR10(opts)
+        else:
+            data = MyCIFAR10(opts)
     else:
         raise ValueError(f"Unknown dataset: {opts.dataset}")
     loaders = MakeDataLoaders(opts, data)

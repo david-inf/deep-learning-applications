@@ -7,7 +7,8 @@ from comet_ml import start
 
 import torch
 
-from train import train_loop_distill, test
+from train import test
+from distill import train_loop_distill
 from utils import (LOG, update_yaml, set_seeds,
                    get_loaders, get_model)
 
@@ -32,36 +33,37 @@ def get_teacher(opts):
 
 
 def get_teacher_student(opts):
+    # opts.teacher and opts.student are dict object
     # Teacher must be loaded from a checkpoint
-    teacher_opts = SimpleNamespace(**opts.teacher)  # dict
+    teacher_opts = SimpleNamespace(**opts.teacher)
     teacher = get_teacher(teacher_opts)
 
     # Student must be initialized
-    student_opts = SimpleNamespace(**opts.student)  # dict
+    student_opts = SimpleNamespace(**opts.student)
     student = get_model(student_opts)
 
     return student, teacher
 
 
-def main(opts):
-    # Seed and Loaders
+def main(opts, experiment):
+    # Seed
     set_seeds(opts.seed)
+    # Data loaders
     train_loader, val_loader, test_loader = get_loaders(opts)
     # Teacher & Student
-    teacher, student = get_teacher_student(opts)
-    print(teacher)
-    print(student)
-
+    student, teacher = get_teacher_student(opts)
     # Training
-    # with experiment.train():
-    LOG.info(f"Running {opts.experiment_name}")
-    train_loop_distill(opts, teacher, student, train_loader, val_loader)
-
+    s_opts = SimpleNamespace(**opts.student)
+    ckp = s_opts.resume_checkpoint if hasattr(s_opts, "resume_checkpoint") else None
+    with experiment.train():
+        LOG.info(f"Running {opts.experiment_name}")
+        train_loop_distill(opts, teacher, student, train_loader,
+                           val_loader, experiment, ckp)
     # Testing
-    # with experiment.test():
-    test_acc = test(opts, student, test_loader)
-    LOG.info(f"Test accuracy: {100.*test_acc:.1f}%")
-    # experiment.log_metrics({"acc": test_acc})
+    with experiment.test():
+        _, test_acc = test(opts, student, test_loader)
+        experiment.log_metrics({"acc": test_acc})
+        LOG.info(f"Test accuracy: {100.*test_acc:.1f}%")
 
 
 if __name__ == "__main__":
@@ -70,4 +72,20 @@ if __name__ == "__main__":
     opts = cmd_args.parse_args()
 
     with launch_ipdb_on_exception():
-        main(opts)
+        # try resuming an experiment if experiment_key is provided
+        # otherwise start a new experiment
+        if not opts.experiment_key:
+            experiment = start(project_name=opts.comet_project)
+            experiment.set_name(opts.experiment_name)
+            # Update with experiment key for resuming
+            update_yaml(opts, "experiment_key", experiment.get_key())
+            LOG.info("Added experiment key for resuming")
+        else:
+            # Resume using provided experiment key and checkpoint
+            # the key is set above
+            # the checkpoint is set with save_checkpoint in train_loop()
+            experiment = start(project_name=opts.comet_project,
+                               mode="get", experiment_key=opts.experiment_key,)
+        main(opts, experiment)
+        experiment.log_parameters(vars(opts))
+        experiment.end()
