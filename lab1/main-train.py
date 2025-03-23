@@ -20,10 +20,11 @@ def main(opts, experiment):
     # Model
     model = get_model(opts)
     # Training
+    ckp = opts.resume_checkpoint if hasattr(opts, "resume_checkpoint") else None
     with experiment.train():
         LOG.info(f"Running {opts.experiment_name}")
         train_loop(opts, model, train_loader, val_loader,
-                   experiment, opts.resume_checkpoint)
+                   experiment, ckp)
     # Testing
     with experiment.test():
         _, test_acc = test(opts, model, test_loader)

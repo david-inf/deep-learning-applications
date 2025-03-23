@@ -47,9 +47,9 @@ class BasicBlock(nn.Module):
 
         self.conv1 = conv3x3(in_channels, out_channels, stride=stride)
         self.bn1 = nn.BatchNorm2d(out_channels)
-        self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(out_channels, out_channels, stride=1)
         self.bn2 = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
 
         if stride != 1 or in_channels != out_channels:
             self.shortcut = Shortcut(in_channels, out_channels, stride)
@@ -70,7 +70,8 @@ class BasicBlock(nn.Module):
 class CNN(nn.Module):
     def __init__(self, in_channels, n_blocks=1, num_filters=16, num_classes=10, skip=False):
         super().__init__()
-        # Adapt channels
+        self.num_filters = num_filters
+
         self.input_adapter = nn.Sequential(
             conv3x3(in_channels, num_filters, stride=2, padding=1),
             nn.BatchNorm2d(num_filters),
@@ -87,6 +88,8 @@ class CNN(nn.Module):
             stride = 2 if i == 0 else 1
             # TODO: add another intermediate downsampling?
             # stride = 2 if i % 3 == 0 else 1
+            # TODO: in ResNet we just stack more of this layers
+            # with fixed num_filters
             blocks.append(BasicBlock(channels[i], channels[i+1],
                                      stride=stride, skip=skip))
         self.blocks = nn.Sequential(*blocks)
@@ -110,6 +113,53 @@ class CNN(nn.Module):
         return x
 
 
+class ResNet(nn.Module):
+    """
+    Total layers: 6*num_blocks + 2
+    - First layer as input adapter
+    - Sequence of 3 layers: num_blocks * BasicBlock (2 conv layers)
+    - Classifier linear layer
+    """
+
+    def __init__(self, in_channels=3, num_filters=16, num_blocks=1, skip=False, num_classes=10):
+        super().__init__()
+        self.in_filters = num_filters
+        self.skip = skip
+
+        self.input_adapter = nn.Sequential(
+            conv3x3(in_channels, num_filters, stride=1, padding=1),
+            nn.BatchNorm2d(num_filters),
+            nn.ReLU(inplace=True),
+        )
+
+        self.layer1 = self._make_layer(num_filters*1, num_blocks, stride=2)
+        self.layer2 = self._make_layer(num_filters*2, num_blocks, stride=2)
+        # self.layer3 = self._make_layer(num_filters*4, num_blocks, stride=2)
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.flatten = nn.Flatten()
+        self.classifier = nn.Linear(num_filters*2, num_classes)
+
+    def _make_layer(self, out_filters, num_blocks, stride):
+        strides = [stride] + [1]*(num_blocks-1)
+        layers = []
+        for stride in strides:
+            layers.append(BasicBlock(self.in_filters, out_filters,
+                                     stride, self.skip))
+            self.in_filters = out_filters
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.input_adapter(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        # x = self.layer3(x)
+        x = self.avgpool(x)
+        x = self.flatten(x)
+        x = self.classifier(x)
+        return x
+
+
 def build_cnn(opts):
     if opts.dataset.lower() == "mnist":
         in_channels = 1
@@ -118,11 +168,13 @@ def build_cnn(opts):
         in_channels = 3
         input_data = torch.randn(128, 3, 28, 28)
 
-    n_blocks = opts.n_blocks if hasattr(opts, "n_blocks") else 1
-    num_filters = opts.num_filters if hasattr(opts, "num_filters") else 32
+    num_blocks = opts.num_blocks if hasattr(opts, "num_blocks") else 1
+    num_filters = opts.num_filters if hasattr(opts, "num_filters") else 16
     skip = opts.skip if hasattr(opts, "skip") else False
-    model = CNN(in_channels, n_blocks=n_blocks,
-                num_filters=num_filters, skip=skip)
+
+    # model = CNN(in_channels, n_blocks=n_blocks,
+    #             num_filters=num_filters, skip=skip)
+    model = ResNet(in_channels, num_filters, num_blocks, skip)
 
     return model, input_data
 
@@ -132,9 +184,9 @@ def parse_args():
     parser = argparse.ArgumentParser(description="CNN model")
     parser.add_argument("--dataset", type=str, default="CIFAR10",
                         help="Dataset to use for training")
-    parser.add_argument("--n_blocks", type=int, default=1,
+    parser.add_argument("--num_blocks", type=int, default=1,
                         help="Number of residual blocks")
-    parser.add_argument("--num_filters", type=int, default=8,
+    parser.add_argument("--num_filters", type=int, default=16,
                         help="Number of filters in each block")
     parser.add_argument("--skip", action="store_true",
                         help="Add skip connections")
@@ -147,4 +199,5 @@ if __name__ == "__main__":
     model, input_data = build_cnn(opts)
     # Count parameters
     model_stats = summary(model, verbose=0)
+    print(f"Total layers: {6*opts.num_blocks+2}")
     print(f"Params: {model_stats.total_params/1e6:.2f}M")

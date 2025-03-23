@@ -13,7 +13,7 @@ from utils import LOG, N
 from train import Trainer, test, load_checkpoint, save_checkpoint
 
 
-def train_loop_distill(opts, teacher, student, train_loader, val_loader, experiment=None, resume_from=None):
+def train_loop_distill(opts, teacher, student, train_loader, val_loader, experiment, resume_from=None):
     """
     Training loop for distillation
 
@@ -23,8 +23,10 @@ def train_loop_distill(opts, teacher, student, train_loader, val_loader, experim
         Student : torch.nn.Module
             student model to be distilled
     """
-    ce_loss = nn.CrossEntropyLoss()
+    # loss for soft targets
     kl_div = nn.KLDivLoss(log_target=True, reduction="batchmean")
+    # loss for hard targets
+    ce_loss = nn.CrossEntropyLoss()
     optimizer = optim.SGD(student.parameters(), lr=opts.learning_rate,
                           momentum=opts.momentum, weight_decay=opts.weight_decay)
     scheduler = ExponentialLR(optimizer, gamma=opts.lr_decay)

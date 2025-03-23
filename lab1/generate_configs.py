@@ -39,8 +39,7 @@ def gen_configs(new_params):
     else:
         output_dir = os.path.join("experiments", base_config["model_name"])
         os.makedirs(output_dir, exist_ok=True)
-        _prefix = base_config["model_name"] + ("skip" if base_config["skip"]
-                                               else "")
+        _prefix = base_config["model_name"] #+ ("skip" if base_config["skip"] else "")
         _params = count_params(base_config)
         _prefix += _params
     base_config["experiment_name"] = f"{_prefix}_{_dataset}"
@@ -58,86 +57,70 @@ def gen_configs(new_params):
 
 if __name__ == "__main__":
     configs = [  # list of params (dict)
-        # {"model_name": "MLP", "dataset": "MNIST", "skip": False,
-        #  "n_blocks": 2, "hidden_size": 512, },
-        # {"model_name": "MLP", "dataset": "MNIST", "skip": True,
-        #  "n_blocks": 2, "hidden_size": 512, },
-
         # # MLP Tiny
-        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": False,
-        #  "n_blocks": 1, "hidden_size": 32, },
-        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": True,
-        #  "n_blocks": 1, "hidden_size": 32, },
-        # # MLP Small
-        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": False,
-        #  "n_blocks": 1, "hidden_size": 128, },
-        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": True,
-        #  "n_blocks": 1, "hidden_size": 128, },
+        # {"model_name": "MLP", "dataset": "MNIST",
+        #  "layers": [64], "weight_decay": 0.},
         # # MLP Large
-        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": False,
-        #  "n_blocks": 4, "hidden_size": 256, },
-        # {"model_name": "MLP", "dataset": "CIFAR10", "skip": True,
-        #  "n_blocks": 4, "hidden_size": 256, },
+        # {"model_name": "MLP", "dataset": "MNIST",
+        #  "layers": [1024,512,128]},
 
-        # {"model_name": "CNN", "dataset": "MNIST", "skip": False,
-        #  "num_filters": 32, "n_blocks": 4, },
-        # {"model_name": "CNN", "dataset": "MNIST", "skip": True,
-        #  "num_filters": 32, "n_blocks": 4, },
+        ## **** ##
 
-        # # CNN Little - 0.00M
+        {"dataset": "MNIST", "model_name": "Distill",
+         "teacher": {
+             "model_name": "MLP",
+             "dataset": "MNIST",
+             "layers": [1024,512,128],
+             "ckp": "checkpoints/MLP/e_020_MLP1.40M_mnist.pt",
+             "device": "cuda",
+         },
+         "student": {
+             "model_name": "MLP",
+             "dataset": "MNIST",
+             "layers": [64],
+             "device": "cuda",
+         },
+         "weight_decay": 0.,
+         "learning_rate": 0.001
+        }
+
+        # # CNN Tiny - 0.02M - For distillation
         # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-        #  "num_filters": 8, "n_blocks": 1, "size_type": "little"},
-        # # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
-        # #  "num_filters": 8, "n_blocks": 1, "size_type": "little"},
-        # # CNN Tiny - 0.02M
+        #  "num_filters": 16, "num_blocks": 1, "size_type": "tiny"},
+        # # CNN Small - 0.07M
         # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-        #  "num_filters": 8, "n_blocks": 2, "size_type": "tiny"},
-        # # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
-        # #  "num_filters": 8, "n_blocks": 2, "size_type": "tiny"},
-        # # CNN Medium - 0.08M - For distillation
+        #  "num_filters": 16, "num_blocks": 3, "size_type": "small"},
+        # # CNN Medium - 0.11M
         # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-        #  "num_filters": 8, "n_blocks": 3, "size_type": "medium"},
-        # # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
-        # #  "num_filters": 8, "n_blocks": 3, "size_type": "medium"},
-        # # CNN Large - 0.31M
+        #  "num_filters": 16, "num_blocks": 5, "size_type": "medium"},
+        # # CNN Large - 0.16M
         # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-        #  "num_filters": 8, "n_blocks": 4, "size_type": "large"},
-        # # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
-        # #  "num_filters": 8, "n_blocks": 4, "size_type": "large"},
-        # # CNN Big - 1.23M
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-        #  "num_filters": 8, "n_blocks": 5, "size_type": "big"},
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
-        #  "num_filters": 8, "n_blocks": 5, "size_type": "big"},
-        # # CNN Huge - 4.90M
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-        #  "num_filters": 8, "n_blocks": 6, "size_type": "huge", "augmentation": True,
-        #  "early_stopping": {"patience": 3, "threshold": 0.01}},
+        #  "num_filters": 16, "num_blocks": 7, "size_type": "large"},
         # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
         #  "num_filters": 8, "n_blocks": 6, "size_type": "huge", "augmentation": True,
         #  "early_stopping": {"patience": 3, "threshold": 0.01}},
 
         ## **** ##
 
-        {"dataset": "CIFAR10", "model_name": "Distill",
-         "teacher": {
-             "model_name": "CNN",
-             "dataset": "CIFAR10",
-             "num_filters": 8,
-             "n_blocks": 6,
-             "skip": True,
-             "ckp": "checkpoints/CNN/e_018_CNNskip4.90M_cifar10_best.pt",
-             "device": "cuda",
-         },
-         "student": {
-             "model_name": "CNN",
-             "dataset": "CIFAR10",
-             "num_filters": 8,
-             "n_blocks": 1,
-             "skip": False,
-             "device": "cuda",
-         }
-         }
+        # {"dataset": "CIFAR10", "model_name": "Distill",
+        #  "teacher": {
+        #      "model_name": "CNN",
+        #      "dataset": "CIFAR10",
+        #      "num_filters": 8,
+        #      "n_blocks": 6,
+        #      "skip": True,
+        #      "ckp": "checkpoints/CNN/e_018_CNNskip4.90M_cifar10_best.pt",
+        #      "device": "cuda",
+        #  },
+        #  "student": {
+        #      "model_name": "CNN",
+        #      "dataset": "CIFAR10",
+        #      "num_filters": 8,
+        #      "n_blocks": 1,
+        #      "skip": False,
+        #      "device": "cuda",
+        #  }
+        #  }
     ]
 
     import yaml

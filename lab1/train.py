@@ -103,7 +103,7 @@ def save_checkpoint(trainer: Trainer, opts, fname=None):
     if not fname:
         fname = f"e_{info["epoch"]:03d}_{opts.experiment_name}.pt"
     output_dir = os.path.join(opts.checkpoint_dir, fname)
-    torch.save(info, fname)
+    torch.save(info, output_dir)
     # Update yaml file with checkpoint name
     update_yaml(opts, "resume_checkpoint", output_dir)
     LOG.info(f"Saved checkpoint {fname} at epoch {info["epoch"]}, "
@@ -146,7 +146,7 @@ class EarlyStopping:
             self.counter = 0
 
 
-def train_loop(opts, model, train_loader, val_loader, experiment, resume_from=None):
+def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
     """
     Training loop with resuming routine. This accounts for training
     ended before the number of epochs is reached or when one wants
