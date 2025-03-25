@@ -5,7 +5,8 @@ import numpy as np
 import torch
 from torchvision import datasets
 import torchvision.transforms as transforms
-from torch.utils.data import Dataset, DataLoader
+from torchvision.transforms import v2
+from torch.utils.data import Dataset
 from utils import set_seeds
 
 
@@ -41,6 +42,18 @@ class MyMNIST(Dataset):
         """
         image, target = self.X[idx], self.y[idx]
         return image, target
+
+
+class MyAugmentedMNIST(MyMNIST):
+    def __init__(self, opts):
+        super().__init__(opts, train=True)
+        self.augmentation_pipeline = v2.Compose([
+            v2.RandomAffine(degrees=15, translate=(
+                0.1, 0.1), scale=(0.9, 1.1)),
+        ])
+
+    def __getitem__(self, idx):
+        return self.augmentation_pipeline(self.X[idx]), self.y[idx]
 
 
 class MyCIFAR10(Dataset):
@@ -81,9 +94,7 @@ class MyCIFAR10(Dataset):
 
 class MyAugmentedCIFAR10(MyCIFAR10):
     def __init__(self, opts):
-        from torchvision.transforms import v2
         super().__init__(opts, crop=False, train=True)
-
         self.augmentation_pipeline = v2.Compose([
             v2.RandomHorizontalFlip(p=0.5),
             v2.RandomCrop(size=32, padding=4),
@@ -106,7 +117,7 @@ class MakeDataLoaders:
     """
 
     def __init__(self, opts, traindata, valdata, testdata):
-        from torch.utils.data import SubsetRandomSampler
+        from torch.utils.data import DataLoader, SubsetRandomSampler
         set_seeds(opts.seed)
         generator = torch.Generator().manual_seed(opts.seed)
         # 1) Dataset objects for train, val and test
@@ -122,8 +133,8 @@ class MakeDataLoaders:
         train_idx, val_idx = indices[split:], indices[:split]
 
         # TODO: consider weighted sampling
-        train_sampler = SubsetRandomSampler(train_idx)
-        val_sampler = SubsetRandomSampler(val_idx)
+        train_sampler = SubsetRandomSampler(train_idx, generator=generator)
+        val_sampler = SubsetRandomSampler(val_idx, generator=generator)
 
         # 3) Data loaders
         def seed_worker(worker_id):
@@ -172,13 +183,14 @@ def main_mnist(opts):
     print()
 
     # Custom datasets
-    trainset = MyMNIST(opts)
+    trainset_original = MyMNIST(opts)
+    trainset_augmented = MyAugmentedMNIST(opts)
     valset = MyMNIST(opts)
     testset = MyMNIST(opts, train=False)
 
     # Check dataset statistics channel-wise
-    X = torch.cat((trainset.X, testset.X))
-    y = torch.cat((trainset.y, testset.y))
+    X = torch.cat((trainset_original.X, testset.X))
+    y = torch.cat((trainset_original.y, testset.y))
     mean = torch.mean(X, dim=(0, 2, 3))  # original data mean
     std = torch.std(X, dim=(0, 2, 3))  # original data std
     print("MNIST custom datasets")
@@ -186,22 +198,30 @@ def main_mnist(opts):
     print(f"Mean: {mean}, Std: {std}")
 
     # Data loaders
-    mnist = MakeDataLoaders(opts, trainset, valset, testset)
-    train_loader = mnist.train_loader
+    mnist_original = MakeDataLoaders(opts, trainset_original, valset, testset)
+    mnist_augmented = MakeDataLoaders(opts, trainset_augmented, valset, testset)
+    train_loader = mnist_original.train_loader
+    train_loader_aug = mnist_augmented.train_loader
 
     # Check first batch
-    X, y = next(iter(train_loader))
-    print("Data shape:", f"X={X.shape}", f"y={y.shape}")
+    X_orig, y_orig = next(iter(train_loader))
+    X_aug, y_aug = next(iter(train_loader_aug))
+    print("Data shape:", f"X={X_orig.shape}", f"y={y_orig.shape}")
 
     # Print first batch
     import os
     os.makedirs("plots", exist_ok=True)
     import matplotlib.pyplot as plt
     from torchvision.utils import make_grid
-    grid = make_grid(X, nrow=8, padding=2, normalize=True)
+    grid = make_grid(X_orig, nrow=8, padding=2, normalize=True)
     plt.imshow(grid.permute(1, 2, 0))
     plt.axis("off")
     plt.savefig("plots/mnist.png")
+
+    grid = make_grid(X_aug, nrow=8, padding=2, normalize=True)
+    plt.imshow(grid.permute(1, 2, 0))
+    plt.axis("off")
+    plt.savefig("plots/mnist_augmented.png")
 
 
 def main_cifar10(opts):
@@ -279,7 +299,7 @@ if __name__ == "__main__":
     from ipdb import launch_ipdb_on_exception
     from types import SimpleNamespace
 
-    config = dict(seed=42, test_size=0.2, val_size=0.1,
+    config = dict(seed=42, val_size=0.1,
                   batch_size=64, num_workers=2)
     opts = SimpleNamespace(**config)
     set_seeds(opts.seed)

@@ -43,15 +43,15 @@ When running a program you should see
 
 </details>
 
-### Exercise 1
+### Exercise 1 - Skip connections
 
-Reproducing on a small scale the results from the ResNet paper, using MNIST and CIFAR10 datasets, an MLP and a CNN.
+Reproducing on a small scale the results from the ResNet paper using CIFAR10 dataset.
 
 > Deep Residual Learning for Image Recognition, Kaiming He and Xiangyu Zhang and Shaoqing Ren and Jian Sun, 2015. [https://arxiv.org/abs/1512.03385].
 
 > Deeper networks, i.e. more stacked layers, do not guarantee more reduction in training loss
 
-So the point of this exercise is to abstract a model definition so that one can add a given number of layers (blocks), and then see how the performance are affected
+So the point of this exercise is to abstract a model definition so that one can add a given number of layers (blocks), and then see how the performance are affected. The idea is to reproduce Figure 6 from the paper.
 
 <details>
 <summary>MLP</summary>
@@ -60,8 +60,6 @@ MLP with variable number of blocks `n_blocks`:
 - `BasicBlock`: 2 fully connected layers with given `hidden_size` and relu
 - Optional skip connection in each block by setting `skip=True`
 
-Models:
-
 </details>
 
 <details>
@@ -69,42 +67,58 @@ Models:
 
 - `input_adapter`: conv + batchnorm + relu that exits with `num_filters`
 - `blocks`: sequence of `BasicBlock` layers
-  - Each one contains two modules of conv + batchnorm + relu
+  - Each `BasicBlock` contains two modules of conv + batchnorm + relu
+  - In this version there are two upper level layers, each one with $n$ `BasicBlock`, in the default version $n=1$
   - Optional shortcut in each block by setting `skip=True`
 - `avgpool`: ends with a (1, 1) feature map
 - `fc`: classification head
 
-Models:
+This results in $4n+2$ layers, where $n$ is the variable specifying the number of blocks per each layer. In the implementation $n$ is specified through the `num_blocks`parameter.
 
 </details>
 
+Name | $n$ | Filters | Layers | Test acc
+---- | --- | ------- | ------- | --------
+`Tiny 0.02M` | 1 | 16 | 6 | 0.6737
+`Small 0.07M` | 3 | 16 | 14 | 0.6646
+`Medium 0.11M` | 5 | 16 | 22 | 0.5999
+`Medium w/ skip 0.11M` | 5 | 16 | 22 | 0.7393
+`Large 0.16M` | 7 | 16 | 30 | 0.5095
+`Large w/ skip 0.16M` | 7 | 16 | 30 | 0.7505
+
 **Description** | **Results**
 --------------- | -----------
-description | plot
+See the degradation problem for increasing depth of the network, tiny and medium have similar performance, but when adding further layers we see that "adding more layers reduces loss" holds no more. Skip connections, residual learning, solve the problem. | ![](lab1/plots/train/curves.svg)
+Test accuracy provides evidence as well | ![](lab1/plots/train/test_acc.svg)
 
-### Exercise 2
 
-<details>
-<summary>Distillation</summary>
+### Exercise 2 - Knowledge Distillation
 
-Reproducing on a small scale the results from the distillation paper, using MNIST and CIFAR10 datasets, an MLP and a CNN.
+Reproducing on a small scale the results from the distillation paper using CIFAR10 dataset.
 
 > Distilling the Knowledge in a Neural Network, Geoffrey Hinton, Oriol Vinyals, Jeff Dean. [https://arxiv.org/abs/1503.02531].
 
-For a given $x$ the frozen teacher and trainable students both produce logits, the idea is to align the student's output with the teachers' one
-
-Teacher:
-- Flagship MLP: 
-- Flagship CNN: 
-Student:
-- Tiny MLP: 
-- Tiny: CNN: 
+<details>
+<summary>Learning algorithm</summary>
+For a given $x$ the frozen teacher and the trainable students both produce logits, the idea is to align the student's output with the teachers' one.
 
 Loss:
-- Soft targets loss: `KLDivLoss(log_target=True)(soft_prob, soft_targets)`
-- Hard targets loss: `CrossEntropyLoss()(student_logits, labels)`
+- Soft targets loss $\mathcal{L}_1$: `KLDivLoss(log_target=True)(soft_prob, soft_targets)`
+- Hard targets loss $\mathcal{L}_2$: `CrossEntropyLoss()(student_logits, labels)`
+- Final loss: $\mathcal{L}=w_1\mathcal{L}_1+w_2\mathcal{L}_2$ with $w_1\gg w_2$
+
+As the teacher model we use the actual `ResNet` architecture with 3 blocks of `BasicBlock` layers resulting in $3n+2$ total layers
+
 </details>
+
+Name | $n$ | Filters | Layers | Test acc
+---- | --- | ------- | ------ | --------
+`Small 0.07M` | 3 | 16 | 14 | 0.6646
+`ResNet 1.86M` | 5 | 32 | 17 | 0.8242
+`Distilled Small 0.07M` | 3 | 16 | 14 | 0.7137
 
 **Description** | **Results**
 --------------- | -----------
-description | plot
+The distilled model is able to achieve a higher train accuracy earlier. | ![](lab1/plots/distill/distill_curves.svg)
+Similar performance most of the time, however the distilled model stays on top of the base one | ![](lab1/plots/distill/distill_val_acc.svg)
+Goal achieved! The small model trained with distillation has better performance than the same trained in the classical way | ![](lab1/plots/distill/distill_test_acc.svg)

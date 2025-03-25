@@ -7,8 +7,7 @@ dataset: MNIST
 seed: 42
 device: cuda
 
-test_size: 0.2  # train-test split
-val_size: 0.1
+val_size: 0.1  # train-val split
 batch_size: 128
 num_workers: 2
 
@@ -18,7 +17,7 @@ weight_decay: 0.0005
 lr_decay: 0.95  # exponential decay at each epoch
 
 log_every: 20  # compute metrics and log to comet_ml after ... batches
-batch_window: 50  # use the previous ... batches to compute the metrics
+# batch_window: 50  # use the previous ... batches to compute the metrics
 
 checkpoint_every: null  # save the model every ... epochs
 
@@ -28,7 +27,7 @@ experiment_key: null
 
 resume_checkpoint: null
 model_name: MLP
-num_epochs: 20
+num_epochs: 10
 
 # when resuming make sure about to update:
 # num_epochs

@@ -13,15 +13,15 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument("--config", help="YAML configuration file")
 
-parser.add_argument("--epochs", default=20, type=int,
+parser.add_argument("--epochs", default=10, type=int,
                     help="Number of epochs, increase when resuming")
 parser.add_argument("--ckping", type=int, default=None,
                     help="Specify checkpointing frequency with epochs")
 
-parser.add_argument("--logging", type=int, default=40,
+parser.add_argument("--log_every", type=int, default=20,
                     help="Metrics logging frequency in batches")
-parser.add_argument("--window", type=int, default=60,
-                    help="Number of previous batches when computing metrics")
+# parser.add_argument("--window", type=int, default=60,
+#                     help="Number of previous batches when computing metrics")
 
 
 def update_opts(opts, args):
@@ -39,7 +39,7 @@ def update_opts(opts, args):
         opts.num_epochs = args.epochs
         LOG.info(f"Updated number of epochs to {opts.num_epochs} from {prev}")
     else:
-        LOG.info(f"Training to {opts.num_epochs} epochs")
+        LOG.info(f"Training for {opts.num_epochs} epochs")
 
     # Model checkpointing
     if args.ckping:

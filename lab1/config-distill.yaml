@@ -2,13 +2,12 @@ dataset: MNIST
 seed: 42
 device: cuda
 
-test_size: 0.2  # train-test split
 val_size: 0.1
 batch_size: 128
 num_workers: 2
 
 log_every: 20  # compute metrics and log to comet_ml after ... batches
-batch_window: 50  # use the previous ... batches to compute the metrics
+# batch_window: 50  # use the previous ... batches to compute the metrics
 
 checkpoint_every: null  # save the model every ... epochs
 
@@ -42,5 +41,5 @@ weight_decay: 0.0005
 lr_decay: 0.95
 
 temp: 5.0  # scaling student and teacher logits
-w1: 100.0  # weight for soft targets loss
+w1: 10.0  # weight for soft targets loss
 w2: 0.5  # weight for hard targets loss

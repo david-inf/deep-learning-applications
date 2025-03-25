@@ -47,6 +47,7 @@ def test(opts, model, loader):
     with torch.no_grad():
         for (X, y) in loader:
 
+            # Get data and forward pass
             X, y = X.to(opts.device), y.to(opts.device)
             out = model(X)  # logits: [N, K]
             # Compute loss
@@ -87,14 +88,10 @@ class Trainer:
         Return a dictionary representation of the training state
         that will be used for checkpointing
         """
-        return {
-            "model_state_dict": self.model,
-            "optimizer_state_dict": self.optimizer,
-            "scheduler_state_dict": self.scheduler,
-            "epoch": self.epoch,
-            "step": self.step,
-            "runtime": self.runtime,
-        }
+        return {"model_state_dict": self.model,
+                "optimizer_state_dict": self.optimizer,
+                "scheduler_state_dict": self.scheduler, "epoch": self.epoch,
+                "step": self.step, "runtime": self.runtime, }
 
 
 def save_checkpoint(trainer: Trainer, opts, fname=None):
@@ -205,12 +202,14 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
         # Check for early stopping after each epoch
         if hasattr(opts, "early_stopping"):
             estop_runtime = prev_runtime + time.time() - start_time
-            trainer.update(model, optimizer, scheduler, epoch, step, estop_runtime)
+            trainer.update(model, optimizer, scheduler,
+                           epoch, step, estop_runtime)
             early_stopping(val_acc, trainer)  # use last computed val_acc
             if early_stopping.early_stop:
-                LOG.info(f"Early stopping at epoch {epoch}, step {step}, saving checkpoint...")
                 fname = f"e_{epoch:03d}_{opts.experiment_name}_best.pt"
                 save_checkpoint(early_stopping.best_trainer, opts, fname)
+                LOG.info(f"Early stopping at epoch {epoch}, "
+                         f"step {step}, checkpoint {fname}")
                 break
 
     # add this run duration to the previous one
@@ -218,6 +217,7 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
     LOG.info(f"Training completed in {runtime:.2f}s, "
              f"ended at epoch {epoch}, step {step}")
     prev_runtime += runtime
+    LOG.info(f"Total runtime: {prev_runtime:.2f}s")
     experiment.log_metric("runtime", prev_runtime)
 
 
@@ -245,19 +245,15 @@ def train_epoch(opts, model, val_loader, experiment, criterion, optimizer, step,
 
         if batch_idx % opts.log_every == 0:
             # Compute training metrics and log to comet_ml
-            train_loss = np.mean(losses[-opts.batch_window:])
-            train_acc = np.mean(accs[-opts.batch_window:])
-            experiment.log_metrics({
-                "loss": train_loss,
-                "acc": train_acc,
-            }, step=step)
+            train_loss = np.mean(losses)  # [-opts.batch_window:])
+            train_acc = np.mean(accs)  # [-opts.batch_window:])
+            experiment.log_metrics(
+                {"loss": train_loss, "acc": train_acc}, step=step)
             # Compute validation metrics and log to comet_ml
             with experiment.validate():
                 val_loss, val_acc = test(opts, model, val_loader)
-                experiment.log_metrics({
-                    "loss": val_loss,
-                    "acc": val_acc,
-                }, step=step)
+                experiment.log_metrics(
+                    {"loss": val_loss, "acc": val_acc}, step=step)
                 # Log to console
             tepoch.set_postfix(train_loss=train_loss, train_acc=train_acc,
                                val_loss=val_loss, val_acc=val_acc)

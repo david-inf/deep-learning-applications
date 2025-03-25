@@ -69,6 +69,7 @@ def train_loop_distill(opts, teacher, student, train_loader, val_loader, experim
     LOG.info(f"Training completed in {runtime:.2f}s, "
              f"ended at epoch {epoch}, step {step}")
     prev_runtime += runtime
+    LOG.info(f"Total runtime: {prev_runtime:.2f}s")
     experiment.log_metric("runtime", prev_runtime)
 
 
@@ -102,19 +103,15 @@ def train_epoch(opts, teacher, student, val_loader, experiment, ce_loss, kl_div,
 
         if batch_idx % opts.log_every == 0:
             # Compute training metrics and log to comet_ml
-            train_loss = np.mean(losses[-opts.batch_window:])
-            train_acc = np.mean(accs[-opts.batch_window:])
-            experiment.log_metrics({
-                "loss": train_loss,
-                "acc": train_acc,
-            }, step=step)
+            train_loss = np.mean(losses)  # [-opts.batch_window:])
+            train_acc = np.mean(accs)  # [-opts.batch_window:])
+            experiment.log_metrics(
+                {"loss": train_loss, "acc": train_acc}, step=step)
             # Compute validation metrics and log to comet_ml
             with experiment.validate():
                 val_loss, val_acc = test(opts, student, val_loader)
-                experiment.log_metrics({
-                    "loss": val_loss,
-                    "acc": val_acc,
-                }, step=step)
+                experiment.log_metrics(
+                    {"loss": val_loss, "acc": val_acc}, step=step)
                 # Log to console
             tepoch.set_postfix(train_loss=train_loss, train_acc=train_acc,
                                val_loss=val_loss, val_acc=val_acc)

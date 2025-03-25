@@ -15,6 +15,8 @@ def get_logger():
     )
     log = logging.getLogger("rich")
     return log
+
+
 LOG = get_logger()
 
 
@@ -47,10 +49,14 @@ def set_seeds(seed):
 
 
 def get_loaders(opts):
-    from mydata import MyMNIST, MyCIFAR10, MyAugmentedCIFAR10, MakeDataLoaders
+    from mydata import MyMNIST, MyAugmentedMNIST
+    from mydata import MyCIFAR10, MyAugmentedCIFAR10, MakeDataLoaders
 
     if opts.dataset.lower() == "mnist":
-        trainset = MyMNIST(opts)
+        if hasattr(opts, "augmentation") and opts.augmentation:
+            trainset = MyAugmentedMNIST(opts)
+        else:
+            trainset = MyMNIST(opts)
         valset = MyMNIST(opts)
         testset = MyMNIST(opts, train=False)
     elif opts.dataset.lower() == "cifar10":
@@ -71,19 +77,23 @@ def get_loaders(opts):
     return train_loader, val_loader, test_loader
 
 
-def get_model(opts):
+def get_model(opts, return_data=False):
     from models.mlp import build_mlp
     from models.cnn import build_cnn
 
     if opts.model_name == "MLP":
-        model, _ = build_mlp(opts)
-    elif opts.model_name == "CNN":
-        model, _ = build_cnn(opts)
+        model, input_data = build_mlp(opts)
+    elif opts.model_name in ("CNN", "ResNet"):
+        model, input_data = build_cnn(opts)
     else:
         raise ValueError(f"Unknown model: {opts.model_name}")
 
     model = model.to(opts.device)
-    return model
+
+    if return_data:
+        return model, input_data
+    else:
+        return model
 
 
 def visualize(model, model_name, input_data):

@@ -1,19 +1,20 @@
 """ Script for inspecting models """
 
 from models.mlp import build_mlp
-from models.cnn import build_cnn
-from utils import visualize
+from models.cnn import build_cnn, compute_flops
+from utils import visualize, get_model
 
 
 def main(opts):
-    if opts.model_name == "MLP":
-        model, input_data = build_mlp(opts)
-    elif opts.model_name == "CNN":
-        model, input_data = build_cnn(opts)
-    else:
-        raise ValueError(f"Unknown model {opts.model_name}")
+    print(opts.experiment_name)
+    model, input_data = get_model(opts, True)
+    input_data = input_data.to(opts.device)
 
     visualize(model, f"{opts.model_name} on {opts.dataset}", input_data)
+    print()
+    # total batches considering validation
+    batches = 1132 if opts.dataset == "CIFAR10" else 1362
+    compute_flops(model, input_data, opts.num_epochs, batches)
 
 if __name__ == "__main__":
     from ipdb import launch_ipdb_on_exception

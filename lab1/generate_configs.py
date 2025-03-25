@@ -59,68 +59,80 @@ if __name__ == "__main__":
     configs = [  # list of params (dict)
         # # MLP Tiny
         # {"model_name": "MLP", "dataset": "MNIST",
-        #  "layers": [64], "weight_decay": 0.},
+        #  "layers": [128, 128], "weight_decay": 0.},
         # # MLP Large
-        # {"model_name": "MLP", "dataset": "MNIST",
-        #  "layers": [1024,512,128]},
+        # {"model_name": "MLP", "dataset": "MNIST", "augmentation": True,
+        #  "layers": [1024,1024,512,128], "early_stopping": {"patience": 3, "threshold": 0.01}},
 
         ## **** ##
 
-        {"dataset": "MNIST", "model_name": "Distill",
-         "teacher": {
-             "model_name": "MLP",
-             "dataset": "MNIST",
-             "layers": [1024,512,128],
-             "ckp": "checkpoints/MLP/e_020_MLP1.40M_mnist.pt",
-             "device": "cuda",
-         },
-         "student": {
-             "model_name": "MLP",
-             "dataset": "MNIST",
-             "layers": [64],
-             "device": "cuda",
-         },
-         "weight_decay": 0.,
-         "learning_rate": 0.001
-        }
-
-        # # CNN Tiny - 0.02M - For distillation
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-        #  "num_filters": 16, "num_blocks": 1, "size_type": "tiny"},
-        # # CNN Small - 0.07M
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-        #  "num_filters": 16, "num_blocks": 3, "size_type": "small"},
-        # # CNN Medium - 0.11M
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-        #  "num_filters": 16, "num_blocks": 5, "size_type": "medium"},
-        # # CNN Large - 0.16M
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False,
-        #  "num_filters": 16, "num_blocks": 7, "size_type": "large"},
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True,
-        #  "num_filters": 8, "n_blocks": 6, "size_type": "huge", "augmentation": True,
-        #  "early_stopping": {"patience": 3, "threshold": 0.01}},
-
-        ## **** ##
-
-        # {"dataset": "CIFAR10", "model_name": "Distill",
+        # {"dataset": "MNIST", "model_name": "Distill",
         #  "teacher": {
-        #      "model_name": "CNN",
-        #      "dataset": "CIFAR10",
-        #      "num_filters": 8,
-        #      "n_blocks": 6,
-        #      "skip": True,
-        #      "ckp": "checkpoints/CNN/e_018_CNNskip4.90M_cifar10_best.pt",
+        #      "model_name": "MLP",
+        #      "dataset": "MNIST",
+        #      "layers": [1024,1024,512,128],
+        #      "ckp": "checkpoints/MLP/e_007_MLP2.45M_mnist_best.pt",
         #      "device": "cuda",
         #  },
         #  "student": {
-        #      "model_name": "CNN",
-        #      "dataset": "CIFAR10",
-        #      "num_filters": 8,
-        #      "n_blocks": 1,
-        #      "skip": False,
+        #      "model_name": "MLP",
+        #      "dataset": "MNIST",
+        #      "layers": [64],
         #      "device": "cuda",
-        #  }
-        #  }
+        #  },
+        #  "weight_decay": 0.,
+        #  "learning_rate": 0.01
+        # }
+
+        # # CNN Tiny - 0.02M - For distillation
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False, "augmentation": True,
+        # "num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
+        # "num_workers": 4, "num_filters": 16, "num_blocks": 1, "size_type": "tiny"},
+        # # CNN Small - 0.07M
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False, "augmentation": True,
+        # "num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
+        # "num_workers": 4, "num_filters": 16, "num_blocks": 3, "size_type": "small"},
+        # # CNN Medium - 0.11M
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False, "augmentation": True,
+        # "num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
+        # "num_workers": 4, "num_filters": 16, "num_blocks": 5, "size_type": "medium"},
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True, "augmentation": True,
+        # "num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
+        # "num_workers": 4, "num_filters": 16, "num_blocks": 5, "size_type": "medium"},
+        # # CNN Large - 0.16M
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False, "augmentation": True,
+        # "num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
+        # "num_workers": 4, "num_filters": 16, "num_blocks": 7, "size_type": "large"},
+        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True, "augmentation": True,
+        #  "Num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
+        #  "num_workers": 4, "num_filters": 16, "num_blocks": 7, "size_type": "large"},
+        # {"model_name": "ResNet", "dataset": "CIFAR10", "skip": True, "augmentation": True,
+        #  "num_epochs": 20, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
+        #  "num_workers": 4, "num_filters": 32, "num_blocks": 5, "size_type": "large",
+        #  "early_stopping": {"patience": 2, "threshold": 0.01}},
+
+        ## **** ##
+
+        {"dataset": "CIFAR10", "model_name": "Distill",
+         "teacher": {
+             "model_name": "ResNet",
+             "dataset": "CIFAR10",
+             "num_filters": 32,
+             "num_blocks": 5,
+             "skip": True,
+             "ckp": "checkpoints/ResNet/e_032_ResNet1.86M_cifar10_best.pt",
+             "device": "cuda",
+         },
+         "student": {
+             "model_name": "CNN",
+             "dataset": "CIFAR10",
+             "num_filters": 16,
+             "num_blocks": 3,
+             "skip": False,
+             "device": "cuda",
+         },
+          "weight_decay": 0., "learning_rate": 0.1, "lr_decay": 0.9,
+         }
     ]
 
     import yaml
