@@ -113,26 +113,26 @@ if __name__ == "__main__":
 
         ## **** ##
 
-        {"dataset": "CIFAR10", "model_name": "Distill",
-         "teacher": {
-             "model_name": "ResNet",
-             "dataset": "CIFAR10",
-             "num_filters": 32,
-             "num_blocks": 5,
-             "skip": True,
-             "ckp": "checkpoints/ResNet/e_032_ResNet1.86M_cifar10_best.pt",
-             "device": "cuda",
-         },
-         "student": {
-             "model_name": "CNN",
-             "dataset": "CIFAR10",
-             "num_filters": 16,
-             "num_blocks": 3,
-             "skip": False,
-             "device": "cuda",
-         },
-          "weight_decay": 0., "learning_rate": 0.1, "lr_decay": 0.9,
-         }
+        # {"dataset": "CIFAR10", "model_name": "Distill",
+        #  "teacher": {
+        #      "model_name": "ResNet",
+        #      "dataset": "CIFAR10",
+        #      "num_filters": 32,
+        #      "num_blocks": 5,
+        #      "skip": True,
+        #      "ckp": "checkpoints/ResNet/e_032_ResNet1.86M_cifar10_best.pt",
+        #      "device": "cuda",
+        #  },
+        #  "student": {
+        #      "model_name": "CNN",
+        #      "dataset": "CIFAR10",
+        #      "num_filters": 16,
+        #      "num_blocks": 3,
+        #      "skip": False,
+        #      "device": "cuda",
+        #  },
+        #   "weight_decay": 0., "learning_rate": 0.1, "lr_decay": 0.9,
+        #  }
     ]
 
     import yaml

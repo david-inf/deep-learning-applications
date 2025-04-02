@@ -41,9 +41,10 @@ def test(opts, model, loader):
     Evaluate model on test/validation set
     Loader can be either test_loader or val_loader
     """
+    losses = AverageMeter()
+    accs = AverageMeter()
     model.eval()
-    criterion = torch.nn.CrossEntropyLoss(reduction="none")
-    losses, correct = [], []
+    criterion = torch.nn.CrossEntropyLoss()  # scalar value
     with torch.no_grad():
         for (X, y) in loader:
 
@@ -51,17 +52,36 @@ def test(opts, model, loader):
             X, y = X.to(opts.device), y.to(opts.device)
             out = model(X)  # logits: [N, K]
             # Compute loss
-            loss = criterion(out, y)  # [N]
-            losses.extend(N(loss))
+            loss = criterion(out, y)
+            losses.update(N(loss), X.size(0))
             # Compute accuracy
             pred = N(torch.argmax(out, dim=1))  # array of ints, size [N]
             label = N(y)  # {0,...,9}, size [N]
-            c = list(pred == label)  # corrects [0,1,0,0,0,1,1...]
-            correct.extend(c)
+            acc = np.mean(list(pred == label))  # mean over [0,1,0,0,0,1,1...]
+            accs.update(acc, X.size(0))
 
-    loss = np.mean(losses)
-    acc = np.mean(correct)
-    return loss, acc
+    return losses.avg, accs.avg
+
+
+class AverageMeter:
+    """ Computes and stores the average and current value """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        # store metric statistics
+        self.val = 0  # value
+        self.sum = 0  # running sum
+        self.avg = 0  # running average
+        self.count = 0  # steps counter
+
+    def update(self, val, n=1):
+        # update statistic with given new value
+        self.val = val  # like loss
+        self.sum += val * n  # loss * batch_size
+        self.count += n  # count batch samples
+        self.avg = self.sum / self.count  # accounts for different sizes
 
 
 class Trainer:
@@ -183,12 +203,11 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
 
     for epoch in range(start_epoch, opts.num_epochs + 1):
         experiment.log_current_epoch(epoch)
-        losses, accs = [], []
         with tqdm(train_loader, unit="batch") as tepoch:
 
             step, val_acc = train_epoch(
                 opts, model, val_loader, experiment, criterion,
-                optimizer, step, epoch, losses, accs, tepoch)
+                optimizer, step, epoch, tepoch)
 
         scheduler.step()  # update learning rate at each epoch
 
@@ -221,8 +240,10 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
     experiment.log_metric("runtime", prev_runtime)
 
 
-def train_epoch(opts, model, val_loader, experiment, criterion, optimizer, step, epoch, losses, accs, tepoch):
+def train_epoch(opts, model, val_loader, experiment, criterion, optimizer, step, epoch, tepoch):
     for batch_idx, (X, y) in enumerate(tepoch):
+        losses = AverageMeter()
+        accs = AverageMeter()
         model.train()
         tepoch.set_description(f"{epoch:03d}")
 
@@ -238,15 +259,15 @@ def train_epoch(opts, model, val_loader, experiment, criterion, optimizer, step,
         loss.backward()   # backprop
         optimizer.step()  # update model
         # metrics
-        losses.append(N(loss))  # add loss for current batch
+        losses.update(N(loss), X.size(0))
         acc = np.mean(np.argmax(N(out), axis=1) == N(y))
-        accs.append(acc)  # add accuracy for current batch
+        accs.update(acc, X.size(0))
         # -----
 
         if batch_idx % opts.log_every == 0:
             # Compute training metrics and log to comet_ml
-            train_loss = np.mean(losses)  # [-opts.batch_window:])
-            train_acc = np.mean(accs)  # [-opts.batch_window:])
+            train_loss = losses.avg
+            train_acc = accs.avg
             experiment.log_metrics(
                 {"loss": train_loss, "acc": train_acc}, step=step)
             # Compute validation metrics and log to comet_ml
