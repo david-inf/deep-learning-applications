@@ -20,8 +20,6 @@ parser.add_argument("--ckping", type=int, default=None,
 
 parser.add_argument("--log_every", type=int, default=20,
                     help="Metrics logging frequency in batches")
-# parser.add_argument("--window", type=int, default=60,
-#                     help="Number of previous batches when computing metrics")
 
 
 def update_opts(opts, args):

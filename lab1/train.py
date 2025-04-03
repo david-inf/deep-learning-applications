@@ -36,6 +36,27 @@ def load_checkpoint(checkpoint_path: str, model, optimizer, scheduler):
     return epoch, step, runtime
 
 
+class AverageMeter:
+    """ Computes and stores the average and current value """
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        # store metric statistics
+        self.val = 0  # value
+        self.sum = 0  # running sum
+        self.avg = 0  # running average
+        self.count = 0  # steps counter
+
+    def update(self, val, n=1):
+        # update statistic with given new value
+        self.val = val  # like loss
+        self.sum += val * n  # loss * batch_size
+        self.count += n  # count batch samples
+        self.avg = self.sum / self.count  # accounts for different sizes
+
+
 def test(opts, model, loader):
     """
     Evaluate model on test/validation set
@@ -61,27 +82,6 @@ def test(opts, model, loader):
             accs.update(acc, X.size(0))
 
     return losses.avg, accs.avg
-
-
-class AverageMeter:
-    """ Computes and stores the average and current value """
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        # store metric statistics
-        self.val = 0  # value
-        self.sum = 0  # running sum
-        self.avg = 0  # running average
-        self.count = 0  # steps counter
-
-    def update(self, val, n=1):
-        # update statistic with given new value
-        self.val = val  # like loss
-        self.sum += val * n  # loss * batch_size
-        self.count += n  # count batch samples
-        self.avg = self.sum / self.count  # accounts for different sizes
 
 
 class Trainer:
@@ -173,9 +173,9 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
         opts: Configuration options for training.
         model: The model to be trained.
         train_loader: DataLoader for the training data.
-        val_loader: DataLoader for the validation data (optional).
-        experiment: Experiment object for logging (optional).
-        resume_from: Path to a checkpoint to resume training from (optional).
+        val_loader: DataLoader for the validation data.
+        experiment: Experiment object for logging.
+        resume_from: Path to a checkpoint to resume training from.
     """
     criterion = torch.nn.CrossEntropyLoss()  # expects logits and labels
     optimizer = optim.SGD(model.parameters(), lr=opts.learning_rate,
@@ -198,16 +198,15 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
     trainer = Trainer(model, optimizer, scheduler,
                       start_epoch, step, prev_runtime)
     # keeps the training objects and info from the best model
-    if hasattr(opts, "early_stopping"):
+    if hasattr(opts, "early_stopping") and opts.early_stopping:
         early_stopping = EarlyStopping(opts.early_stopping)
 
     for epoch in range(start_epoch, opts.num_epochs + 1):
         experiment.log_current_epoch(epoch)
-        with tqdm(train_loader, unit="batch") as tepoch:
 
-            step, val_acc = train_epoch(
-                opts, model, val_loader, experiment, criterion,
-                optimizer, step, epoch, tepoch)
+        step, val_acc = train_epoch(
+            opts, model, train_loader, val_loader, experiment, criterion,
+            optimizer, step, epoch)
 
         scheduler.step()  # update learning rate at each epoch
 
@@ -240,45 +239,46 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
     experiment.log_metric("runtime", prev_runtime)
 
 
-def train_epoch(opts, model, val_loader, experiment, criterion, optimizer, step, epoch, tepoch):
-    for batch_idx, (X, y) in enumerate(tepoch):
-        losses = AverageMeter()
-        accs = AverageMeter()
-        model.train()
-        tepoch.set_description(f"{epoch:03d}")
+def train_epoch(opts, model, train_loader, val_loader, experiment, criterion, optimizer, step, epoch, tepoch):
+    with tqdm(train_loader, unit="batch") as tepoch:
+        for batch_idx, (X, y) in enumerate(tepoch):
+            losses = AverageMeter()
+            accs = AverageMeter()
+            model.train()
+            tepoch.set_description(f"{epoch:03d}")
 
-        # -----
-        # move data to device
-        X = X.to(opts.device)  # [N, C, W, H]
-        y = y.to(opts.device)  # [N]
-        # forward pass
-        optimizer.zero_grad()
-        out = model(X)  # logits: [N, K]
-        loss = criterion(out, y)  # scalar value
-        # backward pass
-        loss.backward()   # backprop
-        optimizer.step()  # update model
-        # metrics
-        losses.update(N(loss), X.size(0))
-        acc = np.mean(np.argmax(N(out), axis=1) == N(y))
-        accs.update(acc, X.size(0))
-        # -----
+            # -----
+            # move data to device
+            X = X.to(opts.device)  # [N, C, W, H]
+            y = y.to(opts.device)  # [N]
+            # forward pass
+            optimizer.zero_grad()
+            out = model(X)  # logits: [N, K]
+            loss = criterion(out, y)  # scalar value
+            # backward pass
+            loss.backward()   # backprop
+            optimizer.step()  # update model
+            # metrics
+            losses.update(N(loss), X.size(0))
+            acc = np.mean(np.argmax(N(out), axis=1) == N(y))
+            accs.update(acc, X.size(0))
+            # -----
 
-        if batch_idx % opts.log_every == 0:
-            # Compute training metrics and log to comet_ml
-            train_loss = losses.avg
-            train_acc = accs.avg
-            experiment.log_metrics(
-                {"loss": train_loss, "acc": train_acc}, step=step)
-            # Compute validation metrics and log to comet_ml
-            with experiment.validate():
-                val_loss, val_acc = test(opts, model, val_loader)
+            if batch_idx % opts.log_every == 0:
+                # Compute training metrics and log to comet_ml
+                train_loss = losses.avg
+                train_acc = accs.avg
                 experiment.log_metrics(
-                    {"loss": val_loss, "acc": val_acc}, step=step)
-                # Log to console
-            tepoch.set_postfix(train_loss=train_loss, train_acc=train_acc,
-                               val_loss=val_loss, val_acc=val_acc)
-            tepoch.update()
-            step += 1
+                    {"loss": train_loss, "acc": train_acc}, step=step)
+                # Compute validation metrics and log to comet_ml
+                with experiment.validate():
+                    val_loss, val_acc = test(opts, model, val_loader)
+                    experiment.log_metrics(
+                        {"loss": val_loss, "acc": val_acc}, step=step)
+                    # Log to console
+                tepoch.set_postfix(train_loss=train_loss, train_acc=train_acc,
+                                val_loss=val_loss, val_acc=val_acc)
+                tepoch.update()
+                step += 1
 
     return step, val_acc
