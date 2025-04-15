@@ -8,8 +8,9 @@ from tqdm import tqdm
 import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import ExponentialLR
+import torch.backends.cudnn as cudnn
 
-from utils import N, LOG, update_yaml
+from utils import N, LOG, update_yaml, AverageMeter
 
 
 def load_checkpoint(checkpoint_path: str, model, optimizer, scheduler):
@@ -36,27 +37,6 @@ def load_checkpoint(checkpoint_path: str, model, optimizer, scheduler):
     return epoch, step, runtime
 
 
-class AverageMeter:
-    """ Computes and stores the average and current value """
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        # store metric statistics
-        self.val = 0  # value
-        self.sum = 0  # running sum
-        self.avg = 0  # running average
-        self.count = 0  # steps counter
-
-    def update(self, val, n=1):
-        # update statistic with given new value
-        self.val = val  # like loss
-        self.sum += val * n  # loss * batch_size
-        self.count += n  # count batch samples
-        self.avg = self.sum / self.count  # accounts for different sizes
-
-
 def test(opts, model, loader):
     """
     Evaluate model on test/validation set
@@ -76,15 +56,13 @@ def test(opts, model, loader):
             loss = criterion(out, y)
             losses.update(N(loss), X.size(0))
             # Compute accuracy
-            pred = N(torch.argmax(out, dim=1))  # array of ints, size [N]
-            label = N(y)  # {0,...,9}, size [N]
-            acc = np.mean(list(pred == label))  # mean over [0,1,0,0,0,1,1...]
+            acc = np.mean(np.argmax(N(out), axis=1) == N(y))
             accs.update(acc, X.size(0))
 
     return losses.avg, accs.avg
 
 
-class Trainer:
+class TrainState:
     """ Class to store training state """
 
     def __init__(self, model, optimizer, scheduler, epoch, step, runtime):
@@ -114,7 +92,7 @@ class Trainer:
                 "step": self.step, "runtime": self.runtime, }
 
 
-def save_checkpoint(trainer: Trainer, opts, fname=None):
+def save_checkpoint(trainer: TrainState, opts, fname=None):
     """ Save a model checkpoint to be resumed later """
     info = trainer.__dict__()
     if not fname:
@@ -141,7 +119,7 @@ class EarlyStopping:
         self.counter = 0
         self.best_trainer = None
 
-    def __call__(self, val_acc, trainer: Trainer):
+    def __call__(self, val_acc, trainer: TrainState):
         score = val_acc
         if self.best_score is None:
             # initialize best score
@@ -177,6 +155,7 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
         experiment: Experiment object for logging.
         resume_from: Path to a checkpoint to resume training from.
     """
+    cudnn.benchmark = True
     criterion = torch.nn.CrossEntropyLoss()  # expects logits and labels
     optimizer = optim.SGD(model.parameters(), lr=opts.learning_rate,
                           momentum=opts.momentum, weight_decay=opts.weight_decay)
@@ -195,7 +174,7 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
                  f" previous runtime {prev_runtime:.2f}s")
 
     # save training objects and info
-    trainer = Trainer(model, optimizer, scheduler,
+    trainer = TrainState(model, optimizer, scheduler,
                       start_epoch, step, prev_runtime)
     # keeps the training objects and info from the best model
     if hasattr(opts, "early_stopping") and opts.early_stopping:
@@ -224,6 +203,7 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
                            epoch, step, estop_runtime)
             early_stopping(val_acc, trainer)  # use last computed val_acc
             if early_stopping.early_stop:
+                # Do early stopping
                 fname = f"e_{epoch:03d}_{opts.experiment_name}_best.pt"
                 save_checkpoint(early_stopping.best_trainer, opts, fname)
                 LOG.info(f"Early stopping at epoch {epoch}, "
@@ -239,11 +219,11 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
     experiment.log_metric("runtime", prev_runtime)
 
 
-def train_epoch(opts, model, train_loader, val_loader, experiment, criterion, optimizer, step, epoch, tepoch):
+def train_epoch(opts, model, train_loader, val_loader, experiment, criterion, optimizer, step, epoch):
+    """Train over a single epoch"""
+    losses, accs = AverageMeter(), AverageMeter()
     with tqdm(train_loader, unit="batch") as tepoch:
         for batch_idx, (X, y) in enumerate(tepoch):
-            losses = AverageMeter()
-            accs = AverageMeter()
             model.train()
             tepoch.set_description(f"{epoch:03d}")
 
@@ -252,22 +232,21 @@ def train_epoch(opts, model, train_loader, val_loader, experiment, criterion, op
             X = X.to(opts.device)  # [N, C, W, H]
             y = y.to(opts.device)  # [N]
             # forward pass
-            optimizer.zero_grad()
             out = model(X)  # logits: [N, K]
             loss = criterion(out, y)  # scalar value
-            # backward pass
-            loss.backward()   # backprop
-            optimizer.step()  # update model
             # metrics
             losses.update(N(loss), X.size(0))
             acc = np.mean(np.argmax(N(out), axis=1) == N(y))
             accs.update(acc, X.size(0))
+            # backward pass
+            optimizer.zero_grad()
+            loss.backward()   # backprop
+            optimizer.step()  # update model
             # -----
 
             if batch_idx % opts.log_every == 0:
                 # Compute training metrics and log to comet_ml
-                train_loss = losses.avg
-                train_acc = accs.avg
+                train_loss, train_acc = losses.avg, accs.avg
                 experiment.log_metrics(
                     {"loss": train_loss, "acc": train_acc}, step=step)
                 # Compute validation metrics and log to comet_ml
@@ -277,7 +256,7 @@ def train_epoch(opts, model, train_loader, val_loader, experiment, criterion, op
                         {"loss": val_loss, "acc": val_acc}, step=step)
                     # Log to console
                 tepoch.set_postfix(train_loss=train_loss, train_acc=train_acc,
-                                val_loss=val_loss, val_acc=val_acc)
+                                   val_loss=val_loss, val_acc=val_acc)
                 tepoch.update()
                 step += 1
 

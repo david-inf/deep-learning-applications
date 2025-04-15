@@ -63,6 +63,7 @@ if __name__ == "__main__":
         # # MLP Large
         # {"model_name": "MLP", "dataset": "MNIST", "augmentation": True,
         #  "layers": [1024,1024,512,128], "early_stopping": {"patience": 3, "threshold": 0.01}},
+        {"model_name": "MLP", "dataset": "CIFAR10", "layers": [512], "weight_decay": 0.}
 
         ## **** ##
 

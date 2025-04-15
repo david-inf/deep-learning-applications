@@ -7,10 +7,11 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import ExponentialLR
 import torch.nn.functional as F
+import torch.backends.cudnn as cudnn
 
 from tqdm import tqdm
-from utils import LOG, N
-from train import Trainer, test, load_checkpoint, save_checkpoint
+from utils import LOG, N, AverageMeter
+from train import TrainState, test, load_checkpoint, save_checkpoint
 
 
 def train_loop_distill(opts, teacher, student, train_loader, val_loader, experiment, resume_from=None):
@@ -23,6 +24,7 @@ def train_loop_distill(opts, teacher, student, train_loader, val_loader, experim
         Student : torch.nn.Module
             student model to be distilled
     """
+    cudnn.benchmark = True
     # loss for soft targets
     kl_div = nn.KLDivLoss(log_target=True, reduction="batchmean")
     # loss for hard targets
@@ -43,7 +45,7 @@ def train_loop_distill(opts, teacher, student, train_loader, val_loader, experim
         LOG.info(f"Resuming from epoch {start_epoch}, step {step},"
                  f" previous runtime {prev_runtime:.2f}s")
 
-    trainer = Trainer(student, optimizer, scheduler,
+    trainer = TrainState(student, optimizer, scheduler,
                       start_epoch, step, prev_runtime)
 
     for epoch in range(start_epoch, opts.num_epochs + 1):
@@ -73,7 +75,8 @@ def train_loop_distill(opts, teacher, student, train_loader, val_loader, experim
     experiment.log_metric("runtime", prev_runtime)
 
 
-def train_epoch(opts, teacher, student, val_loader, experiment, ce_loss, kl_div, optimizer, step, epoch, losses, accs, tepoch):
+def train_epoch(opts, teacher, student, val_loader, experiment, ce_loss, kl_div, optimizer, step, epoch, tepoch):
+    losses, accs = AverageMeter(), AverageMeter()
     for batch_idx, (X, y) in enumerate(tepoch):
         student.train()
         tepoch.set_description(f"{epoch:03d}")
@@ -83,7 +86,6 @@ def train_epoch(opts, teacher, student, val_loader, experiment, ce_loss, kl_div,
         X = X.to(opts.device)  # [N, C, W, H]
         y = y.to(opts.device)  # hard targets [N]
         # forward pass
-        optimizer.zero_grad()
         s_logits = student(X)  # student logits: [N, K]
         t_logits = teacher(X)  # teacher logits: [N, K]
         # compute loss
@@ -92,19 +94,21 @@ def train_epoch(opts, teacher, student, val_loader, experiment, ce_loss, kl_div,
         loss1 = kl_div(soft_prob, soft_targets)  # soft targets loss
         loss2 = ce_loss(s_logits, y)
         loss = opts.w1 * loss1 + opts.w2 * loss2
+        # metrics
+        losses.update(N(loss), X.size(0))
+        acc = np.mean(np.argmax(N(s_logits), axis=1) == N(y))
+        accs.update(acc, X.size(0))
         # backward pass
+        optimizer.zero_grad()
         loss.backward()   # backprop
         optimizer.step()  # update model
-        # metrics
-        losses.append(N(loss))  # add loss for current batch
-        acc = np.mean(np.argmax(N(s_logits), axis=1) == N(y))
-        accs.append(acc)  # add accuracy for current batch
         # -----
 
         if batch_idx % opts.log_every == 0:
             # Compute training metrics and log to comet_ml
-            train_loss = np.mean(losses)  # [-opts.batch_window:])
-            train_acc = np.mean(accs)  # [-opts.batch_window:])
+            # train_loss = np.mean(losses)  # [-opts.batch_window:])
+            # train_acc = np.mean(accs)  # [-opts.batch_window:])
+            train_loss, train_acc = losses.avg, accs.avg
             experiment.log_metrics(
                 {"loss": train_loss, "acc": train_acc}, step=step)
             # Compute validation metrics and log to comet_ml

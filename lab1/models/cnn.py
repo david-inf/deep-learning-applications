@@ -29,7 +29,7 @@ def conv1x1(in_channels, out_channels, stride=1):
 
 
 class Shortcut(nn.Module):
-    """ Shortcut ensures dimension matching over the residual block """
+    """Shortcut ensures dimension matching over the residual block"""
 
     def __init__(self, in_channels, out_channels, stride):
         super().__init__()
@@ -41,9 +41,10 @@ class Shortcut(nn.Module):
 
 
 class BasicBlock(nn.Module):
+    """Building block consisting of two 3x3 convolutions with batch norm and relu"""
     def __init__(self, in_channels, out_channels, stride=1, skip=False):
         super().__init__()
-        self.skip = skip  # wether to add skip connection or not
+        self.skip = skip  # whether to add a skip connection or not
 
         self.conv1 = conv3x3(in_channels, out_channels, stride=stride)
         self.bn1 = nn.BatchNorm2d(out_channels)
@@ -67,57 +68,26 @@ class BasicBlock(nn.Module):
         return out
 
 
-# class CNN(nn.Module):
-#     def __init__(self, in_channels, n_blocks=1, num_filters=16, num_classes=10, skip=False):
-#         super().__init__()
-#         self.num_filters = num_filters
+class InverseBasicBlock(nn.Module):
+    """Same as BasicBlock but with pre-activation batch norm and relu"""
+    def __init__(self, in_channels, out_channels, stride=1, skip=True):
+        super().__init__()
+        self.skip = skip
 
-#         self.input_adapter = nn.Sequential(
-#             conv3x3(in_channels, num_filters, stride=2, padding=1),
-#             nn.BatchNorm2d(num_filters),
-#             nn.ReLU(inplace=True),
-#         )
-
-#         blocks = []  # append BasicBlocks objects
-#         channels = [num_filters]
-#         # ch -> ch*2 -> ch*4 -> ch*8
-#         channels += [num_filters * 2**(i+1) for i in range(n_blocks)]
-#         # list channels has size 1+n_blocks
-#         for i in range(n_blocks):
-#             # stride=2 for downsampling layers and 1 otherwise
-#             stride = 2 if i == 0 else 1
-#             # TODO: add another intermediate downsampling?
-#             # stride = 2 if i % 3 == 0 else 1
-#             # TODO: in ResNet we just stack more of this layers
-#             # with fixed num_filters
-#             blocks.append(BasicBlock(channels[i], channels[i+1],
-#                                      stride=stride, skip=skip))
-#         self.blocks = nn.Sequential(*blocks)
-
-#         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-#         self.flatten = nn.Flatten()
-#         self.fc = nn.Linear(channels[-1], num_classes)
-
-#     def forward(self, x):
-#         # N x C x 28 x 28
-#         x = self.input_adapter(x)  # ; print(x.shape)
-#         # N x num_filters x 28 x 28
-#         x = self.blocks(x)  # ; print(x.shape)
-#         # N x ... x H x W
-#         x = self.avgpool(x)  # ; print(x.shape)
-#         # N x ... x 1 x 1
-#         x = self.flatten(x)  # ; print(x.shape)
-#         # N x ...
-#         x = self.fc(x)
-#         # N x K logits
-#         return x
+        self.bn1 = nn.BatchNorm2d(in_channels)
+        self.conv1 = conv3x3(in_channels, out_channels, stride=stride)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.conv2 = conv3x3(out_channels, out_channels, stride=1)
+        self.relu = nn.ReLU(inplace=True)
+        # altrimenti posso fargli ereditare BasicBlock e quindi cambio solo il forward se può aver senso
 
 
 class CNN(nn.Module):
     """
-    Total layers: 6*num_blocks + 2
+    2 layers version of ResNet (less deep)
+    Total layers: (2*2)*num_blocks + 2
     - First layer as input adapter
-    - Sequence of 3 layers: num_blocks * BasicBlock (2 conv layers)
+    - Sequence of 2 layers: num_blocks * BasicBlock (2 conv layers)
     - Classifier linear layer
     """
 
@@ -134,7 +104,6 @@ class CNN(nn.Module):
 
         self.layer1 = self._make_layer(num_filters*1, num_blocks, stride=2)
         self.layer2 = self._make_layer(num_filters*2, num_blocks, stride=2)
-        # self.layer3 = self._make_layer(num_filters*4, num_blocks, stride=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.flatten = nn.Flatten()
@@ -153,7 +122,6 @@ class CNN(nn.Module):
         x = self.input_adapter(x)
         x = self.layer1(x)
         x = self.layer2(x)
-        # x = self.layer3(x)
         x = self.avgpool(x)
         x = self.flatten(x)
         x = self.classifier(x)
@@ -161,19 +129,27 @@ class CNN(nn.Module):
 
 
 class ResNet(nn.Module):
-    """ The actual ResNet for CIFAR10 """
+    """
+    The actual ResNet for CIFAR10
+    Total layers: (3*2)*num_blocks + 2
+    - First layer as input adapter
+    - Sequence of 3 layers: num_blocks * BasicBlock (2 conv layers)
+    - Classifier linear layer
+    """
 
-    def __init__(self, in_channels=3, num_filters=16, num_blocks=1, skip=False, num_classes=10):
+    def __init__(self, in_channels=3, num_filters=16, num_blocks=1, skip=True, num_classes=10):
+        # TODO: block argument allowing different types of basic blocks
         super().__init__()
-        self.in_filters = num_filters
-        self.skip = skip
+        self.in_filters = num_filters  # planes
+        self.skip = skip  # add skip connection, compatibility with experiments
 
-        self.input_adapter = nn.Sequential(
+        self.input_adapter = nn.Sequential(  # input image downsampling
             conv3x3(in_channels, num_filters, stride=1, padding=1),
             nn.BatchNorm2d(num_filters),
             nn.ReLU(inplace=True),
         )
 
+        # sequence of 3 layers with variable number of BasicBlock
         self.layer1 = self._make_layer(num_filters*1, num_blocks, stride=2)
         self.layer2 = self._make_layer(num_filters*2, num_blocks, stride=2)
         self.layer3 = self._make_layer(num_filters*4, num_blocks, stride=2)
@@ -183,8 +159,9 @@ class ResNet(nn.Module):
         self.classifier = nn.Linear(num_filters*4, num_classes)
 
     def _make_layer(self, out_filters, num_blocks, stride):
+        # different stride only for the first BasicBlock
         strides = [stride] + [1]*(num_blocks-1)
-        layers = []
+        layers = []  # sequence of BasicBlock
         for stride in strides:
             layers.append(BasicBlock(self.in_filters, out_filters,
                                      stride, self.skip))

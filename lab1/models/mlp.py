@@ -9,20 +9,26 @@ class MLP(nn.Module):
     def __init__(self, input_size, layer_sizes=[128], num_classes=10):
         super().__init__()
 
+        self.flatten = nn.Flatten()
+
         self.input_adapter = nn.Linear(input_size, layer_sizes[0])
+        self.relu = nn.ReLU(inplace=True)
+
         layers = []
         for i in range(len(layer_sizes)-1):
             layers.append(nn.Linear(layer_sizes[i], layer_sizes[i+1]))
-            layers.append(nn.ReLU())
+            layers.append(nn.ReLU(inplace=True))
         self.mlp = nn.Sequential(*layers)
-        self.flatten = nn.Flatten()
-        self.head = nn.Linear(layer_sizes[-1], num_classes)
+
+        self.classifier = nn.Linear(layer_sizes[-1], num_classes)
 
     def forward(self, x):
         x = self.flatten(x)
-        x = self.input_adapter(x)  # hidden_size
+
+        x = self.relu(self.input_adapter(x))  # hidden_size
         x = self.mlp(x)  # blocks
-        x = self.head(x)  # logits
+
+        x = self.classifier(x)  # logits
         return x
 
 

@@ -2,7 +2,7 @@
 
 Repository to host the laboratories from the course on deep learning applications
 
-## Lab1 - Convolutional Neural Networks
+## :test_tube: Lab1 - Convolutional Neural Networks
 
 Feel for working with deep models
 
@@ -43,11 +43,11 @@ When running a program you should see
 
 </details>
 
-### Exercise 1 - Skip connections
+### :one: Skip connections, deep residual learning
 
 Reproducing on a small scale the results from the ResNet paper using CIFAR10 dataset.
 
-> Deep Residual Learning for Image Recognition, Kaiming He and Xiangyu Zhang and Shaoqing Ren and Jian Sun, 2015. [https://arxiv.org/abs/1512.03385].
+> Deep Residual Learning for Image Recognition, Kaiming He and Xiangyu Zhang and Shaoqing Ren and Jian Sun, 2015. [Arxiv](https://arxiv.org/abs/1512.03385).
 
 > Deeper networks, i.e. more stacked layers, do not guarantee more reduction in training loss
 
@@ -77,6 +77,9 @@ This results in $4n+2$ layers, where $n$ is the variable specifying the number o
 
 </details>
 
+<details>
+<summary>Results</summary>
+
 Name | $n$ | Filters | Layers | Test acc
 ---- | --- | ------- | ------- | --------
 `Tiny 0.02M` | 1 | 16 | 6 | 0.6737
@@ -91,12 +94,13 @@ Name | $n$ | Filters | Layers | Test acc
 See the degradation problem for increasing depth of the network, tiny and medium have similar performance, but when adding further layers we see that "adding more layers reduces loss" holds no more. Skip connections, residual learning, solve the problem. | ![](lab1/plots/train/curves.svg)
 Test accuracy provides evidence as well | ![](lab1/plots/train/test_acc.svg)
 
+</details>
 
-### Exercise 2 - Knowledge Distillation
+### :two: Knowledge Distillation
 
 Reproducing on a small scale the results from the distillation paper using CIFAR10 dataset.
 
-> Distilling the Knowledge in a Neural Network, Geoffrey Hinton, Oriol Vinyals, Jeff Dean. [https://arxiv.org/abs/1503.02531].
+> Distilling the Knowledge in a Neural Network, Geoffrey Hinton, Oriol Vinyals, Jeff Dean. [Arxiv](https://arxiv.org/abs/1503.02531).
 
 <details>
 <summary>Learning algorithm</summary>
@@ -111,6 +115,9 @@ As the teacher model we use the actual `ResNet` architecture with 3 blocks of `B
 
 </details>
 
+<details>
+<summary>Results</summary>
+
 Name | $n$ | Filters | Layers | Test acc
 ---- | --- | ------- | ------ | --------
 `Small 0.07M` | 3 | 16 | 14 | 0.6646
@@ -122,3 +129,17 @@ Name | $n$ | Filters | Layers | Test acc
 The distilled model is able to achieve a higher train accuracy earlier. | ![](lab1/plots/distill/distill_curves.svg)
 Similar performance most of the time, however the distilled model stays on top of the base one | ![](lab1/plots/distill/distill_val_acc.svg)
 Goal achieved! The small model trained with distillation has better performance than the same trained in the classical way | ![](lab1/plots/distill/distill_test_acc.svg)
+
+</details>
+
+
+## :test_tube: Lab3 - Transformers and NLP
+
+Work with the HuggingFace ecosystem to adapt models to new tasks.
+
+<details>
+<summary>Code organization</summary>
+
+Inside `Lab3/` folder there are the following programs:
+
+</details>
