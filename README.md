@@ -27,6 +27,7 @@ Inside folder `lab1/` you have the follwing programs:
 
 <details>
 <summary>Running the main script</summary>
+
 After generating configs, run a program with
 ```{bash}
 python lab1.py experiments/CNN_4.83M_cifar10.yaml
@@ -49,9 +50,7 @@ Reproducing on a small scale the results from the ResNet paper using CIFAR10 dat
 
 > Deep Residual Learning for Image Recognition, Kaiming He and Xiangyu Zhang and Shaoqing Ren and Jian Sun, 2015. [Arxiv](https://arxiv.org/abs/1512.03385).
 
-> Deeper networks, i.e. more stacked layers, do not guarantee more reduction in training loss
-
-So the point of this exercise is to abstract a model definition so that one can add a given number of layers (blocks), and then see how the performance are affected. The idea is to reproduce Figure 6 from the paper.
+Deeper networks, i.e. more stacked layers, do not guarantee more reduction in training loss. So the point of this exercise is to abstract a model definition so that one can add a given number of layers (blocks), and then see how the performance are affected. The idea is to reproduce Figure 6 from the paper.
 
 <details>
 <summary>MLP</summary>
@@ -82,17 +81,17 @@ This results in $4n+2$ layers, where $n$ is the variable specifying the number o
 
 Name | $n$ | Filters | Layers | Test acc
 ---- | --- | ------- | ------- | --------
-`Tiny 0.02M` | 1 | 16 | 6 | 0.6737
-`Small 0.07M` | 3 | 16 | 14 | 0.6646
-`Medium 0.11M` | 5 | 16 | 22 | 0.5999
-`Medium w/ skip 0.11M` | 5 | 16 | 22 | 0.7393
-`Large 0.16M` | 7 | 16 | 30 | 0.5095
-`Large w/ skip 0.16M` | 7 | 16 | 30 | 0.7505
+`TinyCNN 0.02M` | 1 | 16 | 6 | 0.6737
+`SmallCNN 0.07M` | 3 | 16 | 14 | 0.6646
+`MediumCNN 0.11M` | 5 | 16 | 22 | 0.5999
+`MediumCNN w/ skip 0.11M` | 5 | 16 | 22 | 0.7393
+`LargeCNN 0.16M` | 7 | 16 | 30 | 0.5095
+`LargeCNN w/ skip 0.16M` | 7 | 16 | 30 | 0.7505
 
-**Description** | **Results**
---------------- | -----------
-See the degradation problem for increasing depth of the network, tiny and medium have similar performance, but when adding further layers we see that "adding more layers reduces loss" holds no more. Skip connections, residual learning, solve the problem. | ![](lab1/plots/train/curves.svg)
-Test accuracy provides evidence as well | ![](lab1/plots/train/test_acc.svg)
+Learning curves | Test accuracy
+--- | ---
+![learning](lab1/plots/train/curves.svg) | ![test](lab1/plots/train/test_acc.svg)
+See the degradation problem for increasing depth of the network, tiny and medium have similar performance, but when adding further layers we see that "adding more layers reduces loss" holds no more. Skip connections, residual learning, solve the problem. | Test accuracy provides evidence as well, i.e. skip connections solve the degradation problem.
 
 </details>
 
@@ -104,6 +103,7 @@ Reproducing on a small scale the results from the distillation paper using CIFAR
 
 <details>
 <summary>Learning algorithm</summary>
+
 For a given $x$ the frozen teacher and the trainable students both produce logits, the idea is to align the student's output with the teachers' one.
 
 Loss:
@@ -120,15 +120,14 @@ As the teacher model we use the actual `ResNet` architecture with 3 blocks of `B
 
 Name | $n$ | Filters | Layers | Test acc
 ---- | --- | ------- | ------ | --------
-`Small 0.07M` | 3 | 16 | 14 | 0.6646
+`SmallCNN 0.07M` | 3 | 16 | 14 | 0.6646
 `ResNet 1.86M` | 5 | 32 | 17 | 0.8242
-`Distilled Small 0.07M` | 3 | 16 | 14 | 0.7137
+`Distilled SmallCNN 0.07M` | 3 | 16 | 14 | 0.7137
 
-**Description** | **Results**
---------------- | -----------
-The distilled model is able to achieve a higher train accuracy earlier. | ![](lab1/plots/distill/distill_curves.svg)
-Similar performance most of the time, however the distilled model stays on top of the base one | ![](lab1/plots/distill/distill_val_acc.svg)
-Goal achieved! The small model trained with distillation has better performance than the same trained in the classical way | ![](lab1/plots/distill/distill_test_acc.svg)
+Learning curves | Validation curves | Test accuracy
+--- | --- | ---
+![learning](lab1/plots/distill/distill_curves.svg) | ![validation](lab1/plots/distill/distill_val_acc.svg) | ![test](lab1/plots/distill/distill_test_acc.svg)
+The distilled model is able to achieve a higher train accuracy earlier. | Similar performance most of the time, however the distilled model stays on top of the base one | Goal achieved! The small model trained with distillation has better performance than the same trained in the classical way
 
 </details>
 
@@ -140,6 +139,26 @@ Work with the HuggingFace ecosystem to adapt models to new tasks.
 <details>
 <summary>Code organization</summary>
 
-Inside `Lab3/` folder there are the following programs:
+Inside `lab3/` folder there are the following programs:
+
+</details>
+
+### :one: BERT as a feature extractor
+
+Train a simple classifier (LinearSVC) on top of BERT sentence representation for sentiment analysis task, this will be the stable baseline which we will try to improve with finetuning.
+
+<details>
+<summary>Results</summary>
+
+We use the rotten tomatoes dataset with train-val-test splits, hence we use BERT as feature extractor, then we train a LinearSVC on top of the representation. We compare DistilBERT and SentenceBERT.
+
+Run the program with `python main_extract.py --model "bert"` and `--model "sbert"`
+
+Extractor | `train_acc` | `val_acc` | `test_acc`
+--- | --- | --- | ---
+`distilbert-base-uncased` | 0.849 | 0.822 | 0.798
+`all-mpnet-base-v2` | 0.879 | 0.855 | 0.847
+
+Being SBERT more suitable than BERT for sentence embeddings, as we expected the SVM on top of SBERT has better results. Feature extraction implementation in `feature_extractors.py`.
 
 </details>
