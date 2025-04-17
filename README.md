@@ -96,20 +96,13 @@ First a table with each model
 
 Then learning curves where we can see the degradation problem
 
-<div style="display: flex; justify-content: center;">
-  <div style="text-align: left; margin: 0 10px; width:50%;">
-    <img src="lab1/plots/train/curves.svg" alt="learning">
-    <p style="font-style: normal;">
-    See the degradation problem for increasing depth of the network, tiny and medium have similar performance, but when adding further layers we see that "adding more layers reduces loss" holds no more. Skip connections, residual learning, solve the problem.
-    </p>
-  </div>
-  <div style="text-align: left; margin: 0 10px; width:50%;">
-    <img src="lab1/plots/train/test_acc.svg" alt="test">
-    <p style="font-style: normal;">
-    Test accuracy provides evidence as well, i.e. skip connections solve the degradation problem.
-    </p>
-  </div>
+<div style="display: flex; flex-direction: row;">
+  <img src="lab1/plots/train/curves.svg" alt="learning" width="48%">
+  &nbsp;
+  <img src="lab1/plots/train/test_acc.svg" alt="test" width="48%">
 </div>
+
+See the degradation problem for increasing depth of the network, tiny and medium have similar performance, but when adding further layers we see that "adding more layers reduces loss" holds no more. Skip connections, residual learning, solve the problem. Test accuracy provides evidence as well, i.e. skip connections solve the degradation problem.
 
 </details>
 
@@ -145,23 +138,13 @@ $3n+2$ total layers
 | `ResNet 1.86M`             | 5   | 32      | 17     | 0.8242   |
 | `Distilled SmallCNN 0.07M` | 3   | 16      | 14     | 0.7137   |
 
-<div style="display: flex; justify-content: center;">
-  <div style="text-align: left; margin: 0 10px; width:50%;">
-    <img src="lab1/plots/distill/distill_curves.svg" alt="learning">
-    <p style="font-style: normal;">
-      The distilled model is able to achieve a higher train accuracy earlier.
-    </p>
-  </div>
-  <div style="text-align: left; margin: 0 10px; width:50%;">
-    <img src="lab1/plots/distill/distill_val_acc.svg" alt="validation">
-    <p style="font-style: normal;">
-      Mostly similar performance on the validation set, however the distilled model stays on top of the base one
-    </p>
-  </div>
+<div style="display: flex; flex-direction: row;">
+  <img src="lab1/plots/distill/distill_curves.svg" alt="learning" width="49%">
+  &nbsp;
+  <img src="lab1/plots/distill/distill_val_acc.svg" alt="validation" width="49%">
 </div>
 
-Goal achieved! The small model trained with distillation has better performance than the same trained in the
-classical way.
+The distilled model is able to achieve a higher train accuracy earlier. Mostly similar performance on the validation set, however the distilled model stays on top of the base one. The small model trained with distillation has better performance than the same trained in the classical way!
 
 </details>
 
