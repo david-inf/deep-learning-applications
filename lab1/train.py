@@ -137,7 +137,7 @@ class EarlyStopping:
         else:
             # we see an improvement
             self.best_score = score
-            self.best_traner = trainer
+            self.best_trainer = trainer
             self.counter = 0
 
 

@@ -2,6 +2,7 @@
 import numpy as np
 import torch
 from sklearn.svm import LinearSVC
+from sklearn.linear_model import LogisticRegression
 from datasets import load_dataset
 from feature_extractors import bert_extractor, sbert_extractor
 from utils import set_seeds, LOG
@@ -36,16 +37,24 @@ def main(opts):
     val_labels = np.array(rt_valset["label"])
     test_labels = np.array(rt_testset["label"])
 
-    # Train classifier
+    # Train classifier and do inference
     svm = LinearSVC()
     svm.fit(train_features, train_labels)
 
-    # Inference
+    LOG.info("LinearSVC")
     LOG.info(f"{opts.model.upper()} train_acc={svm.score(train_features, train_labels):.3f}")
     LOG.info(f"{opts.model.upper()} val_acc={svm.score(val_features, val_labels):.3f}")
     LOG.info(f"{opts.model.upper()} test_acc={svm.score(test_features, test_labels):.3f}")
-    # TODO: being of the same dimensionality, what about a distance/similary 
+    # TODO: being of the same dimensionality, what about a distance/similary
     # measure between the two embeddings?
+
+    # logistic = LogisticRegression()
+    # logistic.fit(train_features, train_labels)
+
+    # LOG.info("\nLogistic regression")
+    # LOG.info(f"{opts.model.upper()} train_acc={logistic.score(train_features, train_labels):.3f}")
+    # LOG.info(f"{opts.model.upper()} val_acc={logistic.score(val_features, val_labels):.3f}")
+    # LOG.info(f"{opts.model.upper()} test_acc={logistic.score(test_features, test_labels):.3f}")
 
 
 if __name__ == "__main__":

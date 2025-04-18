@@ -2,17 +2,17 @@
 import random
 import torch
 import numpy as np
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 
-from transformers import DataCollatorWithPadding
-from datasets import load_dataset
+from transformers import DataCollatorWithPadding, PreTrainedTokenizer
+from datasets import load_dataset, Dataset
 
 from utils import set_seeds, LOG
 from models.bert import get_bert
 
 
 class MakeDataLoaders:
-    def __init__(self, opts, tokenizer, trainset: Dataset, valset: Dataset, testset: Dataset):
+    def __init__(self, opts, tokenizer: PreTrainedTokenizer, trainset: Dataset, valset: Dataset, testset: Dataset):
         set_seeds(opts.seed)
         generator = torch.Generator().manual_seed(opts.seed)
         collate_fn = DataCollatorWithPadding(
@@ -27,23 +27,23 @@ class MakeDataLoaders:
             random.seed(worker_seed)
 
         self.train_loader = DataLoader(
-            trainset, batch_size=opts.batch_size, num_workers=opts.num_workers,
-            pin_memory=True, generator=generator, worker_init_fn=seed_worker,
-            collate_fn=collate_fn,
+            trainset, shuffle=True, batch_size=opts.batch_size,
+            num_workers=opts.num_workers, pin_memory=True, generator=generator,
+            worker_init_fn=seed_worker, collate_fn=collate_fn
         )
         self.val_loader = DataLoader(
             valset, batch_size=opts.batch_size, num_workers=opts.num_workers,
             pin_memory=True, generator=generator, worker_init_fn=seed_worker,
-            collate_fn=collate_fn,
+            collate_fn=collate_fn
         )
         self.test_loader = DataLoader(
             testset, batch_size=opts.batch_size, num_workers=opts.num_workers,
             pin_memory=True, generator=generator, worker_init_fn=seed_worker,
-            collate_fn=collate_fn,
+            collate_fn=collate_fn
         )
 
 
-def get_loaders(opts, tokenizer):
+def get_loaders(opts, tokenizer: PreTrainedTokenizer):
     # 1) Get dataset splits
     if opts.dataset == "rotten_tomatoes":
         rt_trainset, rt_valset, rt_testset = load_dataset(
@@ -104,16 +104,20 @@ def main(opts):
         print()
 
     for batch_idx, batch in enumerate(loaders[0]):
+        # Get data
         input_ids = batch["input_ids"]
         attention_mask = batch["attention_mask"]
         labels = batch["labels"]
+        # Class distribution
+        class_distribution = torch.bincount(labels)
 
+        size = labels.size(0)
         LOG.info(f"Train batch_idx={batch_idx}"
                  f"\ntokens={input_ids.shape} "
                  f"mask={attention_mask.shape} "
-                 f"y={labels.shape}")
+                 f"\ny={labels.shape} distrib={class_distribution/size}")
 
-        if batch_idx == 1:
+        if batch_idx == 2:
             break
 
 
@@ -123,6 +127,7 @@ if __name__ == "__main__":
 
     config = dict(
         seed=42, batch_size=32, num_workers=2, max_length=128,
+        ft_setting="head",
         dataset="rotten_tomatoes", model="distilbert", device="cpu",
     )
     opts = SimpleNamespace(**config)

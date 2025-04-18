@@ -144,7 +144,7 @@ class MakeDataLoaders:
 
         self.train_loader = DataLoader(
             full_trainset, batch_size=opts.batch_size, sampler=train_sampler,
-            num_workers=opts.num_workers, pin_memory=True,
+            shuffle=True, num_workers=opts.num_workers, pin_memory=True,
             generator=generator, worker_init_fn=seed_worker
         )
         self.val_loader = DataLoader(
