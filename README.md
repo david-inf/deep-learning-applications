@@ -158,6 +158,9 @@ Work with the HuggingFace ecosystem to adapt models to new tasks.
 
 Inside `lab3/` folder there are the following programs:
 
+- Exercise 1: `feature_extractors.py` and `main_extract.py`
+- Exercise 2: 
+
 </details>
 
 ### :one: BERT as a feature extractor

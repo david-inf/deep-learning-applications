@@ -106,8 +106,6 @@ def train_epoch(opts, teacher, student, val_loader, experiment, ce_loss, kl_div,
 
         if batch_idx % opts.log_every == 0:
             # Compute training metrics and log to comet_ml
-            # train_loss = np.mean(losses)  # [-opts.batch_window:])
-            # train_acc = np.mean(accs)  # [-opts.batch_window:])
             train_loss, train_acc = losses.avg, accs.avg
             experiment.log_metrics(
                 {"loss": train_loss, "acc": train_acc}, step=step)
@@ -116,7 +114,7 @@ def train_epoch(opts, teacher, student, val_loader, experiment, ce_loss, kl_div,
                 val_loss, val_acc = test(opts, student, val_loader)
                 experiment.log_metrics(
                     {"loss": val_loss, "acc": val_acc}, step=step)
-                # Log to console
+            # Log to console
             tepoch.set_postfix(train_loss=train_loss, train_acc=train_acc,
                                val_loss=val_loss, val_acc=val_acc)
             tepoch.update()

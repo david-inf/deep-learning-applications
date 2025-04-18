@@ -1,8 +1,6 @@
-""" Script for inspecting models """
+"""Script for inspecting models"""
 
-from models.mlp import build_mlp
-from models.cnn import build_cnn, compute_flops
-from utils import visualize, get_model
+from utils import visualize, get_model, compute_flops
 
 
 def main(opts):
@@ -15,6 +13,7 @@ def main(opts):
     # total batches considering validation
     batches = 1132 if opts.dataset == "CIFAR10" else 1362
     compute_flops(model, input_data, opts.num_epochs, batches)
+
 
 if __name__ == "__main__":
     from ipdb import launch_ipdb_on_exception

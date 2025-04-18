@@ -44,28 +44,3 @@ def build_mlp(opts):
     model = MLP(input_size, layer_sizes=layers)
 
     return model, input_data
-
-
-def parse_args():
-    import argparse
-
-    def list_of_ints(arg):
-        return list(map(int, arg.split(',')))
-
-    parser = argparse.ArgumentParser(description="MLP model")
-    parser.add_argument("--dataset", type=str, default="MNIST",
-                        help="Dataset to use for training")
-    parser.add_argument("--layers", type=list_of_ints,
-                        help="Hidden units for each layer")
-    return parser.parse_args()
-
-
-if __name__ == "__main__":
-    from torchinfo import summary
-    from ipdb import launch_ipdb_on_exception
-    opts = parse_args()
-    with launch_ipdb_on_exception():
-        model, input_data = build_mlp(opts)
-    # Count parameters
-    model_stats = summary(model, verbose=0)
-    print(f"Params: {model_stats.total_params/1e6:.2f}M")

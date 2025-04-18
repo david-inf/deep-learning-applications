@@ -145,3 +145,25 @@ def visualize(model, model_name, input_data):
     )
     console.print(model_stats)
     return model_stats.total_params
+
+
+def compute_flops(model, input_data, epochs=100, batches=390):
+    from torchinfo import summary
+    model_stats = summary(model, input_data=input_data, verbose=0)
+
+    # Parameters
+    print(f"Params: {model_stats.total_params/1e6:.2f}M")
+
+    # forward pass over each batch
+    forward_flops = 2 * model_stats.total_mult_adds  # floating-point operations
+    # forward + backward pass over each batch -> FLOP/batch
+    flops_batch = 3 * forward_flops
+    print(f"Training cost per batch: {flops_batch/1e12:.4f} TFLOP")
+    flops_epoch = flops_batch * batches  # batches per epoch
+    print(f"Training cost per epoch: {flops_epoch/1e12:.4f} TFLOP")
+    total_flops = epochs * flops_epoch
+    print(f"Training cost: {total_flops/1e12:.4f} TFLOP")
+
+    gpu_flops = 7 * 1e12  # TFLOPS (per second)
+    efficiency = .2
+    print(f"Training time: {total_flops/gpu_flops/efficiency:.2f} seconds")
