@@ -92,9 +92,9 @@ class TrainState:
                 "step": self.step, "runtime": self.runtime, }
 
 
-def save_checkpoint(trainer: TrainState, opts, fname=None):
+def save_checkpoint(trainstate: TrainState, opts, fname=None):
     """ Save a model checkpoint to be resumed later """
-    info = trainer.__dict__()
+    info = trainstate.__dict__()
     if not fname:
         fname = f"e_{info["epoch"]:03d}_{opts.experiment_name}.pt"
     output_dir = os.path.join(opts.checkpoint_dir, fname)
@@ -174,7 +174,7 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
                  f" previous runtime {prev_runtime:.2f}s")
 
     # save training objects and info
-    trainer = TrainState(model, optimizer, scheduler,
+    trainstate = TrainState(model, optimizer, scheduler,
                       start_epoch, step, prev_runtime)
     # keeps the training objects and info from the best model
     if hasattr(opts, "early_stopping") and opts.early_stopping:
@@ -192,16 +192,16 @@ def train_loop(opts, model, train_loader, val_loader, experiment, resume_from):
         if epoch % opts.checkpoint_every == 0 or epoch == opts.num_epochs:
             # save every checkpoint_every epochs or at the end
             ckp_runtime = prev_runtime + time.time() - start_time  # add duration of this run
-            trainer.update(model, optimizer, scheduler,
+            trainstate.update(model, optimizer, scheduler,
                            epoch, step, ckp_runtime)
-            save_checkpoint(trainer, opts)
+            save_checkpoint(trainstate, opts)
 
         # Check for early stopping after each epoch
         if hasattr(opts, "early_stopping"):
             estop_runtime = prev_runtime + time.time() - start_time
-            trainer.update(model, optimizer, scheduler,
+            trainstate.update(model, optimizer, scheduler,
                            epoch, step, estop_runtime)
-            early_stopping(val_acc, trainer)  # use last computed val_acc
+            early_stopping(val_acc, trainstate)  # use last computed val_acc
             if early_stopping.early_stop:
                 # Do early stopping
                 fname = f"e_{epoch:03d}_{opts.experiment_name}_best.pt"

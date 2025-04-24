@@ -44,6 +44,7 @@ class MakeDataLoaders:
 
 
 def get_loaders(opts, tokenizer: PreTrainedTokenizer):
+    """Easier to do with dataset.map"""
     # 1) Get dataset splits
     if opts.dataset == "rotten_tomatoes":
         rt_trainset, rt_valset, rt_testset = load_dataset(

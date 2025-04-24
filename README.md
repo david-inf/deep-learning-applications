@@ -9,6 +9,10 @@ Feel for working with deep models
 <details>
 <summary>Code organization</summary>
 
+```bash
+pip install -r lab1.txt
+```
+
 Inside folder `lab1/` you have the follwing programs:
 - `checkpoints` folder that will be automatically created for storing model checkpoints
 - `experiments` folder that will be automatically created for storing yaml configurations files for each experiment
@@ -156,10 +160,17 @@ Work with the HuggingFace ecosystem to adapt models to new tasks.
 <details>
 <summary>Code organization</summary>
 
+```bash
+python install -r lab3.txt
+```
+
 Inside `lab3/` folder there are the following programs:
 
-- Exercise 1: `feature_extractors.py` and `main_extract.py`
-- Exercise 2: 
+- Exercise 1:
+  - `feature_extractors.py`
+  - `main_extract.py`
+- Exercise 2:
+  - `main_ft.py`
 
 </details>
 
@@ -186,6 +197,12 @@ results. Feature extraction implementation in `feature_extractors.py`.
 
 </details>
 
-### :two: Finetuning BERT
+
+### :two: BERT Finetuning
 
 The goal now is to improve over the baseline performance.
+
+
+### :three: BERT Efficient Finetuning
+
+Efficient way for finetuning BERT on rotten tomatoes dataset using `PEFT` library

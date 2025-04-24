@@ -37,6 +37,7 @@ def bert_extractor(opts, texts):
         with torch.no_grad():
             outputs = model(**encoded_batch)
             # take the [CLS] token
+            # TODO: try two options (i) CLS (ii) pooling
             features = outputs.last_hidden_state[:, 0, :]
             features_list.append(N(features))
 

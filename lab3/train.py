@@ -1,5 +1,6 @@
 """Training utilities for finetuning"""
 
+import os
 import time
 from tqdm import tqdm
 import torch
@@ -7,9 +8,18 @@ import numpy as np
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 
-from transformers import get_linear_schedule_with_warmup
+from transformers import get_linear_schedule_with_warmup, PreTrainedModel
 
 from utils import N, LOG, AverageMeter
+
+
+def save_model(opts, model: PreTrainedModel, reached_epoch, fname=None):
+    """Save a pretrained model"""
+    if not fname:
+        fname = f"e_{reached_epoch:02d}_{opts.experiment_name}"
+    output_dir = os.path.join(opts.checkpoint_dir, fname)
+    model.save_pretrained(output_dir)
+    LOG.info(f"Saved model at path={fname}")
 
 
 def test(opts, model, loader):

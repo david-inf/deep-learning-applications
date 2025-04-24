@@ -1,0 +1,17 @@
+batch_size: 32
+checkpoint_every: null
+comet_project: deep-learning-applications
+config: experiments/sbert.yaml
+dataset: rotten_tomatoes
+device: cuda
+experiment_key: null
+experiment_name: sbert_head
+ft_setting: head
+learning_rate: 0.01
+log_every: 20
+max_length: 128
+model: sbert
+num_epochs: 5
+num_workers: 4
+seed: 42
+visualize: false

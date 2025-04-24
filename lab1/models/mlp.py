@@ -11,8 +11,10 @@ class MLP(nn.Module):
 
         self.flatten = nn.Flatten()
 
-        self.input_adapter = nn.Linear(input_size, layer_sizes[0])
-        self.relu = nn.ReLU(inplace=True)
+        self.input_adapter = nn.Sequential(
+            nn.Linear(input_size, layer_sizes[0]),
+            nn.ReLU(inplace=True)
+        )
 
         layers = []
         for i in range(len(layer_sizes)-1):
@@ -25,7 +27,7 @@ class MLP(nn.Module):
     def forward(self, x):
         x = self.flatten(x)
 
-        x = self.relu(self.input_adapter(x))  # hidden_size
+        x = self.input_adapter(x)  # hidden_size
         x = self.mlp(x)  # blocks
 
         x = self.classifier(x)  # logits

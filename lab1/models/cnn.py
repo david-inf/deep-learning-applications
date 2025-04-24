@@ -42,6 +42,7 @@ class Shortcut(nn.Module):
 
 class BasicBlock(nn.Module):
     """Building block consisting of two 3x3 convolutions with batch norm and relu"""
+
     def __init__(self, in_channels, out_channels, stride=1, skip=False):
         super().__init__()
         self.skip = skip  # whether to add a skip connection or not
@@ -70,6 +71,7 @@ class BasicBlock(nn.Module):
 
 class InverseBasicBlock(nn.Module):
     """Same as BasicBlock but with pre-activation batch norm and relu"""
+
     def __init__(self, in_channels, out_channels, stride=1, skip=True):
         super().__init__()
         self.skip = skip
@@ -159,23 +161,31 @@ class ResNet(nn.Module):
         self.classifier = nn.Linear(num_filters*4, num_classes)
 
     def _make_layer(self, out_filters, num_blocks, stride):
+        """Creating blocks for the current layer"""
         # different stride only for the first BasicBlock
         strides = [stride] + [1]*(num_blocks-1)
-        layers = []  # sequence of BasicBlock
-        for stride in strides:
-            layers.append(BasicBlock(self.in_filters, out_filters,
-                                     stride, self.skip))
-            self.in_filters = out_filters
-        return nn.Sequential(*layers)
+        blocks = []  # sequence of BasicBlock
 
-    def forward(self, x):
+        for stride in strides:
+            # Create block and append to blocks list
+            blocks.append(
+                BasicBlock(self.in_filters, out_filters, stride, self.skip))
+            # Update in_channels for next layer
+            self.in_filters = out_filters
+
+        return nn.Sequential(*blocks)
+
+    def forward(self, x: torch.Tensor):
         x = self.input_adapter(x)
+
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
+
         x = self.avgpool(x)
         x = self.flatten(x)
-        x = self.classifier(x)
+        x = self.classifier(x)  # logits
+
         return x
 
 

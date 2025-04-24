@@ -62,18 +62,19 @@ def visualize(model, model_name, input_data):
     out = model(input_ids=input_ids, attention_mask=attention_mask)
 
     console = Console()
-    console.print(f"Model model={model_name}, computed output shape={out.logits.shape}")
+    console.print(f"Model model={model_name}, computed output_shape={out.logits.shape}")
 
     model_stats = summary(
         model,
         input_data=input_data,
         col_names=[
-            "input_size",
+            # "input_size",
             "output_size",
             "num_params",
-            # "params_percent",
+            "params_percent",
             # "kernel_size",
             # "mult_adds",
+            "trainable",
         ],
         row_settings=("var_names",),
         col_width=18,
