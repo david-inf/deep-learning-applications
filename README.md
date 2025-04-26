@@ -187,10 +187,12 @@ train a LinearSVC on top of the representation. We compare DistilBERT and Senten
 
 Run the program with `python main_extract.py --model "bert"` and `--model "sbert"`
 
-| Extractor                 | `train_acc` | `val_acc` | `test_acc` |
-| ------------------------- | ----------- | --------- | ---------- |
-| `distilbert-base-uncased` | 0.849       | 0.822     | 0.798      |
-| `all-mpnet-base-v2`       | 0.879       | 0.855     | 0.847      |
+| Extractor                                | size  | `train_acc` | `val_acc` | `test_acc` |
+| ---------------------------------------- | ----- | ----------- | --------- | ---------- |
+| `distilbert-base-uncased` ([CLS] token)  | 67M   | 0.849       | 0.822     | 0.798      |
+| `distilbert-base-uncased` (mean pooling) | 67M   | 0.846       | 0.810     | 0.788      |
+| `all-mpnet-base-v2`                      | 109M  | 0.879       | 0.855     | 0.847      |
+| `all-MiniLM-L6-v2`                       | 22.7M | 0.791       | 0.767     | 0.777      |
 
 Being SBERT more suitable than BERT for sentence embeddings, as we expected the SVM on top of SBERT has better
 results. Feature extraction implementation in `feature_extractors.py`.
@@ -200,9 +202,9 @@ results. Feature extraction implementation in `feature_extractors.py`.
 
 ### :two: BERT Finetuning
 
-The goal now is to improve over the baseline performance.
+The goal now is to improve over the baseline performance. For doing this we proceed with a full finetuning and see what happens.
 
 
-### :three: BERT Efficient Finetuning
+### :three: PEFT study on BERT
 
 Efficient way for finetuning BERT on rotten tomatoes dataset using `PEFT` library

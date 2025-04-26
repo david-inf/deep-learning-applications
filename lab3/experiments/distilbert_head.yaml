@@ -1,17 +1,20 @@
 batch_size: 32
+checkpoint_dir: checkpoints
 checkpoint_every: null
 comet_project: deep-learning-applications
-config: experiments/bert.yaml
+config: null
 dataset: rotten_tomatoes
 device: cuda
-experiment_key: 5c2a1eab486c4158a4e440047cf4d934
+experiment_key: null
 experiment_name: distilbert_head
-ft_setting: head
+ft_setting:
+  type: head
 learning_rate: 0.01
-log_every: 20
+log_every: 10
 max_length: 128
 model: distilbert
-num_epochs: 5
+num_epochs: 10
 num_workers: 4
+resume_checkpoint: null
 seed: 42
 visualize: false

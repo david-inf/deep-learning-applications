@@ -82,7 +82,7 @@ def visualize(model, model_name, input_data):
         verbose=0,
     )
     console.print(model_stats)
-    return model_stats.total_params
+    # return model_stats.total_params
 
 
 def update_yaml(opts, key, value):

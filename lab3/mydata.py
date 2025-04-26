@@ -47,9 +47,8 @@ def get_loaders(opts, tokenizer: PreTrainedTokenizer):
     """Easier to do with dataset.map"""
     # 1) Get dataset splits
     if opts.dataset == "rotten_tomatoes":
-        rt_trainset, rt_valset, rt_testset = load_dataset(
-            "cornell-movie-review-data/rotten_tomatoes",
-            split=["train", "validation", "test"])
+        dataset = load_dataset(
+            "cornell-movie-review-data/rotten_tomatoes")
     else:
         raise ValueError(f"Unknown dataset {opts.dataset}")
 
@@ -66,12 +65,12 @@ def get_loaders(opts, tokenizer: PreTrainedTokenizer):
             return_tensors=None,
         )
 
-    trainset = rt_trainset.map(
-        preprocess, batched=True, num_proc=2, remove_columns=["text"], desc="Tokenizing")
-    valset = rt_valset.map(
-        preprocess, batched=True, remove_columns=["text"], desc="Tokenizing")
-    testset = rt_testset.map(
-        preprocess, batched=True, remove_columns=["text"], desc="Tokenizing")
+    tokenized_dataset = dataset.map(
+        preprocess, batched=True, num_proc=2,
+        remove_columns=["text"], desc="Tokenizing")
+    trainset = tokenized_dataset["train"]
+    valset = tokenized_dataset["validation"]
+    testset = tokenized_dataset["test"]
 
     # 3) Loaders
     loaders = MakeDataLoaders(opts, tokenizer, trainset, valset, testset)

@@ -70,7 +70,7 @@ def update_opts(opts, args):
 def parse_args():
     args = parser.parse_args()
     with open(args.config, "r") as f:
-        configs = yaml.load(f, Loader=yaml.SafeLoader)  # dict
+        configs = yaml.safe_load(f)  # dict
 
     opts = SimpleNamespace(**configs)
     update_opts(opts, args)

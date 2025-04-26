@@ -58,7 +58,7 @@ if __name__ == "__main__":
             view_model(opts)
         else:
             LOG.info(f"Training for num_epochs={opts.num_epochs}")
-            LOG.info(f"Checkpoint checkpoint_every={opts.checkpoint_every}")
+            # LOG.info(f"Checkpoint checkpoint_every={opts.checkpoint_every}")
             if not opts.experiment_key:
                 experiment = start(project_name=opts.comet_project)
                 experiment.set_name(opts.experiment_name)

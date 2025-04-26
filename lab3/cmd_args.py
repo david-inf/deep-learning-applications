@@ -20,7 +20,5 @@ def parse_args():
 
     opts.visualize = args.view
     opts.config = args.config
-    exp_name = f"{opts.model}_{opts.ft_setting}"
-    opts.experiment_name = exp_name
 
     return opts

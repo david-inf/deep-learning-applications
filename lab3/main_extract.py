@@ -23,9 +23,9 @@ def main(opts):
 
     # Extract features
     if opts.model == "bert":
-        train_features = bert_extractor(opts, rt_trainset["text"])
-        val_features = bert_extractor(opts, rt_valset["text"])
-        test_features = bert_extractor(opts, rt_testset["text"])
+        train_features = bert_extractor(opts, rt_trainset)
+        val_features = bert_extractor(opts, rt_valset)
+        test_features = bert_extractor(opts, rt_testset)
     elif opts.model == "sbert":
         train_features = sbert_extractor(opts, rt_trainset["text"])
         val_features = sbert_extractor(opts, rt_valset["text"])
@@ -45,8 +45,6 @@ def main(opts):
     LOG.info(f"{opts.model.upper()} train_acc={svm.score(train_features, train_labels):.3f}")
     LOG.info(f"{opts.model.upper()} val_acc={svm.score(val_features, val_labels):.3f}")
     LOG.info(f"{opts.model.upper()} test_acc={svm.score(test_features, test_labels):.3f}")
-    # TODO: being of the same dimensionality, what about a distance/similary
-    # measure between the two embeddings?
 
     # logistic = LogisticRegression()
     # logistic.fit(train_features, train_labels)
@@ -66,9 +64,8 @@ if __name__ == "__main__":
     parser.add_argument("--model", help="Feature extractor")
     args = parser.parse_args()
 
-    config = dict(seed=42, device="cuda")
+    config = dict(seed=42, batch_size=32, device="cuda", model=args.model)
     opts = SimpleNamespace(**config)
-    opts.model = args.model
 
     with launch_ipdb_on_exception():
         main(opts)
