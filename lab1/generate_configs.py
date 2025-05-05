@@ -1,6 +1,8 @@
 """ Script for generating YAML configuration files for experiments """
 
 import os
+import yaml
+from types import SimpleNamespace
 from torchinfo import summary
 from utils import get_model
 
@@ -16,10 +18,10 @@ def gen_configs(new_params):
     # new_params may contain updated and new parameters
     # Load base configuration file
     if new_params["model_name"] == "Distill":
-        with open("config-distill.yaml", "r") as f:
+        with open("src/configs/config-distill.yaml", "r") as f:
             base_config = yaml.safe_load(f)  # dict
     else:
-        with open("config-train.yaml", "r") as f:
+        with open("src/configs/config-train.yaml", "r") as f:
             base_config = yaml.safe_load(f)  # dict
 
     # Update with new parameters
@@ -136,8 +138,6 @@ if __name__ == "__main__":
         #  }
     ]
 
-    import yaml
-    from types import SimpleNamespace
     from ipdb import launch_ipdb_on_exception
     for params in configs:
         with launch_ipdb_on_exception():

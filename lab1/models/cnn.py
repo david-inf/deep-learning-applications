@@ -1,7 +1,6 @@
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 # from torchvision.models import resnet18
 
 
@@ -67,21 +66,6 @@ class BasicBlock(nn.Module):
         out = self.relu(out)
 
         return out
-
-
-class InverseBasicBlock(nn.Module):
-    """Same as BasicBlock but with pre-activation batch norm and relu"""
-
-    def __init__(self, in_channels, out_channels, stride=1, skip=True):
-        super().__init__()
-        self.skip = skip
-
-        self.bn1 = nn.BatchNorm2d(in_channels)
-        self.conv1 = conv3x3(in_channels, out_channels, stride=stride)
-        self.bn2 = nn.BatchNorm2d(out_channels)
-        self.conv2 = conv3x3(out_channels, out_channels, stride=1)
-        self.relu = nn.ReLU(inplace=True)
-        # altrimenti posso fargli ereditare BasicBlock e quindi cambio solo il forward se può aver senso
 
 
 class CNN(nn.Module):
@@ -196,6 +180,8 @@ def build_cnn(opts):
     elif opts.dataset.lower() == "cifar10":
         in_channels = 3
         input_data = torch.randn(128, 3, 28, 28)
+    else:
+        raise ValueError(f"Unknown dataset {opts.dataset}")
 
     num_blocks = opts.num_blocks if hasattr(opts, "num_blocks") else 1
     num_filters = opts.num_filters if hasattr(opts, "num_filters") else 16

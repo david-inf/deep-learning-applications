@@ -35,7 +35,7 @@ def get_bert(opts):
         peft_config = LoraConfig(
             task_type=TaskType.SEQ_CLS, inference_mode=False,
             r=ft_setting.rank, lora_alpha=ft_setting.alpha,
-            lora_dropout=0.1, bias="none",
+            lora_dropout=0.0, bias="none",
             target_modules=ft_setting.target_modules
         )
         model = get_peft_model(model, peft_config)

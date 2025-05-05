@@ -84,19 +84,19 @@ def train_epoch(opts, model: PreTrainedModel, optimizer, scheduler, train_loader
             optimizer.step()
             scheduler.step()
 
-            if batch_idx % opts.log_every == 0:
+            if batch_idx % opts.log_every == 0 or batch_idx == len(train_loader) - 1:
                 # Compute training metrics and log to comet_ml
                 train_loss, train_acc = losses.avg, accs.avg
                 experiment.log_metrics(
                     {"loss": train_loss, "acc": train_acc}, step=step)
                 # Compute validation metrics and log to comet_ml
-                # with experiment.validate():
-                #     val_loss, val_acc = test(opts, model, val_loader)
-                #     experiment.log_metrics(
-                #         {"loss": val_loss, "acc": val_acc}, step=step)
+                with experiment.validate():
+                    val_loss, val_acc = test(opts, model, val_loader)
+                    experiment.log_metrics(
+                        {"loss": val_loss, "acc": val_acc}, step=step)
                 # Log to console
                 tepoch.set_postfix(train_loss=train_loss, train_acc=train_acc,
-                                   #    val_loss=val_loss, val_acc=val_acc
+                                   val_loss=val_loss, val_acc=val_acc
                                    )
                 tepoch.update()
                 step += 1

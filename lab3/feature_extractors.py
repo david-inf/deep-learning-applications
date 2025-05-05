@@ -53,7 +53,7 @@ def bert_extractor(opts, dataset):
             with torch.no_grad():
                 input_ids = batch["input_ids"].to(opts.device)
                 attention_mask = batch["attention_mask"].to(opts.device)
-                y = batch["labels"].to(opts.device)
+                # y = batch["labels"].to(opts.device)
 
                 outputs = model(input_ids=input_ids, attention_mask=attention_mask)
                 # TODO: try two options (i) CLS (ii) pooling
@@ -68,8 +68,8 @@ def bert_extractor(opts, dataset):
 
 def _get_sbert(opts):
     """SentenceBERT"""
-    # model = SentenceTransformer("all-mpnet-base-v2", device=opts.device)  # [N, 768]
-    model = SentenceTransformer("all-MiniLM-L6-v2", device=opts.device)  # [N, 384]
+    model = SentenceTransformer("all-mpnet-base-v2", device=opts.device)  # [N, 768]
+    # model = SentenceTransformer("all-MiniLM-L6-v2", device=opts.device)  # [N, 384]
     return model
 
 

@@ -161,6 +161,7 @@ cython_debug/
 
 /lab1/checkpoints
 /lab1/experiments
+/lab3/checkpoints
 
 lab1/run_exps.sh
 .~lock.runs.ods\#
@@ -168,3 +169,5 @@ runs.ods
 
 lab3/generate_config.py
 lab3/experiments/config.yaml
+lab3/models/mlp.py
+/lab1/configs
