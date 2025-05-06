@@ -176,26 +176,38 @@ Inside `lab3/` folder there are the following programs:
 
 ### :one: BERT as a feature extractor
 
-Train a simple classifier (LinearSVC) on top of BERT sentence representation for sentiment analysis task, this will
-be the stable baseline which we will try to improve with finetuning.
+Train a simple classifier (LinearSVC and LogisticRegression) on top of BERT sentence representation for sentiment analysis task, this will be the stable baseline which we will try to improve with finetuning. See code in `main_extract.py`.
 
 <details>
 <summary>Results</summary>
 
-We use the rotten tomatoes dataset with train-val-test splits, hence we use BERT as feature extractor, then we
-train a LinearSVC on top of the representation. We compare DistilBERT and SentenceBERT.
+We use the rotten tomatoes dataset with train-val-test splits, hence we use the BERT models as feature extractors, then we train LinearSVC and LogisticRegression classifiers on top of the representation. We compare DistilBERT and SentenceBERT extractors.
 
-Run the program with `python main_extract.py --model "bert"` and `--model "sbert"`
+- `python lab3/main_extract.py --extractor "distilbert" --method "cls" --classifier "svm"`
+- `python lab3/main_extract.py --extractor "distilbert" --method "mean" --classifier "svm"`
+- `python lab3/main_extract.py --extractor "sbert" --method "mpnet" --classifier "svm"`
+- `python lab3/main_extract.py --extractor "sbert" --method "minilm" --classifier "svm"`
 
-| Extractor                                | size  | `train_acc` | `val_acc` | `test_acc` |
+| Extractor for LinearSVC                  | size  | `train_acc` | `val_acc` | `test_acc` |
 | ---------------------------------------- | ----- | ----------- | --------- | ---------- |
 | `distilbert-base-uncased` ([CLS] token)  | 67M   | 0.849       | 0.822     | 0.798      |
 | `distilbert-base-uncased` (mean pooling) | 67M   | 0.846       | 0.810     | 0.788      |
 | `all-mpnet-base-v2`                      | 109M  | 0.879       | 0.855     | 0.847      |
 | `all-MiniLM-L6-v2`                       | 22.7M | 0.791       | 0.767     | 0.777      |
 
-Being SBERT more suitable than BERT for sentence embeddings, as we expected the SVM on top of SBERT has better
-results. Feature extraction implementation in `feature_extractors.py`.
+- `python lab3/main_extract.py --extractor "distilbert" --method "cls" --classifier "logistic"`
+- `python lab3/main_extract.py --extractor "distilbert" --method "mean" --classifier "logistic"`
+- `python lab3/main_extract.py --extractor "sbert" --method "mpnet" --classifier "logistic"`
+- `python lab3/main_extract.py --extractor "sbert" --method "minilm" --classifier "logistic"`
+
+| Extractor for LogisticRegression         | size  | `train_acc` | `val_acc` | `test_acc` |
+| ---------------------------------------- | ----- | ----------- | --------- | ---------- |
+| `distilbert-base-uncased` ([CLS] token)  | 67M   | 0.840       | 0.822     | 0.794      |
+| `distilbert-base-uncased` (mean pooling) | 67M   | 0.841       | 0.817     | 0.792      |
+| `all-mpnet-base-v2`                      | 109M  | 0.863       | 0.859     | 0.852      |
+| `all-MiniLM-L6-v2`                       | 22.7M | 0.784       | 0.777     | 0.774      |
+
+Being SBERT more suitable than BERT for sentence embeddings, as we expected the classifier on top of SBERT has better performance.
 
 </details>
 

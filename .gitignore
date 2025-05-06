@@ -171,3 +171,5 @@ lab3/generate_config.py
 lab3/experiments/config.yaml
 lab3/models/mlp.py
 /lab1/configs
+
+src/feature_extractors.py

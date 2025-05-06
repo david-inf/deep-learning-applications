@@ -14,6 +14,19 @@ def count_params(configs):
     return f"{model_stats.total_params/10**6:.2f}M"
 
 
+def train_configs(param_dict):
+    configs = {
+        "seed": 42, "device": "cuda", "batch_size": 128, "num_workers": 2,
+        "num_epochs": 10, "learning_rate": 0.01, "momentum": 0.9, "lr_decay": 0.95,
+        "weight_decay": 0.0005,
+        "resume_checkpoint": None, "log_every": 20, "checkpoint_every": None,
+        "comet_project": "deep-learning-applications", "experiment_name": None,
+        "experiment_key": None}
+
+
+# def distil_configs(param_dict)
+
+
 def gen_configs(new_params):
     # new_params may contain updated and new parameters
     # Load base configuration file
@@ -138,9 +151,11 @@ if __name__ == "__main__":
         #  }
     ]
 
-    from ipdb import launch_ipdb_on_exception
+    from ipdb import set_trace
     for params in configs:
-        with launch_ipdb_on_exception():
+        try:
             gen_configs(params)
             print()
+        except Exception:
+            set_trace()
     print("Done")
