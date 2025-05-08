@@ -2,83 +2,84 @@
 
 import os
 import yaml
-from types import SimpleNamespace
-from torchinfo import summary
-from utils import get_model
+# from types import SimpleNamespace
+# from torchinfo import summary
+# from utils import get_model
 
 
-def count_params(configs):
-    # returns params in millions
-    opts = SimpleNamespace(**configs)
-    model_stats = summary(get_model(opts), verbose=0)
-    return f"{model_stats.total_params/10**6:.2f}M"
+# def count_params(configs: dict):
+#     # returns params in millions
+#     opts = SimpleNamespace(**configs)
+#     model_stats = summary(get_model(opts), verbose=0)
+#     return f"{model_stats.total_params/10**6:.2f}M"
 
+# TODO: distillation configs
+# def gen_configs_distil(new_params):
+#     """Generate a configuration file given the params dict"""
+    # _dataset = base_config["dataset"].lower()
+    #     if base_config["model_name"] == "Distill":
+    #         output_dir = "experiments/distill"
+    #         os.makedirs(output_dir, exist_ok=True)
+    #         _teacher = base_config["teacher"]
+    #         _teacher_prefix = _teacher["model_name"] + count_params(_teacher)
+    #         _student = base_config["student"]
+    #         _student_prefix = _student["model_name"] + count_params(_student)
+    #         _prefix = "Distill_" + _teacher_prefix + \
+    #             "_" + _student_prefix
 
-def train_configs(param_dict):
-    configs = {
-        "seed": 42, "device": "cuda", "batch_size": 128, "num_workers": 2,
-        "num_epochs": 10, "learning_rate": 0.01, "momentum": 0.9, "lr_decay": 0.95,
-        "weight_decay": 0.0005,
-        "resume_checkpoint": None, "log_every": 20, "checkpoint_every": None,
-        "comet_project": "deep-learning-applications", "experiment_name": None,
-        "experiment_key": None}
-
-
-# def distil_configs(param_dict)
-
-
-def gen_configs(new_params):
-    # new_params may contain updated and new parameters
+def gen_configs_train(new_params):
+    """Generate a configuration file given the params dict"""
+    # new_params may contain updated and new params
     # Load base configuration file
-    if new_params["model_name"] == "Distill":
-        with open("src/configs/config-distill.yaml", "r") as f:
-            base_config = yaml.safe_load(f)  # dict
-    else:
-        with open("src/configs/config-train.yaml", "r") as f:
-            base_config = yaml.safe_load(f)  # dict
+    configs = {
+        "seed": 42, "dataset": "MNIST", "batch_size": 128, "num_workers": 4,
+        "num_epochs": 10, "learning_rate": 0.01, "momentum": 0.9, "weight_decay": 5e-4,
+        "scheduler": {"type": "multi-step", "steps": [50, 100], "gamma": 0.1},
+        "log_every": 20, "checkpoint": None,
+        "do_early_stopping": False,
+        "comet_project": "deep-learning-applications", "experiment_key": None,
+    }
+    configs.update(new_params)
 
-    # Update with new parameters
-    base_config.update(new_params)
+    # Experiment naming
+    if configs.get("experiment_name") is None:
+        _prefix = configs["model"]# + count_params(configs)
+        exp_name = f"{_prefix}_{configs["dataset"].lower()}"
+        configs["experiment_name"] = exp_name
+    
+    # Checkpoint directory
+    if configs.get("checkpoint_dir") is None:
+        output_dir = os.path.join("lab1/ckpts", configs["model"])
+        configs["checkpoint_dir"] = output_dir
+    os.makedirs(configs["checkpoint_dir"], exist_ok=True)
 
-    # Automate naming
-    _dataset = base_config["dataset"].lower()
-    if base_config["model_name"] == "Distill":
-        output_dir = "experiments/distill"
-        os.makedirs(output_dir, exist_ok=True)
-        _teacher = base_config["teacher"]
-        _teacher_prefix = _teacher["model_name"] + count_params(_teacher)
-        _student = base_config["student"]
-        _student_prefix = _student["model_name"] + count_params(_student)
-        _prefix = "Distill_" + _teacher_prefix + \
-            "_" + _student_prefix
-    else:
-        output_dir = os.path.join("experiments", base_config["model_name"])
-        os.makedirs(output_dir, exist_ok=True)
-        _prefix = base_config["model_name"] #+ ("skip" if base_config["skip"] else "")
-        _params = count_params(base_config)
-        _prefix += _params
-    base_config["experiment_name"] = f"{_prefix}_{_dataset}"
+    # Chekpointing frequency
+    if configs.get("checkpoint_every") is None:
+        configs["checkpoint_every"] = configs["num_epochs"]
 
     # Dump new configuration file
-    fname = base_config["experiment_name"] + ".yaml"
-    output_path = os.path.join(output_dir, fname)
-    with open(output_path, "w") as f:
-        yaml.dump(base_config, f)
+    fname = configs["experiment_name"] + ".yaml"
+    output_dir = os.path.join("lab1/configs", configs["model"])
+    os.makedirs(output_dir, exist_ok=True)
 
-    print(f"Generated config: {output_path}")
-    print(f"Configuration: {base_config}")
-    print(f"Experiment name: {base_config["experiment_name"]}")
+    output_path = os.path.join(output_dir, fname)
+    with open(output_path, "w", encoding="utf-8") as f:
+        yaml.dump(configs, f)
+
+    print(f"Generated file: {output_path}")
+    print(f"Configs: {configs}")
+    print(f"Experiment: {configs["experiment_name"]}")
 
 
 if __name__ == "__main__":
-    configs = [  # list of params (dict)
+    new_configs = [  # list of params (dict)
         # # MLP Tiny
-        # {"model_name": "MLP", "dataset": "MNIST",
-        #  "layers": [128, 128], "weight_decay": 0.},
+        {"model": "MLP", "dataset": "MNIST",
+         "layers": [128, 128], "weight_decay": 0.},
         # # MLP Large
         # {"model_name": "MLP", "dataset": "MNIST", "augmentation": True,
         #  "layers": [1024,1024,512,128], "early_stopping": {"patience": 3, "threshold": 0.01}},
-        {"model_name": "MLP", "dataset": "CIFAR10", "layers": [512], "weight_decay": 0.}
+        # {"model_name": "MLP", "dataset": "CIFAR10", "layers": [512], "weight_decay": 0.}
 
         ## **** ##
 
@@ -151,11 +152,7 @@ if __name__ == "__main__":
         #  }
     ]
 
-    from ipdb import set_trace
-    for params in configs:
-        try:
-            gen_configs(params)
-            print()
-        except Exception:
-            set_trace()
+    for params_dict in new_configs:
+        gen_configs_train(params_dict)
+        print()
     print("Done")

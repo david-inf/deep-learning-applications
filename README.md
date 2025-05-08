@@ -1,6 +1,7 @@
 # Deep learning applications
 
-Repository to host the laboratories from the course on deep learning applications
+Repository to host the laboratories from the course on Deep Learning Applications
+
 
 ## :test_tube: Lab1 - Convolutional Neural Networks
 
@@ -13,12 +14,15 @@ Feel for working with deep models
 pip install -r lab1.txt
 ```
 
-Inside folder `lab1/` you have the follwing programs:
-- `checkpoints` folder that will be automatically created for storing model checkpoints
-- `experiments` folder that will be automatically created for storing yaml configurations files for each experiment
+- `ckpts` folder that will be automatically created for storing model checkpoints
+- `configs` folder that will be automatically created for storing `yaml` configurations files for each experiment
+  - `generate_configs.py` automatically generate a configuration file from a given params dict
+  - Each model configuration will be stored in `configs/model`
 - `models/` folder with MLPs (`mlp.py`) and CNNs (`cnn.py`) definitions
+- `plots/` for results
+- `utils/` for various utilities (`misc_utils.py` and `train_utils.py`)
 - `cmd_args.py` arguments for main programs
-- `config-train.yaml` `config-distill.yaml` base configuration files
+- `config-distill.yaml` base configuration files
 - `generate_configs.py` program for generating yaml configuration files automatically from base configuration files
 and given options
 - Main programs:
@@ -167,7 +171,6 @@ python install -r lab3.txt
 Inside `lab3/` folder there are the following programs:
 
 - Exercise 1:
-  - `feature_extractors.py`
   - `main_extract.py`
 - Exercise 2:
   - `main_ft.py`

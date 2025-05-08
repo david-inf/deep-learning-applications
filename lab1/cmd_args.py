@@ -11,68 +11,38 @@ from utils import LOG
 parser = argparse.ArgumentParser(
     description="Run an experiment and log to comet_ml")
 
-parser.add_argument("--config", help="YAML configuration file")
-
-parser.add_argument("--epochs", default=10, type=int,
-                    help="Number of epochs, increase when resuming")
-parser.add_argument("--ckping", type=int, default=None,
-                    help="Specify checkpointing frequency with epochs")
-
-parser.add_argument("--log_every", type=int, default=20,
-                    help="Metrics logging frequency in batches")
+parser.add_argument("--config",
+                    # default="lab1/configs/",
+                    help="YAML configuration file")
+parser.add_argument("--view", action="store_true",  # default False
+                    help="Visualize model architecture, no training")
 
 
-def update_opts(opts, args):
-    # update yaml file with updated and new attributes from opts
-    # Configs yaml file
-    opts.config = args.config  # keep the yaml file name
-
+def print_info(opts):
     # Device
     opts.device = "cuda" if torch.cuda.is_available() else "cpu"
-    LOG.info(f"Device: {opts.device}")
-
-    # Update epochs
-    if args.epochs != opts.num_epochs:
-        prev = opts.num_epochs
-        opts.num_epochs = args.epochs
-        LOG.info(f"Updated number of epochs to {opts.num_epochs} from {prev}")
-    else:
-        LOG.info(f"Training for {opts.num_epochs} epochs")
-
+    LOG.info("device=%s", opts.device)
+    # Epochs
+    LOG.info("num_epochs=%d epochs", opts.num_epochs)
     # Model checkpointing
-    if args.ckping:
-        opts.checkpoint_every = args.ckping
-        LOG.info(f"Checkpointing every {opts.checkpoint_every} epochs")
-    else:
-        opts.checkpoint_every = opts.num_epochs
-        LOG.info(f"Checkpointing at the end of training")
-    # checkpoints directory
-    ckp_dir = os.path.join("checkpoints", opts.model_name)
-    os.makedirs(ckp_dir, exist_ok=True)  # output dir not tracked by git
-    opts.checkpoint_dir = ckp_dir  # for saving and loading ckps
+    LOG.info("checkpoint_every=%d epochs", opts.checkpoint_every)
 
     # Early stopping
-    if hasattr(opts, "early_stopping"):
+    if opts.do_early_stopping:
         patience = opts.early_stopping["patience"]
         threshold = opts.early_stopping["threshold"]
-        LOG.info(f"Early stopping activated with patience {patience}, "
-                 f"threshold {threshold}")
-
-    # Update opts with new attributes from args
-    opts.__dict__.update(vars(args))
-
-    # Update yaml file
-    with open(opts.config, "w") as f:
-        # dump the updated opts to the yaml file
-        yaml.dump(opts.__dict__, f)
+        LOG.info("Early stopping activated with patience %d, "
+                 "threshold %f", patience, threshold)
 
 
 def parse_args():
     args = parser.parse_args()
-    with open(args.config, "r") as f:
+    with open(args.config, "r", encoding="utf-8") as f:
         configs = yaml.safe_load(f)  # dict
-
     opts = SimpleNamespace(**configs)
-    update_opts(opts, args)
+
+    opts.visualize = args.view
+    opts.config = args.config
+    print_info(opts)
 
     return opts
