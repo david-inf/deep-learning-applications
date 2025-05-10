@@ -1,10 +1,35 @@
 
 from types import SimpleNamespace
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, pipeline
 from peft import LoraConfig, TaskType, get_peft_model
+import numpy as np
 
 
-def get_bert(opts):
+def get_distilbert_features(opts, texts):
+    """Use DistilBERT as feature extractor"""
+    checkpoint="distilbert-base-uncased"
+    feature_extractor = pipeline(
+        model=checkpoint, tokenizer=checkpoint, task="feature-extraction",
+        framework="pt", device="cuda", batch_size=32,
+        tokenize_kwargs=dict(max_length=128, truncation=True))
+    extractions = feature_extractor(texts, return_tensors="pt")
+
+    features = []
+    for extract in extractions:  # get a tensor
+        if opts.method == "cls":
+            # extract CLS token
+            features.append(extract[0].numpy()[0])
+        elif opts.method == "mean":
+            # mean pooling over each token embeddings
+            features.append(extract[0].numpy().mean(axis=0))
+        else:
+            raise ValueError(f"Unknown extraction method {opts.method}")
+
+    return np.vstack((features))
+
+
+def get_distilbert(opts):
+    """Get DistilBERT"""
     tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
     model = DistilBertForSequenceClassification.from_pretrained(
         "distilbert-base-uncased", num_labels=2)

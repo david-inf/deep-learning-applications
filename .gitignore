@@ -159,17 +159,20 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-/lab1/checkpoints
-/lab1/experiments
-/lab3/checkpoints
+/data
+
+/lab1/ckpts
+/lab1/configs
+/lab3/ckpts
+/lab3/configs
 
 lab1/run_exps.sh
+lab1/commands.sh
+
 .~lock.runs.ods\#
 runs.ods
 
 lab3/generate_config.py
 lab3/experiments/config.yaml
 lab3/models/mlp.py
-/lab1/configs
-
-src/feature_extractors.py
+lab3/feature_extractors.py

@@ -3,7 +3,7 @@
 from comet_ml import start
 import torch
 from mydata import get_loaders
-from models.bert import get_bert
+from lab3.models.distilbert import get_bert
 from train import train_loop, test
 from utils import LOG, set_seeds, visualize, update_yaml
 

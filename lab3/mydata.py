@@ -8,7 +8,7 @@ from transformers import DataCollatorWithPadding, PreTrainedTokenizer
 from datasets import load_dataset, Dataset
 
 from utils import set_seeds, LOG
-from models.bert import get_bert
+from lab3.models.distilbert import get_bert
 
 
 class MakeDataLoaders:
