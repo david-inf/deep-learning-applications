@@ -1,6 +1,7 @@
 # Deep learning applications
 
-Repository to host the laboratories from the course on deep learning applications
+Repository to host the laboratories from the course on Deep Learning Applications
+
 
 ## :test_tube: Lab1 - Convolutional Neural Networks
 
@@ -13,46 +14,43 @@ Feel for working with deep models
 pip install -r lab1.txt
 ```
 
-Inside folder `lab1/` you have the follwing programs:
-- `checkpoints` folder that will be automatically created for storing model checkpoints
-- `experiments` folder that will be automatically created for storing yaml configurations files for each experiment
-- `models/` folder with MLPs (`mlp.py`) and CNNs (`cnn.py`) definitions
+- `ckpts/` folder that will be automatically created for storing model checkpoints
+- `configs/` folder that will be automatically created for storing `yaml` configurations files for each experiment
+  - `generate_configs.py` automatically generate a configuration file from a given params dict
+  - Each model configuration will be stored in `configs/model/`
+- `models/` module with MLPs (`mlp.py`) and CNNs (`cnn.py` `resnet.py`) definitions
+- `plots/` for results
+- `utils/` module with utilities (`misc_utils.py` and `train_utils.py`)
 - `cmd_args.py` arguments for main programs
-- `config-train.yaml` `config-distill.yaml` base configuration files
-- `generate_configs.py` program for generating yaml configuration files automatically from base configuration files
-and given options
+- `config-distill.yaml` base configuration files
 - Main programs:
-- `main-train.py` main script for training a single model
-- `main-distill.py` main script for distilling knowledge
-- `main-models.py` main script for inspecting models defined in `models/` folder
+  - `main-train.py` main script for training a single model, see `python lab1/main-train.py --help`
+  - `main-distill.py` main script for distilling knowledge, see `python lab1/main-distill.py --help.py`
 - `mydata.py` wrappers for MNIST and CIFAR10 datasets
-- `train.py` and `utils.py` are utilities
+- `train.py` training utilities
 
 </details>
 
 <details>
 <summary>Running the main script</summary>
 
-After generating configs, run a program with
 ```bash
-python lab1.py experiments/CNN_4.83M_cifar10.yaml
+python lab1/main-train.py --config lab1/configs/CNN/MediumCNN.yaml
 ```
 
-It will automatically save checkpoints and log to `comet_ml`. If the experiment have already been runned, you may run
-the same command with more epochs (`--epochs 40`) and the experiment will be resumed (checkpoint path and experiment
-key are automatically dumped in the configuration file).
-
-When running a program you should see
+```bash
+001: 100%|█████████████████████████| 391/391 [00:30<00:00, 12.92batch/s, train_acc=0.342, train_loss=1.73, val_acc=0.379, val_loss=1.78]
+002: 100%|█████████████████████████| 391/391 [00:37<00:00, 10.32batch/s, train_acc=0.5, train_loss=1.37, val_acc=0.535, val_loss=1.28]
+003: 100%|█████████████████████████| 391/391 [00:39<00:00,  9.91batch/s, train_acc=0.586, train_loss=1.15, val_acc=0.597, val_loss=1.16]
+```
 
 ```bash
-030: 100%|██████████████████████| 338/338 [00:02<00:00, 112.93batch/s, train_acc=0.997, train_loss=0.0669, val_acc=0.538, val_loss=1.97]
-031: 100%|██████████████████████| 338/338 [00:03<00:00, 112.49batch/s, train_acc=0.998, train_loss=0.0619, val_acc=0.533, val_loss=1.97]
-032: 100%|██████████████████████| 338/338 [00:03<00:00, 106.86batch/s, train_acc=0.998, train_loss=0.0583, val_acc=0.534, val_loss=1.98]
+python lab1/main-distil.py --config
 ```
 
 </details>
 
-### :one: Skip connections, deep residual learning
+### :one: Degradation problem, deep residual learning
 
 Reproducing on a small scale the results from the ResNet paper using CIFAR10 dataset.
 
@@ -61,26 +59,17 @@ Reproducing on a small scale the results from the ResNet paper using CIFAR10 dat
 Deeper networks, i.e. more stacked layers, do not guarantee more reduction in training loss. So the point of this exercise is to abstract a model definition so that one can add a given number of layers (blocks), and then see how the performance are affected. The idea is to reproduce Figure 6 from the paper.
 
 <details>
-<summary>MLP</summary>
-
-MLP with variable number of blocks `n_blocks`:
-- `BasicBlock`: 2 fully connected layers with given `hidden_size` and relu
-- Optional skip connection in each block by setting `skip=True`
-
-</details>
-
-<details>
-<summary>CNN</summary>
+<summary>CNNs architecture</summary>
 
 - `input_adapter`: conv + batchnorm + relu that exits with `num_filters`
 - `blocks`: sequence of `BasicBlock` layers
-- Each `BasicBlock` contains two modules of conv + batchnorm + relu
-- In this version there are two upper level layers, each one with $n$ `BasicBlock`, in the default version $n=1$
-- Optional shortcut in each block by setting `skip=True`
-- `avgpool`: ends with a (1, 1) feature map
-- `fc`: classification head
+  - Each `BasicBlock` contains two modules of conv + batchnorm + relu
+  - In this version there are two upper level layers, each one with $n$ `BasicBlock`, in the default version $n=1$
+  - Optional shortcut in each block by setting `skip=True` (this for comparison)
+- `avgpool`: ends with a `(num_filters*2) x 1 x 1` feature map
+- `classifier`: classification head
 
-This results in $4n+2$ layers, where $n$ is the variable specifying the number of blocks per each layer. In the implementation $n$ is specified through the `num_blocks` parameter.
+This results in `2*2*n+2` layers, where $n$ is the variable specifying the number of `BasicBlock` per each layer. In the implementation $n$ is specified through the `num_blocks` argument.
 
 </details>
 
@@ -89,22 +78,22 @@ This results in $4n+2$ layers, where $n$ is the variable specifying the number o
 
 First a table with each model
 
-| Name                      | $n$ | Filters | Layers | Test acc |
-| ------------------------- | --- | ------- | ------ | -------- |
-| `TinyCNN 0.02M`           | 1   | 16      | 6      | 0.6737   |
-| `SmallCNN 0.07M`          | 3   | 16      | 14     | 0.6646   |
-| `MediumCNN 0.11M`         | 5   | 16      | 22     | 0.5999   |
-| `MediumCNN w/ skip 0.11M` | 5   | 16      | 22     | 0.7393   |
-| `LargeCNN 0.16M`          | 7   | 16      | 30     | 0.5095   |
-| `LargeCNN w/ skip 0.16M`  | 7   | 16      | 30     | 0.7505   |
+| Name            | `num_blocks` | `num_filters` | #params | Layers | val_acc |
+| --------------- | ------------ | ------------- | ------- | ------ | ------- |
+| `SmallCNN`      | 1            | 16            | 0.02M   | 6      | 0.      |
+| `SmallCNNskip`  | 1            | 16            | 0.02M   | 6      | 0.      |
+| `MediumCNN`     | 5            | 16            | 0.11M   | 22     | 0.      |
+| `MediumCNNskip` | 5            | 16            | 0.11M   | 22     | 0.      |
+| `LargeCNN`      | 7            | 16            | 0.16M   | 30     | 0.      |
+| `LargeCNNskip`  | 7            | 16            | 0.16M   | 30     | 0.      |
 
 Then learning curves where we can see the degradation problem
 
-<div style="display: flex; flex-direction: row;">
-  <img src="lab1/plots/train/curves.svg" alt="learning" width="48%">
+<p align="middle">
+  <img src="lab1/plots/train/curves.svg" alt="learning" width="45%">
   &nbsp;
-  <img src="lab1/plots/train/test_acc.svg" alt="test" width="48%">
-</div>
+  <img src="lab1/plots/train/test_acc.svg" alt="test" width="45%">
+</p>
 
 See the degradation problem for increasing depth of the network, tiny and medium have similar performance, but when adding further layers we see that "adding more layers reduces loss" holds no more. Skip connections, residual learning, solve the problem. Test accuracy provides evidence as well, i.e. skip connections solve the degradation problem.
 
@@ -136,17 +125,17 @@ $3n+2$ total layers
 <details>
 <summary>Results</summary>
 
-| Name                       | $n$ | Filters | Layers | Test acc |
-| -------------------------- | --- | ------- | ------ | -------- |
-| `SmallCNN 0.07M`           | 3   | 16      | 14     | 0.6646   |
-| `ResNet 1.86M`             | 5   | 32      | 17     | 0.8242   |
-| `Distilled SmallCNN 0.07M` | 3   | 16      | 14     | 0.7137   |
+| Name                 | `num_blocks` | `num_filters` | #params | Layers | val_acc |
+| -------------------- | ------------ | ------------- | ------- | ------ | ------- |
+| `SmallCNNskip`       | 1            | 16            | 0.02M   | 6      | 0.      |
+| `ResNet32`           | 5            | 16            | 0.47M   | 32     | 0.      |
+| `DistilSmallCNNskip` | 1            | 16            | 0.02M   | 6      | 0.      |
 
-<div style="display: flex; flex-direction: row;">
-  <img src="lab1/plots/distill/distill_curves.svg" alt="learning" width="49%">
+<p align="middle">
+  <img src="lab1/plots/distill/distill_curves.svg" alt="learning" width="45%">
   &nbsp;
-  <img src="lab1/plots/distill/distill_val_acc.svg" alt="validation" width="49%">
-</div>
+  <img src="lab1/plots/distill/distill_val_acc.svg" alt="validation" width="45%">
+</p>
 
 The distilled model is able to achieve a higher train accuracy earlier. Mostly similar performance on the validation set, however the distilled model stays on top of the base one. The small model trained with distillation has better performance than the same trained in the classical way!
 
@@ -167,7 +156,6 @@ python install -r lab3.txt
 Inside `lab3/` folder there are the following programs:
 
 - Exercise 1:
-  - `feature_extractors.py`
   - `main_extract.py`
 - Exercise 2:
   - `main_ft.py`

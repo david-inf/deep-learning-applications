@@ -161,13 +161,17 @@ cython_debug/
 
 /data
 
-/lab1/ckpts
-/lab1/configs
+# /lab1/ckpts
+# /lab1/configs/CNN
+# /lab1/configs/distill
+# /lab1/configs/MLP
+# /lab1/configs/ResNet
 /lab3/ckpts
 /lab3/configs
 
+lab1/commands1.sh
+lab1/commands2.sh
 lab1/run_exps.sh
-lab1/commands.sh
 
 .~lock.runs.ods\#
 runs.ods

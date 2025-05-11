@@ -6,7 +6,7 @@ import numpy as np
 
 
 def get_distilbert_features(opts, texts):
-    """Use DistilBERT as feature extractor"""
+    """Extract DistilBERT features for given texts"""
     checkpoint="distilbert-base-uncased"
     feature_extractor = pipeline(
         model=checkpoint, tokenizer=checkpoint, task="feature-extraction",
@@ -29,7 +29,7 @@ def get_distilbert_features(opts, texts):
 
 
 def get_distilbert(opts):
-    """Get DistilBERT"""
+    """Get BERT family model and its tokenizer with given finetuning setting"""
     tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
     model = DistilBertForSequenceClassification.from_pretrained(
         "distilbert-base-uncased", num_labels=2)
