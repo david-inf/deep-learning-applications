@@ -3,7 +3,7 @@
 import os
 import torch
 import numpy as np
-from utils.misc_utils import LOG, update_yaml
+from utils import LOG, update_yaml
 
 
 def N(x: torch.Tensor):
@@ -21,6 +21,8 @@ def accuracy(logits, labels):
     return acc
 
 
+# TODO: rename to save_torch_model
+# TODO: outside module with all utilities for all labs
 def save_checkpoint(opts, model: torch.nn.Module, fname=None):
     """Save a model checkpoint to be resumed later"""
     if not fname:
@@ -30,7 +32,7 @@ def save_checkpoint(opts, model: torch.nn.Module, fname=None):
     output_path = os.path.join(opts.checkpoint_dir, fname)
 
     ckpt_state = {
-        "model_state_dict": model,
+        "model_state_dict": model.state_dict(),
     }
     torch.save(ckpt_state, output_path)
 

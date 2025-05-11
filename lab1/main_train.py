@@ -9,7 +9,7 @@ from torch.backends import cudnn
 from mydata import MyMNIST, MyAugmentedMNIST
 from mydata import MyCIFAR10, MyAugmentedCIFAR10, MakeDataLoaders
 from models import build_mlp, build_cnn
-from train import train_loop, test
+from train import train_loop
 from utils.misc_utils import LOG, set_seeds, visualize, compute_flops
 
 

@@ -5,6 +5,7 @@ checkpoint_dir: lab1/ckpts/CNN
 checkpoint_every: 20
 comet_project: deep-learning-applications
 dataset: CIFAR10
+device: cuda
 do_early_stopping: false
 experiment_name: SmallCNN
 learning_rate: 0.01
