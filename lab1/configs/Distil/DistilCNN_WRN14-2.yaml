@@ -1,11 +1,12 @@
 augmentation: true
 batch_size: 128
-checkpoint: null
+checkpoint: lab1/ckpts/Distil/DistilCNN_WRN14-2.pt
 checkpoint_dir: lab1/ckpts/Distil
 checkpoint_every: 20
 comet_project: deep-learning-applications
+config: lab1/configs/Distil/DistilCNN_WRN14-2.yaml
 dataset: CIFAR10
-device: cuda
+device: cuda:0
 do_early_stopping: false
 experiment_name: DistilCNN_WRN14-2
 learning_rate: 0.01
@@ -19,12 +20,12 @@ scheduler:
 seed: 42
 student:
   dataset: CIFAR10
-  device: cuda
+  device: cuda:0
   learning_rate: 0.01
   model: CNN
   momentum: 0.9
   num_blocks: 1
-  num_filters: 16
+  num_filters: 32
   scheduler:
     gamma: 0.95
     type: exponential
@@ -33,12 +34,12 @@ student:
 teacher:
   ckpt: lab1/ckpts/WideResNet/WideResNet14-2.pt
   dataset: CIFAR10
-  device: cuda
+  device: cuda:0
   model: WideResNet
   num_blocks: 2
   num_filters: 16
   widen_factor: 2
 temp: 5
-weight_decay: 0.0005
+visualize: false
 weight_labloss: 0.5
-weight_stloss: 5.0
+weight_stloss: 10.0

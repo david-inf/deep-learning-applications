@@ -99,7 +99,7 @@ if __name__ == "__main__":
     NUM_FILTERS = 16
     train_new_configs = [  # list of params (dict)
 
-        # SmallCNN - For distillation
+        # SmallCNN
         # {"model": "CNN", "skip": False, "num_filters": NUM_FILTERS, "num_blocks": 1,
         #  "experiment_name": "SmallCNN"},
         # {"model": "CNN", "skip": True, "num_filters": NUM_FILTERS, "num_blocks": 1,
@@ -114,6 +114,10 @@ if __name__ == "__main__":
         #  "experiment_name": "LargeCNN"},
         # {"model": "CNN", "skip": True, "num_filters": NUM_FILTERS, "num_blocks": 7,
         #  "experiment_name": "LargeCNNskip"},
+
+        # BaseCNN for distillation
+        # {"model": "CNN", "skip": True, "num_filters": NUM_FILTERS, "num_blocks": 3,
+        #  "experiment_name": "BaseCNN"},
 
         # ResNet (teacher model)
         # {"model": "ResNet", "num_filters": NUM_FILTERS, "num_blocks": 5, "skip": True,

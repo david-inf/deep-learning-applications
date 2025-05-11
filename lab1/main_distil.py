@@ -55,7 +55,7 @@ def main(opts, experiment):
     # Training
     cudnn.benchmark = True
     with experiment.train():
-        LOG.info("Running experiment_name=%s", {opts.experiment_name})
+        LOG.info("Running experiment_name=%s", opts.experiment_name)
         train_loop_distill(opts, teacher, student, optimizer, scheduler,
                            train_loader, val_loader, experiment)
     # TODO: testing? again on validation?

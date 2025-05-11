@@ -1,24 +1,21 @@
 augmentation: true
 batch_size: 128
-checkpoint: lab1/ckpts/ResNet/ResNet32.pt
-checkpoint_dir: lab1/ckpts/ResNet
+checkpoint: lab1/ckpts/CNN/BaseCNN.pt
+checkpoint_dir: lab1/ckpts/CNN
 checkpoint_every: 20
 comet_project: deep-learning-applications
-config: lab1/configs/ResNet/ResNet32.yaml
+config: lab1/configs/CNN/BaseCNN.yaml
 dataset: CIFAR10
 device: cuda:1
-do_early_stopping: true
-early_stopping:
-  min_delta: 0.001
-  patience: 7
-experiment_name: ResNet32
+do_early_stopping: false
+experiment_name: BaseCNN
 learning_rate: 0.01
 log_every: 20
-model: ResNet
+model: CNN
 momentum: 0.9
-num_blocks: 5
-num_epochs: 100
-num_filters: 16
+num_blocks: 1
+num_epochs: 20
+num_filters: 32
 num_workers: 4
 scheduler:
   gamma: 0.95

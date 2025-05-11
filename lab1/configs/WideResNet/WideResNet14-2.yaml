@@ -6,11 +6,11 @@ checkpoint_every: 20
 comet_project: deep-learning-applications
 config: lab1/configs/WideResNet/WideResNet14-2.yaml
 dataset: CIFAR10
-device: cuda
+device: cuda:0
 do_early_stopping: true
 early_stopping:
-  min_delta: 0.002
-  patience: 4
+  min_delta: 0.001
+  patience: 7
 experiment_name: WideResNet14-2
 learning_rate: 0.01
 log_every: 20

@@ -34,8 +34,10 @@ pip install -r lab1.txt
 <details>
 <summary>Running the main script</summary>
 
+Before running check always the configuration file (as for the device).
+
 ```bash
-python lab1/main-train.py --config lab1/configs/CNN/MediumCNN.yaml
+python lab1/main_train.py --config lab1/configs/CNN/MediumCNN.yaml
 ```
 
 ```bash
@@ -45,7 +47,13 @@ python lab1/main-train.py --config lab1/configs/CNN/MediumCNN.yaml
 ```
 
 ```bash
-python lab1/main-distil.py --config
+python lab1/main_distil.py --config lab1/configs/Distil/DistilCNN_RN32.yaml
+```
+
+```bash
+001: 100%|████████████████████████| 391/391 [00:13<00:00, 28.11batch/s, train_acc=0.326, train_loss=2.32, val_acc=0.413, val_loss=1.62]
+002: 100%|████████████████████████| 391/391 [00:12<00:00, 31.35batch/s, train_acc=0.472, train_loss=1.74, val_acc=0.497, val_loss=1.49]
+003: 100%|████████████████████████| 391/391 [00:12<00:00, 31.09batch/s, train_acc=0.537, train_loss=1.48, val_acc=0.55, val_loss=1.27]
 ```
 
 </details>
@@ -125,11 +133,15 @@ $3n+2$ total layers
 <details>
 <summary>Results</summary>
 
-| Name                 | `num_blocks` | `num_filters` | #params | Layers | val_acc |
-| -------------------- | ------------ | ------------- | ------- | ------ | ------- |
-| `SmallCNNskip`       | 1            | 16            | 0.02M   | 6      | 0.      |
-| `ResNet32`           | 5            | 16            | 0.47M   | 32     | 0.      |
-| `DistilSmallCNNskip` | 1            | 16            | 0.02M   | 6      | 0.      |
+We define another CNN, named BaseCNN, with skip connectiona and to have more #params than dataset samples. Here we'd like to compare BaseCNN with standard training and knowledge distillation training. We compare also the two teachers.
+
+| Name                 | `num_blocks` | `num_filters` | `widen_factor` | #params | Layers | val_acc |
+| -------------------- | ------------ | ------------- | -------------- | ------- | ------ | ------- |
+| `BaseCNN`            | 1            | 32            | 1              | 0.08M   | 6      | 0.      |
+| `ResNet32`           | 5            | 16            | 1              | 0.47M   | 32     | 0.      |
+| `WideResNet14-2`     | 2            | 16            | 2              | 0.69M   | 14     | 0.      |
+| `DistilCNN_RN32`     | 1            | 16            | 1              | 0.08M   | 6      | 0.      |
+| `DistilCNN_WRN14-2`  | 1            | 16            | 1              | 0.08M   | 6      | 0.      |
 
 <p align="middle">
   <img src="lab1/plots/distill/distill_curves.svg" alt="learning" width="45%">
