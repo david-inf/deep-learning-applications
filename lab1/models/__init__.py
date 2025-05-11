@@ -3,11 +3,12 @@ import torch
 from models.mlp import MLP
 from models.cnn import CNN
 from models.resnet import ResNet
+from models.wideresnet import WideResNet
 from utils.misc_utils import LOG
 
 
 def build_mlp(opts):
-    """MLP"""
+    """Whichever MLP you want"""
     if opts.dataset.lower() == "mnist":
         input_data = torch.randn(128, 1, 28, 28)
         input_size = 28*28*1
@@ -24,7 +25,11 @@ def build_mlp(opts):
 
 
 def build_cnn(opts):
-    """2-layer CNN or 3-layer ResNet"""
+    """
+    - 2-layer CNN
+    - 3-layer ResNet
+    - 3-layer WideResNet
+    """
     if opts.dataset.lower() == "mnist":
         in_channels = 1
         input_data = torch.randn(128, 1, 28, 28)
@@ -42,10 +47,11 @@ def build_cnn(opts):
 
     if opts.model == "CNN":
         model = CNN(in_channels, num_filters, num_blocks, skip)
-    elif opts.model == "ResNet":
+    elif opts.model in ("ResNet", "RN"):
         model = ResNet(in_channels, num_filters, num_blocks, skip)
-    # TODO: WideResNet
-    # TODO: requires the widening factor
+    elif opts.model in ("WideResNet", "WRN"):
+        # widen_factor = opts.widen_factor if hasattr(opts, "widen_factor") else 1
+        model = WideResNet(in_channels, num_filters, num_blocks, opts.widen_factor)
     else:
         raise ValueError(f"Unknown model {opts.model_name}")
 

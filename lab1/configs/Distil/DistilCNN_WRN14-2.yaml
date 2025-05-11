@@ -7,7 +7,7 @@ comet_project: deep-learning-applications
 dataset: CIFAR10
 device: cuda
 do_early_stopping: false
-experiment_name: DistilCNN_RN32
+experiment_name: DistilCNN_WRN14-2
 learning_rate: 0.01
 log_every: 20
 momentum: 0.9
@@ -31,13 +31,13 @@ student:
   skip: true
   weight_decay: 0.0005
 teacher:
-  ckpt: lab1/ckpts/ResNet/ResNet32.pt
+  ckpt: lab1/ckpts/WideResNet/WideResNet14-2.pt
   dataset: CIFAR10
   device: cuda
-  model: ResNet
-  num_blocks: 5
+  model: WideResNet
+  num_blocks: 2
   num_filters: 16
-  skip: true
+  widen_factor: 2
 temp: 5
 weight_decay: 0.0005
 weight_labloss: 0.5

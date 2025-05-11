@@ -40,7 +40,7 @@ def get_model(opts, return_data=False):
     """Get model to train"""
     if opts.model == "MLP":
         model, input_data = build_mlp(opts)
-    elif opts.model in ("CNN", "ResNet"):
+    elif opts.model in ("CNN", "ResNet", "WideResNet"):
         model, input_data = build_cnn(opts)
     else:
         raise ValueError(f"Unknown model: {opts.model}")
