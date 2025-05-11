@@ -1,12 +1,12 @@
 
+import os
 import numpy as np
 
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import LogisticRegression
 
 from datasets import load_dataset
-from transformers import pipeline
-from sentence_transformers import SentenceTransformer
+from models import get_distilbert_features, get_sbert_features
 
 from utils import set_seeds, LOG
 
@@ -20,63 +20,49 @@ def get_dataset():
     return rt_trainset, rt_valset, rt_testset
 
 
-def distilbert_features(opts, texts):
-    """Use DistilBERT as feature extractor"""
-    checkpoint="distilbert-base-uncased"
-    feature_extractor = pipeline(
-        model=checkpoint, tokenizer=checkpoint, task="feature-extraction",
-        framework="pt", device="cuda", batch_size=32,
-        tokenize_kwargs=dict(max_length=128, truncation=True))
-    extractions = feature_extractor(texts, return_tensors="pt")
-
-    features = []
-    for extract in extractions:  # get a tensor
-        if opts.method == "cls":
-            # extract CLS token
-            features.append(extract[0].numpy()[0])
-        elif opts.method == "mean":
-            # mean pooling over each token embeddings
-            features.append(extract[0].numpy().mean(axis=0))
-        else:
-            raise ValueError(f"Unknown extraction method {opts.method}")
-
-    return np.vstack((features))
-
-
-def sbert_features(opts, texts):
-    """Use SentenceBERT as feature extractor"""
-    if opts.method == "mpnet":
-        model = SentenceTransformer("all-mpnet-base-v2", device=opts.device)  # [N, 768]
-    elif opts.method == "minilm":
-        model = SentenceTransformer("all-MiniLM-L6-v2", device=opts.device)  # [N, 384]
+def extract_features(opts, texts, path):
+    """Extract features and save locally for later use"""
+    if opts.extractor == "distilbert":
+        features = get_distilbert_features(opts, texts)
+    elif opts.extractor == "sbert":
+        features = get_sbert_features(opts, texts)
     else:
-        raise ValueError(f"Unknown sbert {opts.method}")
-    model.eval()
-    features = model.encode(texts, show_progress_bar=True, batch_size=32)
-    return np.vstack(features)
+        raise ValueError(f"Unknown extractor {opts.extractor}")
+    np.savetxt(path, features, delimiter=" ")
 
 
 def main(opts):
     """Extract features and train classifier"""
     set_seeds(opts.seed)
-    # Get train-val-test splits
-    rt_trainset, rt_valset, rt_testset = get_dataset()
 
-    # Extract features
-    if opts.extractor == "distilbert":
-        train_features = distilbert_features(opts, rt_trainset["text"])
-        val_features = distilbert_features(opts, rt_valset["text"])
-        test_features = distilbert_features(opts, rt_testset["text"])
-    elif opts.extractor == "sbert":
-        train_features = sbert_features(opts, rt_trainset["text"])
-        val_features = sbert_features(opts, rt_valset["text"])
-        test_features = sbert_features(opts, rt_testset["text"])
-    else:
-        raise ValueError(f"Unknown extractor {opts.extractor}")
+    path = "data/rt_features"
+    if opts.extract:
+        # Get train-val-test splits
+        rt_trainset, rt_valset, rt_testset = get_dataset()
 
-    train_labels = np.array(rt_trainset["label"])
-    val_labels = np.array(rt_valset["label"])
-    test_labels = np.array(rt_testset["label"])
+        extract_features(opts, rt_trainset["text"], os.path.join(
+            path, opts.extractor + "_train.txt"))
+        extract_features(opts, rt_valset["text"], os.path.join(
+            path, opts.extractor + "_val.txt"))
+        extract_features(opts, rt_testset["text"], os.path.join(
+            path, opts.extractor + "_test.txt"))
+
+        train_labels = np.savetxt(os.path.join(
+            path, "train_labels.txt"), np.array(rt_trainset["label"]))
+        val_labels = np.savetxt(os.path.join(
+            path, "val_labels.txt"), np.array(rt_valset["label"]))
+        test_labels = np.savetxt(os.path.join(
+            path, "test_labels.txt"), np.array(rt_testset["label"]))
+
+    train_features = np.loadtxt(os.path.join(
+        path, opts.extractor + "_train.txt"))
+    val_features = np.loadtxt(os.path.join(path, opts.extractor + "_val.txt"))
+    test_features = np.loadtxt(os.path.join(
+        path, opts.extractor + "_test.txt"))
+
+    train_labels = np.loadtxt(os.path.join(path, "train_labels.txt"))
+    val_labels = np.loadtxt(os.path.join(path, "val_labels.txt"))
+    test_labels = np.loadtxt(os.path.join(path, "test_labels.txt"))
 
     # Train classifier and do inference
     if opts.classifier == "svm":
@@ -98,26 +84,65 @@ def main(opts):
     LOG.info("test_acc=%.3f", test_acc)
 
 
+def view_embeds(opts):
+    """Visualize embeddings"""
+    from sklearn.preprocessing import MinMaxScaler
+    from umap import UMAP
+    import matplotlib.pyplot as plt
+    train_embeds = np.loadtxt(os.path.join(
+        "data/rt_features", opts.extractor + "_train.txt"))
+    train_labels = np.loadtxt("data/rt_features/train_labels.txt")
+
+    scaler = MinMaxScaler()
+    scaled_train_embeds = scaler.fit_transform(train_embeds)
+
+    reducer = UMAP(n_components=2, metric="cosine")
+    embeddings = reducer.fit_transform(scaled_train_embeds)
+
+    _, axs = plt.subplots(1, 2, layout="constrained")
+    axs = axs.flatten()
+    colormaps = ["Blues", "Greens"]
+    for label, (ax, color) in enumerate(zip(axs.flatten(), colormaps)):
+        subset = embeddings[train_labels == label]
+        ax.hexbin(subset[:, 0], subset[:, 1], gridsize=20, cmap=color)
+        ax.set_title(f"Label: {label}")
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    output_dir = os.path.join("lab3/results", opts.extractor + "_embeds.svg")
+    plt.savefig(output_dir)
+
+
 if __name__ == "__main__":
     from types import SimpleNamespace
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--extractor", default="distilbert", choices=["distilbert", "sbert"], help="Feature extractor")
+    parser.add_argument("--extract", action="store_true",
+                        help="Run when extracting from a new extractor")
+    parser.add_argument("--extractor", default="distilbert",
+                        choices=["distilbert", "sbert"], help="Feature extractor")
     parser.add_argument("--method", default="cls",
                         help="DistilBert: use CLS or mean pooling method. SBERT: choose model.",
                         choices=["cls", "mean", "mpnet", "minilm"])
     parser.add_argument("--classifier", default="svm", choices=["svm", "logistic"],
                         help="Classifier to build ontop of the feature extractor")
+    parser.add_argument("--view", action="store_true",
+                        help="Visualize embeddings")
     args = parser.parse_args()
 
     configs = dict(seed=42, batch_size=32, device="cuda",
+                   extract=args.extract, view=args.view,
                    extractor=args.extractor, method=args.method,
                    classifier=args.classifier)
     args = SimpleNamespace(**configs)
 
     try:
-        main(args)
-    except Exception:
+        if not args.view:
+            main(args)
+        else:
+            view_embeds(args)
+    except Exception as e:
         import ipdb
+        print(e)
         ipdb.post_mortem()
