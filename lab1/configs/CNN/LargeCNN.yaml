@@ -1,11 +1,12 @@
 augmentation: true
 batch_size: 128
-checkpoint: null
+checkpoint: lab1/ckpts/CNN/LargeCNN.pt
 checkpoint_dir: lab1/ckpts/CNN
 checkpoint_every: 20
 comet_project: deep-learning-applications
+config: lab1/configs/CNN/LargeCNN.yaml
 dataset: CIFAR10
-device: cuda
+device: cuda:1
 do_early_stopping: false
 experiment_name: LargeCNN
 learning_rate: 0.01
@@ -21,4 +22,5 @@ scheduler:
   type: exponential
 seed: 42
 skip: false
+visualize: false
 weight_decay: 0.0005

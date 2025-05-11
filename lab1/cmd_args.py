@@ -20,7 +20,7 @@ parser.add_argument("--view", action="store_true",  # default False
 def print_info(opts):
     """Print few training informations"""
     # Device
-    opts.device = "cuda" if torch.cuda.is_available() else "cpu"
+    # opts.device = "cuda" if torch.cuda.is_available() else "cpu"
     LOG.info("device=%s", opts.device)
     # Epochs
     LOG.info("num_epochs=%d epochs", opts.num_epochs)
