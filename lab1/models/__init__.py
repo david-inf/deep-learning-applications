@@ -44,6 +44,8 @@ def build_cnn(opts):
         model = CNN(in_channels, num_filters, num_blocks, skip)
     elif opts.model == "ResNet":
         model = ResNet(in_channels, num_filters, num_blocks, skip)
+    # TODO: WideResNet
+    # TODO: requires the widening factor
     else:
         raise ValueError(f"Unknown model {opts.model_name}")
 

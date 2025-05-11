@@ -1,10 +1,12 @@
 augmentation: true
 batch_size: 128
-checkpoint: null
+checkpoint: lab1/ckpts/ResNet/ResNet32.pt
 checkpoint_dir: lab1/ckpts/ResNet
 checkpoint_every: 20
 comet_project: deep-learning-applications
+config: lab1/configs/ResNet/ResNet32.yaml
 dataset: CIFAR10
+device: cuda
 do_early_stopping: true
 early_stopping:
   min_delta: 0.002
@@ -23,4 +25,5 @@ scheduler:
   type: exponential
 seed: 42
 skip: true
+visualize: false
 weight_decay: 0.0005

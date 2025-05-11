@@ -38,16 +38,9 @@ def train_loop(opts, model: Module, optimizer: Optimizer, scheduler: LRScheduler
     Training loop with resuming routine. This accounts for training
     ended before the number of epochs is reached or when one wants
     to train the model further.
-
-    Args:
-        opts: Configuration options for training.
-        model: The model to be trained.
-        train_loader: DataLoader for the training data.
-        val_loader: DataLoader for the validation data.
-        experiment: comet_ml.Experiment object for logging.
     """
-    start_epoch, step = 1, 0  # last training epoch and step
-    start_time, prev_runtime = time.time(), 0.
+    start_epoch, step = 1, 0
+    start_time = time.time()
 
     # keeps the training objects and info from the best model
     if opts.do_early_stopping:
@@ -78,7 +71,7 @@ def train_loop(opts, model: Module, optimizer: Optimizer, scheduler: LRScheduler
     runtime = time.time() - start_time
     LOG.info("Training completed in %.2fs, ended at epoch %d, step %d",
              runtime, epoch, step)
-    experiment.log_metric("runtime", prev_runtime)
+    experiment.log_metric("runtime", runtime)
 
 
 def train_epoch(opts, model: Module, optimizer: Optimizer, train_loader, val_loader, experiment: Experiment, step, epoch):

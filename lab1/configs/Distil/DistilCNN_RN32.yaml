@@ -1,0 +1,45 @@
+augmentation: true
+batch_size: 128
+checkpoint: null
+checkpoint_dir: lab1/ckpts/Distil
+checkpoint_every: 20
+comet_project: deep-learning-applications
+dataset: CIFAR10
+device: cuda
+do_early_stopping: false
+experiment_name: DistilCNN_RN32
+learning_rate: 0.01
+log_every: 20
+model_name: Distill
+momentum: 0.9
+num_epochs: 20
+num_workers: 4
+scheduler:
+  gamma: 0.95
+  type: exponential
+seed: 42
+student:
+  dataset: CIFAR10
+  device: cuda
+  learning_rate: 0.01
+  model: CNN
+  momentum: 0.9
+  num_blocks: 1
+  num_filters: 16
+  scheduler:
+    gamma: 0.95
+    type: exponential
+  skip: true
+  weight_decay: 0.0005
+teacher:
+  ckpt: lab1/ckpts/ResNet/ResNet32.pt
+  dataset: CIFAR10
+  device: cuda
+  model: ResNet
+  num_blocks: 5
+  num_filters: 16
+  skip: true
+temp: 5
+weight_decay: 0.0005
+weight_labloss: 0.5
+weight_stloss: 5.0
