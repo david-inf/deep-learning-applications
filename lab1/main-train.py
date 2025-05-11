@@ -8,10 +8,9 @@ from torch.backends import cudnn
 
 from mydata import MyMNIST, MyAugmentedMNIST
 from mydata import MyCIFAR10, MyAugmentedCIFAR10, MakeDataLoaders
-from models.mlp import build_mlp
-from models.cnn import build_cnn
+from models import build_mlp, build_cnn
 from train import train_loop, test
-from utils.misc_utils import LOG, set_seeds
+from utils.misc_utils import LOG, set_seeds, visualize, compute_flops
 
 
 def get_loaders(opts):
@@ -48,6 +47,7 @@ def get_model(opts, return_data=False):
 
     model = model.to(opts.device)
     if return_data:
+        input_data.to(opts.device)
         return model, input_data
     return model
 
@@ -72,6 +72,7 @@ def get_optimization(opts, model: torch.nn.Module):
 
 
 def main(opts, experiment):
+    """Train a deep model"""
     # opts: SimpleNmamespace object
     # experiment: comet_ml.Experiment object
     set_seeds(opts.seed)
@@ -88,7 +89,16 @@ def main(opts, experiment):
         LOG.info("experiment_name=%s", opts.experiment_name)
         train_loop(opts, model, optimizer, scheduler,
                    train_loader, val_loader, experiment)
-    # TODO: Test (validation again, named test)
+    # TODO: load best model and reevaluate on valset
+
+
+def view_model(opts):
+    """Model inspection"""
+    opts.device = "cpu"
+    model, input_data = get_model(opts, True)
+    visualize(model, f"{opts.model} on {opts.dataset}", input_data)
+    batches = 1132 if opts.dataset == "CIFAR10" else 1362
+    compute_flops(model, input_data, opts.num_epochs, batches)
 
 
 if __name__ == "__main__":
@@ -96,12 +106,15 @@ if __name__ == "__main__":
     opts = cmd_args.parse_args()
 
     try:
-        experiment = start(project_name=opts.comet_project)
-        experiment.set_name(opts.experiment_name)
-        experiment.log_parameters(vars(opts))
-        main(opts, experiment)
-        experiment.log_parameters(vars(opts))
-        experiment.end()
+        if not opts.visualize:
+            experiment = start(project_name=opts.comet_project)
+            experiment.set_name(opts.experiment_name)
+            experiment.log_parameters(vars(opts))
+            main(opts, experiment)
+            experiment.log_parameters(vars(opts))
+            experiment.end()
+        else:
+            view_model(opts)
     except Exception:
         import ipdb, traceback, sys
         traceback.print_exc()

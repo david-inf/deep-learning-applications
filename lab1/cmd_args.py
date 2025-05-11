@@ -1,6 +1,5 @@
 """ Arguments for the main programs """
 
-import os
 from types import SimpleNamespace
 import argparse
 import yaml
@@ -19,6 +18,7 @@ parser.add_argument("--view", action="store_true",  # default False
 
 
 def print_info(opts):
+    """Print few training informations"""
     # Device
     opts.device = "cuda" if torch.cuda.is_available() else "cpu"
     LOG.info("device=%s", opts.device)
@@ -30,9 +30,9 @@ def print_info(opts):
     # Early stopping
     if opts.do_early_stopping:
         patience = opts.early_stopping["patience"]
-        threshold = opts.early_stopping["threshold"]
-        LOG.info("Early stopping activated with patience %d, "
-                 "threshold %f", patience, threshold)
+        min_delta = opts.early_stopping["min_delta"]
+        LOG.info("Early stopping activated with patience=%d, "
+                 "min_delta=%.4f", patience, min_delta)
 
 
 def parse_args():

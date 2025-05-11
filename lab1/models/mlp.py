@@ -1,13 +1,16 @@
+"""MLP models"""
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 
 class MLP(nn.Module):
-    """ Simple MLP with variable layers """
+    """Simple MLP with variable layers"""
 
-    def __init__(self, input_size, layer_sizes=[128], num_classes=10):
+    def __init__(self, input_size, layer_sizes=None, num_classes=10):
         super().__init__()
+        if layer_sizes is None:
+            layer_sizes = [128]
 
         self.flatten = nn.Flatten()
 
@@ -24,7 +27,7 @@ class MLP(nn.Module):
 
         self.classifier = nn.Linear(layer_sizes[-1], num_classes)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
         x = self.flatten(x)
 
         x = self.input_adapter(x)  # hidden_size
@@ -32,17 +35,3 @@ class MLP(nn.Module):
 
         x = self.classifier(x)  # logits
         return x
-
-
-def build_mlp(opts):
-    if opts.dataset.lower() == "mnist":
-        input_data = torch.randn(128, 1, 28, 28)
-        input_size = 28*28*1
-    elif opts.dataset.lower() == "cifar10":
-        input_data = torch.randn(128, 3, 28, 28)
-        input_size = 28*28*3
-
-    layers = opts.layers if hasattr(opts, "layers") else [128]
-    model = MLP(input_size, layer_sizes=layers)
-
-    return model, input_data

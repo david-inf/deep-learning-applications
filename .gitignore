@@ -167,7 +167,9 @@ cython_debug/
 /lab1/configs/ResNet
 /lab3/checkpoints
 
-lab1/commands.sh
+lab1/commands1.sh
+lab1/commands2.sh
+lab1/run_exps.sh
 
 .~lock.runs.ods\#
 runs.ods

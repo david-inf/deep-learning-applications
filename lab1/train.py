@@ -51,7 +51,7 @@ def train_loop(opts, model: Module, optimizer: Optimizer, scheduler: LRScheduler
 
     # keeps the training objects and info from the best model
     if opts.do_early_stopping:
-        early_stopping = EarlyStopping(opts.early_stopping)
+        early_stopping = EarlyStopping(opts)
 
     for epoch in range(start_epoch, opts.num_epochs + 1):
         experiment.log_current_epoch(epoch)

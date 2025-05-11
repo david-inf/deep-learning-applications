@@ -5,6 +5,7 @@ from peft import LoraConfig, TaskType, get_peft_model
 
 
 def get_bert(opts):
+    """Get BERT family model and tokenizer with finetuning setting"""
     tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
     model = DistilBertForSequenceClassification.from_pretrained(
         "distilbert-base-uncased", num_labels=2)

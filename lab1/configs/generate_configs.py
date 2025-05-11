@@ -1,4 +1,4 @@
-""" Script for generating YAML configuration files for experiments """
+"""Script for generating YAML configuration files for experiments"""
 
 import os
 import yaml
@@ -16,37 +16,36 @@ import yaml
 # TODO: distillation configs
 # def gen_configs_distil(new_params):
 #     """Generate a configuration file given the params dict"""
-    # _dataset = base_config["dataset"].lower()
-    #     if base_config["model_name"] == "Distill":
-    #         output_dir = "experiments/distill"
-    #         os.makedirs(output_dir, exist_ok=True)
-    #         _teacher = base_config["teacher"]
-    #         _teacher_prefix = _teacher["model_name"] + count_params(_teacher)
-    #         _student = base_config["student"]
-    #         _student_prefix = _student["model_name"] + count_params(_student)
-    #         _prefix = "Distill_" + _teacher_prefix + \
-    #             "_" + _student_prefix
+# _dataset = base_config["dataset"].lower()
+#     if base_config["model_name"] == "Distill":
+#         output_dir = "experiments/distill"
+#         os.makedirs(output_dir, exist_ok=True)
+#         _teacher = base_config["teacher"]
+#         _teacher_prefix = _teacher["model_name"] + count_params(_teacher)
+#         _student = base_config["student"]
+#         _student_prefix = _student["model_name"] + count_params(_student)
+#         _prefix = "Distill_" + _teacher_prefix + \
+#             "_" + _student_prefix
 
 def gen_configs_train(new_params):
-    """Generate a configuration file given the params dict"""
-    # new_params may contain updated and new params
-    # Load base configuration file
+    """Generate a configuration file given a params dict"""
     configs = {
-        "seed": 42, "dataset": "MNIST", "batch_size": 128, "num_workers": 4,
-        "num_epochs": 10, "learning_rate": 0.01, "momentum": 0.9, "weight_decay": 5e-4,
-        "scheduler": {"type": "multi-step", "steps": [50, 100], "gamma": 0.1},
+        "seed": 42, "dataset": "CIFAR10", "batch_size": 128, "num_workers": 4,
+        "num_epochs": 20, "learning_rate": 0.01, "momentum": 0.9, "weight_decay": 5e-4,
+        # "scheduler": {"type": "multi-step", "steps": [50, 100], "gamma": 0.1},
+        "scheduler": {"type": "exponential", "gamma": 0.95},
         "log_every": 20, "checkpoint": None,
-        "do_early_stopping": False,
-        "comet_project": "deep-learning-applications", "experiment_key": None,
+        "do_early_stopping": False, "augmentation": True,
+        "comet_project": "deep-learning-applications",
     }
     configs.update(new_params)
 
     # Experiment naming
     if configs.get("experiment_name") is None:
-        _prefix = configs["model"]# + count_params(configs)
+        _prefix = configs["model"]  # + count_params(configs)
         exp_name = f"{_prefix}_{configs["dataset"].lower()}"
         configs["experiment_name"] = exp_name
-    
+
     # Checkpoint directory
     if configs.get("checkpoint_dir") is None:
         output_dir = os.path.join("lab1/ckpts", configs["model"])
@@ -72,10 +71,11 @@ def gen_configs_train(new_params):
 
 
 if __name__ == "__main__":
+    NUM_FILTERS = 32
     new_configs = [  # list of params (dict)
         # # MLP Tiny
-        {"model": "MLP", "dataset": "MNIST",
-         "layers": [128, 128], "weight_decay": 0.},
+        # {"model": "MLP", "dataset": "MNIST",
+        #  "layers": [128, 128], "weight_decay": 0.},
         # # MLP Large
         # {"model_name": "MLP", "dataset": "MNIST", "augmentation": True,
         #  "layers": [1024,1024,512,128], "early_stopping": {"patience": 3, "threshold": 0.01}},
@@ -83,50 +83,28 @@ if __name__ == "__main__":
 
         ## **** ##
 
-        # {"dataset": "MNIST", "model_name": "Distill",
-        #  "teacher": {
-        #      "model_name": "MLP",
-        #      "dataset": "MNIST",
-        #      "layers": [1024,1024,512,128],
-        #      "ckp": "checkpoints/MLP/e_007_MLP2.45M_mnist_best.pt",
-        #      "device": "cuda",
-        #  },
-        #  "student": {
-        #      "model_name": "MLP",
-        #      "dataset": "MNIST",
-        #      "layers": [64],
-        #      "device": "cuda",
-        #  },
-        #  "weight_decay": 0.,
-        #  "learning_rate": 0.01
-        # }
+        # # SmallCNN - For distillation
+        # {"model": "CNN", "skip": False, "num_filters": NUM_FILTERS, "num_blocks": 1,
+        #  "experiment_name": "SmallCNN"},
+        # {"model": "CNN", "skip": True, "num_filters": NUM_FILTERS, "num_blocks": 1,
+        #  "experiment_name": "SmallCNNskip"},
+        # # MediumCNN
+        # {"model": "CNN", "skip": False, "num_filters": NUM_FILTERS, "num_blocks": 5,
+        #  "experiment_name": "MediumCNN"},
+        # {"model": "CNN", "skip": True, "num_filters": NUM_FILTERS, "num_blocks": 5,
+        #  "experiment_name": "MediumCNNskip"},
+        # # LargeCNN
+        # {"model": "CNN", "skip": False, "num_filters": NUM_FILTERS, "num_blocks": 7,
+        #  "experiment_name": "LargeCNN"},
+        # {"model": "CNN", "skip": True, "num_filters": NUM_FILTERS, "num_blocks": 7,
+        #  "experiment_name": "LargeCNNskip"},
 
-        # # CNN Tiny - 0.02M - For distillation
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False, "augmentation": True,
-        # "num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
-        # "num_workers": 4, "num_filters": 16, "num_blocks": 1, "size_type": "tiny"},
-        # # CNN Small - 0.07M
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False, "augmentation": True,
-        # "num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
-        # "num_workers": 4, "num_filters": 16, "num_blocks": 3, "size_type": "small"},
-        # # CNN Medium - 0.11M
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False, "augmentation": True,
-        # "num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
-        # "num_workers": 4, "num_filters": 16, "num_blocks": 5, "size_type": "medium"},
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True, "augmentation": True,
-        # "num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
-        # "num_workers": 4, "num_filters": 16, "num_blocks": 5, "size_type": "medium"},
-        # # CNN Large - 0.16M
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": False, "augmentation": True,
-        # "num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
-        # "num_workers": 4, "num_filters": 16, "num_blocks": 7, "size_type": "large"},
-        # {"model_name": "CNN", "dataset": "CIFAR10", "skip": True, "augmentation": True,
-        #  "Num_epochs": 10, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
-        #  "num_workers": 4, "num_filters": 16, "num_blocks": 7, "size_type": "large"},
-        # {"model_name": "ResNet", "dataset": "CIFAR10", "skip": True, "augmentation": True,
-        #  "num_epochs": 20, "weight_decay": 0.0001, "learning_rate": 0.1, "lr_decay": 0.9,
-        #  "num_workers": 4, "num_filters": 32, "num_blocks": 5, "size_type": "large",
-        #  "early_stopping": {"patience": 2, "threshold": 0.01}},
+        # ResNet (teacher model)
+        {"model": "ResNet", "num_filters": NUM_FILTERS, "num_blocks": 5, "skip": True,
+         "early_stopping": {"patience": 4, "min_delta": 0.002}, "do_early_stopping": True,
+         "experiment_name": "ResNet16",
+         },
+        # WideResNet
 
         ## **** ##
 
