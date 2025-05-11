@@ -1,0 +1,23 @@
+augmentation: true
+batch_size: 128
+checkpoint: null
+checkpoint_dir: lab1/ckpts/CNN
+checkpoint_every: 20
+comet_project: deep-learning-applications
+dataset: CIFAR10
+do_early_stopping: false
+experiment_name: MediumCNNskip
+learning_rate: 0.01
+log_every: 20
+model: CNN
+momentum: 0.9
+num_blocks: 5
+num_epochs: 20
+num_filters: 16
+num_workers: 4
+scheduler:
+  gamma: 0.95
+  type: exponential
+seed: 42
+skip: true
+weight_decay: 0.0005

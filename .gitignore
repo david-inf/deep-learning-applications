@@ -160,12 +160,12 @@ cython_debug/
 #.idea/
 
 /data
-/lab1/ckpts
-/lab1/configs/CNN
-/lab1/configs/distill
-/lab1/configs/MLP
-/lab1/configs/ResNet
-/lab3/checkpoints
+# /lab1/ckpts
+# /lab1/configs/CNN
+# /lab1/configs/distill
+# /lab1/configs/MLP
+# /lab1/configs/ResNet
+/lab3/ckpts
 
 lab1/commands1.sh
 lab1/commands2.sh

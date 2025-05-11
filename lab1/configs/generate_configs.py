@@ -71,17 +71,8 @@ def gen_configs_train(new_params):
 
 
 if __name__ == "__main__":
-    NUM_FILTERS = 32
+    NUM_FILTERS = 16
     new_configs = [  # list of params (dict)
-        # # MLP Tiny
-        # {"model": "MLP", "dataset": "MNIST",
-        #  "layers": [128, 128], "weight_decay": 0.},
-        # # MLP Large
-        # {"model_name": "MLP", "dataset": "MNIST", "augmentation": True,
-        #  "layers": [1024,1024,512,128], "early_stopping": {"patience": 3, "threshold": 0.01}},
-        # {"model_name": "MLP", "dataset": "CIFAR10", "layers": [512], "weight_decay": 0.}
-
-        ## **** ##
 
         # # SmallCNN - For distillation
         # {"model": "CNN", "skip": False, "num_filters": NUM_FILTERS, "num_blocks": 1,
@@ -99,11 +90,11 @@ if __name__ == "__main__":
         # {"model": "CNN", "skip": True, "num_filters": NUM_FILTERS, "num_blocks": 7,
         #  "experiment_name": "LargeCNNskip"},
 
-        # ResNet (teacher model)
-        {"model": "ResNet", "num_filters": NUM_FILTERS, "num_blocks": 5, "skip": True,
-         "early_stopping": {"patience": 4, "min_delta": 0.002}, "do_early_stopping": True,
-         "experiment_name": "ResNet16",
-         },
+        # # ResNet (teacher model)
+        # {"model": "ResNet", "num_filters": NUM_FILTERS, "num_blocks": 5, "skip": True,
+        #  "early_stopping": {"patience": 4, "min_delta": 0.002}, "do_early_stopping": True,
+        #  "experiment_name": "ResNet32",
+        #  },
         # WideResNet
 
         ## **** ##
