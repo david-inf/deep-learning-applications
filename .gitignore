@@ -180,3 +180,5 @@ lab3/generate_config.py
 lab3/experiments/config.yaml
 lab3/models/mlp.py
 lab3/feature_extractors.py
+lab1/plots/make_plot.py
+/lab1/plots/curves_data
