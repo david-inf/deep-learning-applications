@@ -61,6 +61,3 @@ class ResNet(nn.Module):
         x = self.classifier(x)  # logits
 
         return x
-
-
-# TODO: WideResNet

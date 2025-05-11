@@ -117,37 +117,44 @@ if __name__ == "__main__":
 
         # ResNet (teacher model)
         # {"model": "ResNet", "num_filters": NUM_FILTERS, "num_blocks": 5, "skip": True,
-        #  "early_stopping": {"patience": 4, "min_delta": 0.002}, "do_early_stopping": True,
+        #  "num_epochs": 50, "early_stopping": {"patience": 4, "min_delta": 0.002}, "do_early_stopping": True,
         #  "experiment_name": "ResNet32",
         #  },
         # WideResNet
+        # {"model": "WideResNet", "num_filters": NUM_FILTERS, "num_blocks": 2, "widen_factor": 2,
+        #  "num_epoch": 50, "early_stopping": {"patience": 4, "min_delta": 0.002}, "do_early_stopping": True,
+        #  "experiment_name": "WideResNet14-2",
+        #  },
 
     ]
 
     distil_new_configs = [
 
-        {"dataset": "CIFAR10", "model_name": "Distill",
-         "teacher": {
-             "model": "ResNet",
-             "dataset": "CIFAR10",
-             "num_filters": NUM_FILTERS,
-             "num_blocks": 5,
-             "skip": True,
-             "ckpt": "lab1/ckpts/ResNet/ResNet32.pt",
-             "device": "cuda",
-         },
-         "student": {
-             "model": "CNN",
-             "dataset": "CIFAR10",
-             "num_filters": NUM_FILTERS,
-             "num_blocks": 1,
-             "skip": True,
-             "device": "cuda",
-             "weight_decay": 5e-4, "learning_rate": 0.01, "momentum": 0.9,
-             "scheduler": {"type": "exponential", "gamma": 0.95},
-         },
-         "experiment_name": "DistilCNN_RN32",
-         }
+        # {"dataset": "CIFAR10",
+        #  "teacher": {
+        #      "model": "ResNet", "dataset": "CIFAR10", "num_filters": NUM_FILTERS, "num_blocks": 5,
+        #      "skip": True, "ckpt": "lab1/ckpts/ResNet/ResNet32.pt", "device": "cuda",
+        #  },
+        #  "student": {
+        #      "model": "CNN", "dataset": "CIFAR10", "num_filters": NUM_FILTERS, "num_blocks": 1,
+        #      "skip": True, "device": "cuda", "weight_decay": 5e-4, "learning_rate": 0.01, "momentum": 0.9,
+        #      "scheduler": {"type": "exponential", "gamma": 0.95},
+        #  },
+        #  "experiment_name": "DistilCNN_RN32",
+        #  }
+
+        # {"dataset": "CIFAR10",
+        #  "teacher": {
+        #      "model": "WideResNet", "dataset": "CIFAR10", "num_filters": NUM_FILTERS, "num_blocks": 2,
+        #      "widen_factor": 2, "ckpt": "lab1/ckpts/WideResNet/WideResNet14-2.pt", "device": "cuda",
+        #  },
+        #  "student": {
+        #      "model": "CNN", "dataset": "CIFAR10", "num_filters": NUM_FILTERS, "num_blocks": 1,
+        #      "skip": True, "device": "cuda", "weight_decay": 5e-4, "learning_rate": 0.01, "momentum": 0.9,
+        #      "scheduler": {"type": "exponential", "gamma": 0.95},
+        #  },
+        #  "experiment_name": "DistilCNN_WRN14-2",
+        #  }
 
     ]
 
