@@ -1,17 +1,9 @@
-"""Training-specific utilities"""
 
 import os
-import torch
 import numpy as np
-from utils import LOG, update_yaml
-
-
-def N(x: torch.Tensor):
-    """Get actual value"""
-    # detach from computational graph
-    # send back to cpu
-    # numpy ndarray
-    return x.detach().cpu().numpy()
+from transformers import PreTrainedModel
+# from accelerate import Accelerator
+from utils.misc_utils import LOG, update_yaml
 
 
 def accuracy(logits, labels):
@@ -21,40 +13,29 @@ def accuracy(logits, labels):
     return acc
 
 
-# TODO: rename to save_torch_model
-# TODO: outside module with all utilities for all labs
-def save_checkpoint(opts, model: torch.nn.Module, fname=None):
-    """Save a model checkpoint to be resumed later"""
+def save_model(opts, model: PreTrainedModel, fname=None):
+    """Save a pretrained model"""
     if not fname:
-        # fname = f"e_{info["epoch"]:03d}_{opts.experiment_name}.pt"
-        fname = f"{opts.experiment_name}.pt"
+        # fname = f"e_{reached_epoch:02d}_{opts.experiment_name}"
+        fname = opts.experiment_name
     os.makedirs(opts.checkpoint_dir, exist_ok=True)
     output_path = os.path.join(opts.checkpoint_dir, fname)
 
-    ckpt_state = {
-        "model_state_dict": model.state_dict(),
-    }
-    torch.save(ckpt_state, output_path)
-
-    # Update yaml file with checkpoint name
+    model.save_pretrained(output_path)
+    # add checkpoint path
     update_yaml(opts, "checkpoint", output_path)
     LOG.info("Saved model at path=%s", opts.checkpoint)
 
 
-def load_checkpoint(ckpt_path: str, model: torch.nn.Module):
-    """Load a model checkpoint to resume training"""
-    if not os.path.isfile(ckpt_path):
+def load_model(ckpt_path, model: PreTrainedModel):
+    """Load a finetuned model"""
+    if not os.path.isdir(ckpt_path):
         raise FileNotFoundError(
             f"Checkpoint file not found: {ckpt_path}")
 
-    # load from given checkpoint path
     LOG.info("Loading checkpoint=%s", ckpt_path)
-    # checkpoint = torch.load(checkpoint_path, map_location="cuda")
-    checkpoint = torch.load(ckpt_path)
-
-    # load weights and optimizer in those given
-    # this means that the initialized model and optimizer are updated
-    model.load_state_dict(checkpoint["model_state_dict"])
+    # TODO: check if it's correct
+    model.from_pretrained(ckpt_path, num_labels=2)
 
 
 class AverageMeter:
@@ -108,7 +89,7 @@ class EarlyStopping:
         self.early_stop = False
         self.verbose = verbose
 
-    def __call__(self, val_acc, model):
+    def __call__(self, val_acc, model: PreTrainedModel):
         score = val_acc
         if self.best_score is None:
             # initialize best score
@@ -131,7 +112,13 @@ class EarlyStopping:
             self.checkpoint(model)
             self.counter = 0
 
-    def checkpoint(self, model):
+    def checkpoint(self, model: PreTrainedModel):
         """Save current best model"""
         LOG.info("Updated best_score=%.3f", self.best_score)
-        save_checkpoint(self._opts, model)
+        save_model(self._opts, model)
+
+    # def checkpoint(self, accelerator: Accelerator):
+    # TODO: make work for multi_gpu
+    #     """Current best accelerator state"""
+    #     accelerator.save_state()
+    #     LOG.info("Saved Accelerator state at path=%s", self._opts.checkpoint)

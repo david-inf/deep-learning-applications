@@ -65,6 +65,8 @@ Reproducing on a small scale the results from the ResNet paper on CIFAR10 datase
 
 Deeper networks, i.e. more stacked layers, do not guarantee more reduction in training loss. So the point of this exercise is to abstract a model definition so that one can add a given number of layers (blocks), and then see how the performance are affected. The idea is to reproduce Figure 6 from the paper.
 
+Inspect experiments from my [comet_ml](https://www.comet.com/david-inf/deep-learning-applications) project.
+
 <details>
 <summary>CNNs architecture</summary>
 
@@ -135,8 +137,8 @@ We define another CNN, named BaseCNN, with skip connections and to have more #pa
 
 | Name                 | `num_blocks` | `num_filters` | `widen_factor` | #params | Layers | val_acc |
 | -------------------- | ------------ | ------------- | -------------- | ------- | ------ | ------- |
-| `ResNet32`           | 5            | 16            | 1              | 0.47M   | 32     | 0.8406  |
-| `WideResNet14-2`     | 2            | 16            | 2              | 0.69M   | 14     | 0.8436  |
+| `ResNet32`           | 5            | 16            | 1              | 0.47M   | 32     | 0.8420  |
+| `WideResNet14-2`     | 2            | 16            | 2              | 0.69M   | 14     | 0.8500  |
 | `BaseCNN`            | 1            | 32            | 1              | 0.08M   | 6      | 0.7690  |
 | `DistilCNN_RN32`     | 1            | 32            | 1              | 0.08M   | 6      | 0.7116  |
 | `DistilCNN_WRN14-2`  | 1            | 32            | 1              | 0.08M   | 6      | 0.8007  |
