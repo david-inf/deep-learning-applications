@@ -4,16 +4,16 @@ import torch
 import numpy as np
 from torch.utils.data import DataLoader
 
-from transformers import DataCollatorWithPadding, PreTrainedTokenizer
+from transformers import set_seed, DataCollatorWithPadding, PreTrainedTokenizer
 from datasets import load_dataset, Dataset
 
-from utils import set_seeds, LOG
-from lab3.models.distilbert import get_bert
+from utils import LOG
+from models.distilbert import get_distilbert
 
 
 class MakeDataLoaders:
     def __init__(self, opts, tokenizer: PreTrainedTokenizer, trainset: Dataset, valset: Dataset, testset: Dataset):
-        set_seeds(opts.seed)
+        set_seed(opts.seed)
         generator = torch.Generator().manual_seed(opts.seed)
         collate_fn = DataCollatorWithPadding(
             tokenizer=tokenizer,
@@ -45,6 +45,7 @@ class MakeDataLoaders:
 
 def get_loaders(opts, tokenizer: PreTrainedTokenizer):
     """Easier to do with dataset.map"""
+    # TODO: separe loading train-val sets for model selection from testset for inference
     # 1) Get dataset splits
     if opts.dataset == "rotten_tomatoes":
         dataset = load_dataset(
@@ -83,55 +84,43 @@ def get_loaders(opts, tokenizer: PreTrainedTokenizer):
 
 def main(opts):
     # Get tokenizer
-    tokenizer, _ = get_bert(opts)
+    tokenizer: PreTrainedTokenizer = get_distilbert(opts)[0]
     # Get loaders
-    loaders = get_loaders(opts, tokenizer)
+    train_loader, val_loader, _ = get_loaders(opts, tokenizer)
 
     # Inspect first batch
-    sets = ["Train", "Val", "Test"]
-    for i, loader in enumerate(loaders):
-        # get batch
-        batch = next(iter(loader))
-        # get elements
+    LOG.info("num_batches_train=%s", len(train_loader))
+    LOG.info("num_batches_val=%s", len(val_loader))
+    for batch_idx, batch in enumerate(train_loader):
+        # Get data
         input_ids = batch["input_ids"]
         attn_mask = batch["attention_mask"]
         labels = batch["labels"]
-        # inspect
-        LOG.info(f"{sets[i]}"
-                 f"\ninput_ids={input_ids.shape}"
-                 f"\nattention_mask={attn_mask.shape}"
-                 f"\nlabels={labels.shape}")
+        class_distrib = torch.bincount(labels)
+        # Inspect train data
+        LOG.info("input_ids=%s\nattention_mask=%s\nlabels=%s",
+                 input_ids.shape, attn_mask.shape, labels.shape)
+        LOG.info(f"distrib={class_distrib/labels.size(0)}")
+
+        # Inspect first sample
+        sample_id = 0
+        sample_tokens = tokenizer.convert_ids_to_tokens(input_ids[sample_id])
+        sample_tokens_no_pad = [token for token in sample_tokens if token != "[PAD]"]
+        LOG.info("%s --> %s", labels[sample_id], sample_tokens_no_pad)
         print()
 
-    for batch_idx, batch in enumerate(loaders[0]):
-        # Get data
-        input_ids = batch["input_ids"]
-        attention_mask = batch["attention_mask"]
-        labels = batch["labels"]
-        # Class distribution
-        class_distribution = torch.bincount(labels)
-
-        size = labels.size(0)
-        LOG.info(f"Train batch_idx={batch_idx}"
-                 f"\ntokens={input_ids.shape} "
-                 f"mask={attention_mask.shape} "
-                 f"\ny={labels.shape} distrib={class_distribution/size}")
-
-        if batch_idx == 2:
+        if batch_idx == 4:
             break
 
 
 if __name__ == "__main__":
-    from ipdb import launch_ipdb_on_exception
-    from types import SimpleNamespace
+    from cmd_args import parse_args
+    configs = parse_args()
+    set_seed(configs.seed)
 
-    config = dict(
-        seed=42, batch_size=32, num_workers=2, max_length=128,
-        ft_setting="head",
-        dataset="rotten_tomatoes", model="distilbert", device="cpu",
-    )
-    opts = SimpleNamespace(**config)
-    set_seeds(opts.seed)
-
-    with launch_ipdb_on_exception():
-        main(opts)
+    try:
+        main(configs)
+    except Exception:
+        import ipdb, traceback, sys
+        traceback.print_exc()
+        ipdb.post_mortem(sys.exc_info()[2])

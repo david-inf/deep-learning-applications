@@ -1,6 +1,6 @@
 
 from types import SimpleNamespace
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, pipeline
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 from peft import LoraConfig, TaskType, get_peft_model
 import numpy as np
 
@@ -29,32 +29,27 @@ def get_distilbert_features(opts, texts):
 
 
 def get_distilbert(opts):
-    """Get BERT family model and its tokenizer with given finetuning setting"""
-    tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased")
-    model = DistilBertForSequenceClassification.from_pretrained(
-        "distilbert-base-uncased", num_labels=2)
+    """
+    Get BERT pretrained model and its tokenizer for finetuning
+    - DistilBERT
+    - SciBERT
+    """
+    checkpoint = "distilbert-base-uncased"
+    tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+    model = AutoModelForSequenceClassification.from_pretrained(
+        checkpoint, num_labels=2)
+    
+    tokenizer, model = _finetuning_setting(opts, tokenizer, model)
+    return tokenizer, model
+
+
+def _finetuning_setting(opts, tokenizer: AutoTokenizer, model: AutoModelForSequenceClassification):
+    """Set BERT model finetuning settings"""
     ft_setting = SimpleNamespace(**opts.ft_setting)
 
     if ft_setting.type == "full":
         # train all parameters
         pass
-
-    elif ft_setting.type == "head":
-        # i.e. 2-layers MLP
-        # freeze embeddings and transformer layers
-        # leave only pre-classifier and classifier trainable
-        for param in model.distilbert.embeddings.parameters():
-            param.requires_grad = False
-        for param in model.distilbert.parameters():
-            param.requires_grad = False
-
-    elif ft_setting.type == "custom":
-        # freeze the first 4 out of 6 transformer layers
-        for param in model.distilbert.embeddings.parameters():
-            param.requires_grad = False
-        for i in range(4):
-            for param in model.distilbert.transformer.layer[i].parameters():
-                param.requires_grad = False
 
     elif ft_setting.type == "lora":
         peft_config = LoraConfig(
@@ -68,5 +63,4 @@ def get_distilbert(opts):
     else:
         raise ValueError(f"Unknown training setting {opts.ft_setting}")
 
-    model = model.to(opts.device)
     return tokenizer, model

@@ -166,19 +166,20 @@ cython_debug/
 # /lab1/configs/distill
 # /lab1/configs/MLP
 # /lab1/configs/ResNet
-/lab3/ckpts
-/lab3/configs
+
+# /lab3/ckpts
+# /lab3/configs
 
 lab1/commands1.sh
 lab1/commands2.sh
 lab1/run_exps.sh
 
-.~lock.runs.ods\#
-runs.ods
-
-lab3/generate_config.py
-lab3/experiments/config.yaml
-lab3/models/mlp.py
-lab3/feature_extractors.py
 lab1/plots/make_plot.py
 /lab1/plots/curves_data
+
+# lab3/configs/generate_config.py
+lab3/models/mlp.py
+lab3/feature_extractors.py
+
+.~lock.runs.ods\#
+runs.ods
