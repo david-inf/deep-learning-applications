@@ -34,7 +34,6 @@ def load_model(ckpt_path, model: PreTrainedModel):
             f"Checkpoint file not found: {ckpt_path}")
 
     LOG.info("Loading checkpoint=%s", ckpt_path)
-    # TODO: check if it's correct
     model.from_pretrained(ckpt_path, num_labels=2)
 
 

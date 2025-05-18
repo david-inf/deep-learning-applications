@@ -121,7 +121,6 @@ class MakeDataLoaders:
         traindata : Dataset
             Could be with or without augmentation
         valdata : Dataset
-        testdata : Dataset
     """
 
     def __init__(self, opts, trainset, valset):
