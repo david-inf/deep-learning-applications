@@ -212,4 +212,26 @@ Efficient way for finetuning BERT on rotten tomatoes dataset using `PEFT` librar
 
 ## :test_tube: Lab4 - Adversarial Learning
 
+<details>
+<summary>Code organization</summary>
 
+Inside the `lab4/` folder there are the following programs
+
+- `ckpts/`
+- `models/`
+- `plots/`
+- `utils/`
+- `main_detection.py`
+- `mydata.py`
+
+</details>
+
+### :one: OOD detection pipeline
+
+We choose as in-distribution (ID) dataset CIFAR10 (10000 samples from test split), and out-of-distribution (OOD) dataset the **aquatic mammals** subset from CIFAR100 (2500 samples from train split).
+
+<p align="middle">
+  <img src="lab4/plots/id_imgs.png" alt="ID samples" width="30%">
+  &nbsp;
+  <img src="lab4/plots/ood_imgs.png" alt="OOD samples" width="30%">
+</p>

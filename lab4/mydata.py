@@ -106,7 +106,7 @@ def get_loaders(opts):
     # OOD testset
     # train: 2500
     # test: 500
-    ood_testset = MyCIFAR100(train=False)
+    ood_testset = MyCIFAR100(train=True)
     ood_loader = make_loader(opts, ood_testset)
 
     return id_loader, ood_loader

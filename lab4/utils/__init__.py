@@ -1,2 +1,2 @@
 
-from utils.misc_utils import set_seeds
+from lab4.utils.misc import set_seeds

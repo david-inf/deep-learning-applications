@@ -6,7 +6,6 @@ import yaml
 from lab1.utils.misc_utils import set_seeds
 from lab1.main_train import get_model
 from lab1.utils.train_utils import load_checkpoint
-from lab1.train import test
 
 from mydata import get_loaders
 
@@ -25,6 +24,7 @@ def main(opts):
 
     # Evaluate on testset (ID)
 
+
     # Evaluate on fakeset (OOD)
 
 
@@ -39,3 +39,9 @@ if __name__ == "__main__":
     try:
         main(opts)
     except Exception:
+        import ipdb
+        import traceback
+        import sys
+        traceback.print_exc()
+        ipdb.post_mortem(sys.exc_info()[2])
+
