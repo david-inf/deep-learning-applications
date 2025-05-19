@@ -1,14 +1,15 @@
 """CIFAR10 and CIFAR100 wrappers"""
 
-# TODO: print one image per ID-class from CIFAR10
-# TODO: print one image per OOD-class from CIFAR100
-
+import os
 import random
 
 import torch
 import numpy as np
 from torchvision import datasets, transforms
+from torchvision.utils import make_grid
 from torch.utils.data import Dataset, Subset, DataLoader
+
+import matplotlib.pyplot as plt
 
 from utils import set_seeds
 
@@ -17,30 +18,33 @@ ID_CLASSES = (  # CIFAR10
     'plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 OOD_CLASSES = (  # CIFAR100 aquatic mammals
     "beaver", "dolphin", "otter", "seal", "whale")
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5))
-])
+
 
 class MyCIFAR10(Dataset):
     """Wrapper for CIFAR10 Dataset class"""
 
-    def __init__(self, crop=True, train=True):
+    def __init__(self, train=True):
         self.num_classes = 10
 
-        dataset = datasets.CIFAR10(
+        transform = transforms.Compose([
+            transforms.CenterCrop(28),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.489255, 0.475775, 0.439889),
+                                 std=(0.243047, 0.239315, 0.255997)),
+        ])
+        self.dataset = datasets.CIFAR10(
             root="./data", train=train, download=True, transform=transform)
-        self.X, self.y = dataset.data, dataset.targets  # ndarray, list
-
-        if crop:
-            margin = (32 - 28) // 2
-            self.X = self.X[:, :, margin:-margin, margin:-margin]
 
     def __len__(self):
-        return self.X.shape[0]
+        return len(self.dataset)
 
     def __getitem__(self, idx):
-        image, target = self.X[idx], self.y[idx]
+        """
+        returns:
+            X: [C, W, H] (tensor)
+            y: [] (tensor)
+        """
+        image, target = self.dataset[idx]
         return image, target
 
 
@@ -50,19 +54,22 @@ class MyCIFAR100(Dataset):
     - aquatic mammals superclass
     """
 
-    def __init__(self, crop=True, train=True):
+    def __init__(self, train=True):
         self.num_classes = 5
 
+        transform = transforms.Compose([
+            transforms.CenterCrop(28),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.507075, 0.486548, 0.440917),
+                                 std=(0.267334, 0.256438, 0.276150)),
+        ])
         dataset = datasets.CIFAR100(
             root="./data", train=train, download=True, transform=transform)
 
-        if crop:
-            margin = (32 - 28) // 2
-            dataset.data = dataset.data[:, :, margin:-margin, margin:-margin]
-
         # Get the aquatic mammals subset
         ood_labels = [dataset.class_to_idx[k] for k in OOD_CLASSES]
-        indices = [i for i, label in enumerate(dataset.targets) if label in ood_labels]
+        indices = [i for i, label in enumerate(
+            dataset.targets) if label in ood_labels]
         self.aquatic_mammals = Subset(dataset, indices)
 
     def __len__(self):
@@ -74,8 +81,10 @@ class MyCIFAR100(Dataset):
 
 
 def make_loader(opts, dataset):
+    """Build a DataLoader quickly"""
     set_seeds(opts.seed)
     generator = torch.Generator().manual_seed(opts.seed)
+
     def seed_worker(worker_id):
         worker_seed = torch.initial_seed() % 2**32
         np.random.seed(worker_seed)
@@ -91,7 +100,7 @@ def make_loader(opts, dataset):
 def get_loaders(opts):
     """Get data loaders for ID and OOD data"""
     # ID testset
-    id_testset = MyCIFAR10(opts, train=False)
+    id_testset = MyCIFAR10(train=False)
     id_loader = make_loader(opts, id_testset)
 
     # OOD testset
@@ -103,10 +112,37 @@ def get_loaders(opts):
     return id_loader, ood_loader
 
 
+def main(opts):
+    """Inspect ID and OOD data"""
+    # Load data
+    id_loader, ood_loader = get_loaders(opts)
+    os.makedirs("lab4/plots", exist_ok=True)
+
+    # Inspect ID data
+    id_imgs, id_lab = next(iter(id_loader))
+    print(id_imgs.shape, id_lab.shape)
+    grid = make_grid(id_imgs, nrow=4, padding=2, normalize=True)
+    plt.imshow(grid.permute(1, 2, 0))
+    plt.axis("off")
+    output_path = "lab4/plots/id_imgs.png"
+    plt.savefig(output_path)
+    print(f"Printed img={output_path}")
+
+    # Inspect OOD data
+    ood_imgs, ood_lab = next(iter(ood_loader))
+    print(ood_imgs.shape, ood_lab.shape)
+    grid = make_grid(ood_imgs, nrow=4, padding=2, normalize=True)
+    plt.imshow(grid.permute(1, 2, 0))
+    plt.axis("off")
+    output_path = "lab4/plots/ood_imgs.png"
+    plt.savefig(output_path)
+    print(f"Printed img={output_path}")
+
+
 if __name__ == "__main__":
     from types import SimpleNamespace
     configs = {
-        "seed": 42, "batch_size": 128, "num_workers": 2
+        "seed": 42, "batch_size": 32, "num_workers": 2
     }
     opts = SimpleNamespace(**configs)
-    get_loaders(opts)
+    main(opts)

@@ -208,3 +208,8 @@ The goal now is to improve over the baseline performance. For doing this we proc
 ### :three: PEFT study on BERT
 
 Efficient way for finetuning BERT on rotten tomatoes dataset using `PEFT` library
+
+
+## :test_tube: Lab4 - Adversarial Learning
+
+
