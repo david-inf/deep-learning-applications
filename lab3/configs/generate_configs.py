@@ -44,20 +44,20 @@ if __name__ == "__main__":
     ALPHA = 16
     new_configs = [
         # DistilBERT full-finetuning
-        {"model": MODEL, "num_epochs": NUM_EPOCHS, "learning_rate": 5e-5,
-         "dataset": DATASET, "weight_decay": 0.01, "warmup": 0.05,
-         "early_stopping": {"patience": 5, "min_delta": 0.002},
-         "ft_setting": {
-             "type": "full", "ftname": "full", "lr_head": 0.0001
-         }
-         },
+        # {"model": MODEL, "num_epochs": NUM_EPOCHS, "learning_rate": 5e-5,
+        #  "dataset": DATASET, "weight_decay": 0.01, "warmup": 0.05,
+        #  "early_stopping": {"patience": 5, "min_delta": 0.002},
+        #  "ft_setting": {
+        #      "type": "full", "ftname": "full", "lr_head": 0.0001
+        #  }
+        #  },
         # DistilBERT LoRA
         {"model": MODEL, "num_epochs": NUM_EPOCHS, "learning_rate": 5e-5,
          "dataset": DATASET, "weight_decay": 0.01, "warmup": 0.05,
          "early_stopping": {"patience": 5, "min_delta": 0.002},
          "ft_setting": {
-             "type": "lora", "rank": 4, "alpha": ALPHA, "target_modules": ["q_lin"],
-             "lr_head": 0.0001, "ftname": "lora_q_4"
+             "type": "lora", "rank": 16, "alpha": ALPHA, "target_modules": ["q_lin", "v_lin"],
+             "lr_head": 0.0001, "ftname": "lora_qv_16"
          },
          },
     ]

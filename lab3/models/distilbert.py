@@ -38,7 +38,7 @@ def get_distilbert(opts):
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
     model = AutoModelForSequenceClassification.from_pretrained(
         checkpoint, num_labels=2)
-    
+
     tokenizer, model = _finetuning_setting(opts, tokenizer, model)
     return tokenizer, model
 

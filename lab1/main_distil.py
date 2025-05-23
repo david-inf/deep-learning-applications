@@ -7,7 +7,7 @@ from comet_ml import start
 import torch
 from torch.backends import cudnn
 
-from utils.misc_utils import LOG, set_seeds
+from utils.misc import LOG, set_seeds
 from main_train import get_loaders, get_model, get_optimization
 from distill import train_loop_distill
 

@@ -1,11 +1,13 @@
 # Deep learning applications
 
-Repository to host the laboratories from the course on Deep Learning Applications
+Repository to host the laboratories from the course on Deep Learning Applications. We conver topics ranging from Computer Vision, Natural Language Processing and then Adversarial Learning.
 
 
 ## :test_tube: Lab1 - Convolutional Neural Networks
 
 Feel for working with deep models
+
+Inspect experiments from my [comet_ml](https://www.comet.com/david-inf/deep-learning-applications) project
 
 <details>
 <summary>Code organization</summary>
@@ -14,26 +16,30 @@ Feel for working with deep models
 pip install -r lab1.txt
 ```
 
-- `ckpts/` folder that will be automatically created for storing model checkpoints
+- `ckpts/` folder that will be automatically created for storing model checkpoints, this uses `torch.save()`
 - `configs/` folder that will be automatically created for storing `yaml` configurations files for each experiment
   - `generate_configs.py` automatically generate a configuration file from a given params dict
   - Each model configuration will be stored in `configs/model/`
 - `models/` module with MLPs (`mlp.py`) and CNNs (`cnn.py` `resnet.py` `wideresnet.py`) definitions
 - `plots/` for results
-- `utils/` module with utilities (`misc_utils.py` and `train_utils.py`)
+- `utils/` module with utilities (`misc.py` and `train.py`)
 - `cmd_args.py` arguments for main programs
+- `mydata.py` wrappers for MNIST and CIFAR10 datasets, augmentations are available too
+- `train.py` `distill.py` training utilities for standard training and knowledge distillation training
 - Main programs:
   - `main_train.py` main script for training a single model, see `python lab1/main_train.py --help`
   - `main_distill.py` main script for distilling knowledge, see `python lab1/main_distill.py --help`
-- `mydata.py` wrappers for MNIST and CIFAR10 datasets
-- `train.py` `distill.py` training utilities for standard training and knowledge distillation training
 
 </details>
 
 <details>
-<summary>Running the main script</summary>
+<summary>Running the main programs</summary>
 
 Before running check always if the configuration file is correct (as for the device).
+
+```bash
+python lab1/main_train.py --config lab1/configs/CNN/MediumCNN.yaml --view
+```
 
 ```bash
 python lab1/main_train.py --config lab1/configs/CNN/MediumCNN.yaml
@@ -57,18 +63,36 @@ python lab1/main_distil.py --config lab1/configs/Distil/DistilCNN_RN32.yaml
 
 </details>
 
-### :one: Degradation problem, deep residual learning
 
-Reproducing on a small scale the results from the ResNet paper on CIFAR10 dataset.
+### :zero: Warming up on MNIST
 
-> Deep Residual Learning for Image Recognition, Kaiming He and Xiangyu Zhang and Shaoqing Ren and Jian Sun, 2015. [Arxiv](https://arxiv.org/abs/1512.03385).
+Train a MLP and a two CNNs on the MNIST dataset. I chose to train two CNNs because one has fewer params than the dataset samples, the other has more, as the MLP. Maybe something shows up idk.
 
-Deeper networks, i.e. more stacked layers, do not guarantee more reduction in training loss. So the point of this exercise is to abstract a model definition so that one can add a given number of layers (blocks), and then see how the performance are affected. The idea is to reproduce Figure 6 from the paper.
+<details>
+<summary>MLP architecture</summary>
 
-Inspect experiments from my [comet_ml](https://www.comet.com/david-inf/deep-learning-applications) project.
+The simplest version in which you give as argument a list with hidden unit sizes `layer_sizes=[512, 512, 512]` like in this example. On top of this another linear layer that ends with the number of classes.
+
+```python
+layers = []
+layers.append(nn.Linear(input_size, layer_sizes[0]))
+layers.append(nn.ReLU(inplace=True))
+for i in range(len(layer_sizes) - 1):
+    layers.append(nn.Linear(layer_sizes[i], layer_sizes[i + 1]))
+    layers.append(nn.ReLU(inplace=True))
+self.mlp = nn.Sequential(*layers)
+
+self.classifier = nn.Linear(layer_sizes[-1], num_classes)
+```
+
+- `python lab1/main_train.py --config lab1/configs/MLP/MLP_mnist.yaml --view`
+
+</details>
 
 <details>
 <summary>CNNs architecture</summary>
+
+This architecture follows the concept of the ResNet in which we have "macro-layers" each one with a variable number of blocks.
 
 - `input_adapter`: conv + batchnorm + relu that exits with `num_filters`
 - `blocks`: fixed number of layers with variable `BasicBlock` blocks
@@ -78,11 +102,36 @@ Inspect experiments from my [comet_ml](https://www.comet.com/david-inf/deep-lear
 - `avgpool`: ends with a `(num_filters*2) x 1 x 1` feature map
 - `classifier`: classification head
 
-Here we use 2 (macro-)layers, resulting in `2*2*n+2` total layers.
+Here we use 2 macro-layers, resulting in `2*2*n+2` total layers.
 
-- `python lab1/main_train.py --config lab1/configs/CNN/MediumCNN.yaml --view` for model inspection (no training with the `--view` argument)
+- `python lab1/main_train.py --config lab1/configs/CNN/CNN1.yaml --view` where `num_blocks=2` and `num_filters=32`
+- `python lab1/main_train.py --config lab1/configs/CNN/CNN2.yaml --view` where `num_blocks=2` and `num_filters=64`
 
 </details>
+
+<details>
+<summary>Results</summary>
+
+Model  | #params
+------ | -----
+`MLP`  | 0.93M
+`CNN1` | 0.17M
+`CNN2` | 0.68M
+
+<p align="middle">
+  <img src="lab1/plots/mnist_warmup.svg" alt="Warming up on MNIST" width="60%">
+</p>
+
+</details>
+
+
+### :one: Degradation problem, deep residual learning
+
+Reproducing on a small scale the results from the ResNet paper on CIFAR10 dataset.
+
+> Deep Residual Learning for Image Recognition, Kaiming He and Xiangyu Zhang and Shaoqing Ren and Jian Sun, 2015. [Arxiv](https://arxiv.org/abs/1512.03385).
+
+Deeper networks, i.e. more stacked layers, do not guarantee more reduction in training loss. So the point of this exercise is to abstract a model definition so that one can add a given number of layers (blocks), and then see how the performance are affected. The idea is to reproduce Figure 6 from the paper.
 
 <details>
 <summary>Results</summary>
@@ -103,6 +152,7 @@ Here we use 2 (macro-)layers, resulting in `2*2*n+2` total layers.
 When adding further layers we see that "adding more layers reduces loss" holds no more. Skip connections, residual learning, solve the problem. Validation accuracy provides evidence as well, i.e. skip connections solve the degradation problem.
 
 </details>
+
 
 ### :two: Knowledge Distillation
 
@@ -154,9 +204,10 @@ The distilled model is able to achieve a higher train accuracy earlier. Mostly s
 </details>
 
 
+
 ## :test_tube: Lab3 - Transformers and NLP
 
-Work with the HuggingFace ecosystem to adapt models to new tasks.
+Work with the `HuggingFace` ecosystem to adapt models to new tasks.
 
 <details>
 <summary>Code organization</summary>
@@ -165,14 +216,20 @@ Work with the HuggingFace ecosystem to adapt models to new tasks.
 python install -r lab3.txt
 ```
 
-Inside `lab3/` folder there are the following programs:
-
-- Exercise 1:
-  - `main_extract.py`
-- Exercise 2:
-  - `main_ft.py`
+- `ckpts/` model checkpoints using `.save_pretrained()` method
+- `configs/` configuration files automatically generated using `generate_configs.py` program
+- `models/` wrappers for BERT-family models
+- `results/` plotted stuffs
+- `utils/` module with various utilities inside `misc.py` and `train.py`
+- `cmd_args.py` main programs' arguments
+- `load_and_eval.py` load the test dataset and perform inference with a given model checkpoint
+- `main_extract.py` main program for obtaining baseline results with a given pretrained extractor, i.e. a BERT-family model from the local `models` module
+- `main_ft.py` core of this lab that is the main program for finetuning a pretrained BERT-family model
+- `mydata.py` utilities for preprocessing and loading the `rotten_tomatoes` dataset from HuggingFace
+- `train.py` train loop
 
 </details>
+
 
 ### :one: BERT as a feature extractor
 

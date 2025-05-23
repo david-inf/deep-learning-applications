@@ -4,7 +4,7 @@ from models.mlp import MLP
 from models.cnn import CNN
 from models.resnet import ResNet
 from models.wideresnet import WideResNet
-from utils.misc_utils import LOG
+from utils.misc import LOG
 
 
 def build_mlp(opts):

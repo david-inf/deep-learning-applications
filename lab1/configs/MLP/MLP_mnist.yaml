@@ -1,0 +1,30 @@
+augmentation: true
+batch_size: 128
+checkpoint: lab1/ckpts/MLP/MLP_mnist.pt
+checkpoint_dir: lab1/ckpts/MLP
+checkpoint_every: 20
+comet_project: deep-learning-applications
+config: lab1/configs/MLP/MLP_mnist.yaml
+dataset: MNIST
+device: cuda
+do_early_stopping: false
+experiment_name: MLP_mnist
+layers:
+- 512
+- 512
+- 512
+learning_rate: 0.01
+log_every: 20
+model: MLP
+momentum: 0.9
+num_epochs: 20
+num_workers: 4
+scheduler:
+  gamma: 0.1
+  steps:
+  - 50
+  - 100
+  type: multi-step
+seed: 42
+visualize: false
+weight_decay: 0.0005

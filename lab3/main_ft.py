@@ -1,6 +1,7 @@
 """Main program for finetuning BERT for sentiment analysis"""
 
 import os
+
 import torch
 from torch.optim import AdamW
 from torch.backends import cudnn
@@ -9,7 +10,7 @@ from transformers import set_seed, get_cosine_schedule_with_warmup, PreTrainedMo
 
 from mydata import get_loaders
 from models.distilbert import get_distilbert
-from utils.misc_utils import LOG, visualize, update_yaml
+from utils.misc import LOG, visualize, update_yaml
 from train import train_loop
 
 

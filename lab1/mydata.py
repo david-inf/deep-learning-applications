@@ -12,7 +12,7 @@ from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 from torchvision.utils import make_grid
 
-from utils.misc_utils import set_seeds
+from utils import set_seeds
 
 
 class MyMNIST(Dataset):

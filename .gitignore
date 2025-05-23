@@ -159,7 +159,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-/data
+/data/
 
 # /lab1/ckpts
 # /lab1/configs/CNN
@@ -167,12 +167,14 @@ cython_debug/
 # /lab1/configs/MLP
 # /lab1/configs/ResNet
 
-# /lab3/ckpts
+/lab3/ckpts
 # /lab3/configs
 
 lab1/commands1.sh
 lab1/commands2.sh
 lab1/run_exps.sh
+lab3/commands1.sh
+lab3/commands2.sh
 
 lab1/plots/make_plot.py
 /lab1/plots/curves_data
