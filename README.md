@@ -235,24 +235,38 @@ python install -r lab3.txt
 
 Train a simple classifier (LinearSVC and LogisticRegression) on top of BERT sentence representation for sentiment analysis task, this will be the stable baseline which we will try to improve with finetuning. See code in `main_extract.py`.
 
+
 <details>
 <summary>Results</summary>
 
-We use the rotten tomatoes dataset with train-val-test splits, hence we use the BERT models as feature extractors, then we train LinearSVC and LogisticRegression classifiers on top of the representation. We compare DistilBERT and SentenceBERT extractors.
+We use the rotten tomatoes dataset with train-val-test splits, hence we use the BERT-family models as feature extractors, then we train a LinearSVC classifier on top of the representation. We compare DistilBERT (`[CLS]` token and mean pooling) and SentenceBERT (two models) extractors.
 
-- `python lab3/main_extract.py --extractor "distilbert" --method "cls" --classifier "svm"`
-- `python lab3/main_extract.py --extractor "distilbert" --method "mean" --classifier "svm"`
-- `python lab3/main_extract.py --extractor "sbert" --method "mpnet" --classifier "svm"`
-- `python lab3/main_extract.py --extractor "sbert" --method "minilm" --classifier "svm"`
+- `python lab3/main_extract.py --extract --extractor distilbert --method cls`
+- `python lab3/main_extract.py --extract --extractor distilbert --method mean`
+- `python lab3/main_extract.py --extract --extractor sbert --method minilm`
+- `python lab3/main_extract.py --extract --extractor sbert --method mpnet`
 
-| Extractor for LinearSVC                  | size  | `train_acc` | `val_acc` | `test_acc` |
-| ---------------------------------------- | ----- | ----------- | --------- | ---------- |
-| `distilbert-base-uncased` ([CLS] token)  | 67M   | 0.849       | 0.822     | 0.798      |
-| `distilbert-base-uncased` (mean pooling) | 67M   | 0.846       | 0.810     | 0.788      |
-| `all-mpnet-base-v2`                      | 109M  | 0.879       | 0.855     | 0.847      |
-| `all-MiniLM-L6-v2`                       | 22.7M | 0.791       | 0.767     | 0.777      |
+The `--extract` argument is needed for saving the features locally, this makes possible to train different classifiers on top of those features.
 
-Being SBERT more suitable than BERT for producing sentence embeddings, as we expected the classifier on top of SBERT has better performance.
+| Extractor for LinearSVC                   | size  | `train_acc` | `val_acc` | `test_acc` |
+| ----------------------------------------  | ----- | ----------- | --------- | ---------- |
+| `distilbert-base-uncased` (`[CLS]` token) | 67M   | 0.849       | 0.822     | 0.798      |
+| `distilbert-base-uncased` (mean pooling)  | 67M   | 0.846       | 0.810     | 0.788      |
+| `sentence-transformers/all-MiniLM-L6-v2`  | 22.7M | 0.791       | 0.767     | 0.777      |
+| `sentence-transformers/all-mpnet-base-v2` | 109M  | 0.879       | 0.855     | 0.847      |
+
+Being SBERT more suitable than DistilBERT for producing sentence embeddings, as we expected the classifier on top of SBERT has better performance.
+
+</details>
+
+
+<details>
+<summary>Visualize embeddings</summary>
+
+```bash
+python lab3/main_extract.py --extractor "distilbert"  --view
+python lab3/main_extract.py --extractor "sbert"  --view
+```
 
 </details>
 
@@ -264,4 +278,6 @@ The goal now is to improve over the baseline performance. For doing this we proc
 
 ### :three: PEFT study on BERT
 
-Efficient way for finetuning BERT on rotten tomatoes dataset using `PEFT` library
+Efficient way for finetuning BERT on the rotten tomatoes dataset using `PEFT` library.
+
+The idea is to perform model selection on BERT-family models (full-finetuning and few LoRA configs) for the text classification task, then we deploy the best BERT on the test split.

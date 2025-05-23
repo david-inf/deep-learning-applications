@@ -3,7 +3,7 @@ import os
 import numpy as np
 from transformers import PreTrainedModel
 # from accelerate import Accelerator
-from utils.misc_utils import LOG, update_yaml
+from utils.misc import LOG, update_yaml
 
 
 def accuracy(logits, labels):

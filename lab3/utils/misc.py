@@ -27,13 +27,6 @@ def get_logger():
 LOG = get_logger()
 
 
-def set_seeds(seed):
-    """Set seeds for all random number generators"""
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-
-
 def update_yaml(opts, key, value):
     """
     Update a key in the yaml configuration file
