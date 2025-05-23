@@ -273,11 +273,15 @@ python lab3/main_extract.py --extractor "sbert"  --view
 
 ### :two: BERT Finetuning
 
-The goal now is to improve over the baseline performance. For doing this we proceed with a full finetuning and see what happens.
-
-
-### :three: PEFT study on BERT
-
-Efficient way for finetuning BERT on the rotten tomatoes dataset using `PEFT` library.
+The goal now is to improve over the baseline performance. For doing this we proceed with a full finetuning and see what happens. Then we seek for a more efficient way for finetuning BERT on the rotten tomatoes dataset using `PEFT` library.
 
 The idea is to perform model selection on BERT-family models (full-finetuning and few LoRA configs) for the text classification task, then we deploy the best BERT on the test split.
+
+<details>
+<summary>Results</summary>
+
+<p align="middle">
+  <img src="lab3/results/lora.svg" alt="LoRA against full-finetuning" width="60%">
+</p>
+
+</details>
