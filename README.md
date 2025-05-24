@@ -169,7 +169,7 @@ student's output with the teacher's one.
 Loss:
 - Soft targets loss $\mathcal{L}_1$: `KLDivLoss(log_target=True, reduction="batchmean")(soft_prob, soft_targets)`
 - Hard targets loss $\mathcal{L}_2$: `CrossEntropyLoss()(student_logits, labels)`
-- Final loss: $\mathcal{L}=w_1\mathcal{L}_1+w_2\mathcal{L}_2$ with $w_1\gg w_2$
+- Final loss: $\mathcal{L}=w_1\mathcal{L}_1+w_2\mathcal{L}_2$ with $w_1\gg w_2$ which important to ensure that the knowledge distillation training outperforms that standard training
 
 As the teacher model we use the actual `ResNet` architecture with 3 blocks of `BasicBlock` blocks resulting in
 $3n+2$ total layers. Also the same algorithm is applied to the `WideResNet` model (same architecture with pre-activation `BasicBlock`).
