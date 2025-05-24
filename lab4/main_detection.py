@@ -18,7 +18,7 @@ from lab4.utils.detection import compute_scores
 from lab4.models import AutoEncoder
 
 from lab1.main_train import get_model
-from lab1.utils.train_utils import load_checkpoint
+from lab1.utils.train import load_checkpoint
 from lab1.utils import set_seeds, LOG
 
 
@@ -85,8 +85,8 @@ if __name__ == "__main__":
                         choices=["max_logit", "max_softmax", "mse"])
     parser.add_argument("--temp", type=float, default=1.0,
                         help="Temperature for softmax (default: 1.0)")
-    parser.add_argument("--model_configs", type=str, default="lab1/configs/CNN/LargeCNNskip.yaml",
-                        help="Model configuration file (default: LargeCNNskip)")
+    parser.add_argument("--model_configs", type=str,
+                        help="Model configuration file")
     args = parser.parse_args()
     args.seed = 42
     try:

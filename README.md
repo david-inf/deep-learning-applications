@@ -231,27 +231,63 @@ Inside the `lab4/` folder there are the following programs
 <details>
 <summary>ID and OOD samples</summary>
 
-We choose as in-distribution (ID) dataset CIFAR10 (10000 samples from test split), and out-of-distribution (OOD) dataset the **aquatic mammals** subset from CIFAR100 (2500 samples from train split).
+We choose as in-distribution (ID) dataset CIFAR10 (10000 samples from test split), and few out-of-distribution (OOD) datasets
+- **aquatic mammals** subset from CIFAR100 (2500 samples from train split)
+- **people** subset from CIFAR100
+- **noise** generate from FakeData dataset
 
 <p align="middle">
-  <img src="lab4/plots/id_imgs.png" alt="ID samples" width="30%">
+  <img src="lab4/plots/id_imgs.png" alt="ID samples" width="20%">
   &nbsp;
-  <img src="lab4/plots/ood_imgs.png" alt="OOD samples" width="30%">
+  <img src="lab4/plots/aquatic_mammals.png" alt="OOD samples" width="20%">
+  &nbsp;
+  <img src="lab4/plots/people.png" alt="OOD samples" width="20%">
+  &nbsp;
+  <img src="lab4/plots/noise.png" alt="OOD samples" width="20%">
 </p>
 
 </details>
 
-<details open>
+<details>
+<summary>AutoEncoder</summary>
+
+`python lab4/train.py --config lab4/ckpts/autoencoder.yaml`
+
+The AE outputs with a sigmoid, so images needs to be in [0,1] already, as done in the lab1 exercises.
+
+</details>
+
+<details>
 <summary>Pipeline</summary>
 
-`python lab4/main_detection.py --help`
+OOD detection pipeline for all the OOD datasets chosen, see `python lab4/main_detection.py --help`, plot data with `python lab4/mydata.py`.
+
+- `python lab4/main_detection.py --score_fun max_logit --model_configs lab1/configs/CNN/LargeCNNskip.yaml`
+- `python lab4/main_detection.py --score_fun max_softmax --model_configs lab1/configs/CNN/LargeCNNskip.yaml`
+- `python lab4/main_detection.py --score_fun mse --model_configs lab4/ckpts/autoencoder.yaml`
 
 <p align="middle">
-  <img src="lab4/plots/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="30%">
+  <img src="lab4/plots/aquatic/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="30%">
   &nbsp;
-  <img src="lab4/plots/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="30%">
+  <img src="lab4/plots/aquatic/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="30%">
   &nbsp;
-  <img src="lab4/plots/scores_autoencoder.svg" alt="Scores from CNN using max_logit", width="30%">
+  <img src="lab4/plots/aquatic/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="30%">
+</p>
+
+<p align="middle">
+  <img src="lab4/plots/people/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="30%">
+  &nbsp;
+  <img src="lab4/plots/people/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="30%">
+  &nbsp;
+  <img src="lab4/plots/people/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="30%">
+</p>
+
+<p align="middle">
+  <img src="lab4/plots/noise/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="30%">
+  &nbsp;
+  <img src="lab4/plots/noise/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="30%">
+  &nbsp;
+  <img src="lab4/plots/noise/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="30%">
 </p>
 
 </details>

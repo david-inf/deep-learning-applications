@@ -4,7 +4,7 @@ checkpoint_dir: lab4/ckpts
 checkpoint_every: 5
 config: lab4/ckpts/autoencoder.yaml
 dataset: CIFAR10
-device: cuda
+device: cuda:1
 experiment_name: autoencoder
 learning_rate: 0.0001
 log_every: 20

@@ -1,18 +1,24 @@
 """Data loading utilities"""
 
+import sys
 import os
 import random
 
 import torch
 import numpy as np
 from torchvision import datasets
-import torchvision.transforms as transforms
+# import torchvision.transforms as transforms
 from torchvision.transforms import v2
+from torchvision.utils import make_grid
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
-from torchvision.utils import make_grid
 
-from lab1.utils.misc_utils import set_seeds
+# Ensure the parent directory is in the path for module imports
+sys.path.append(os.path.dirname(
+    # Add parent directory to path
+    os.path.dirname(os.path.abspath(__file__))))
+
+from lab1.utils.misc import set_seeds
 
 
 class MyMNIST(Dataset):
@@ -24,19 +30,23 @@ class MyMNIST(Dataset):
 
         dataset = datasets.MNIST(
             root="./data", train=train, download=True)
-        X, y = dataset.data, dataset.targets  # tensor, tensor
+        images, labels = dataset.data, dataset.targets  # tensor, tensor
 
         # Prepare data
-        self.X = X.unsqueeze(1) / 255.  # [N, 1, 28, 28] in [0,1]
-        self.y = y  # [N]
+        self.images = images.unsqueeze(1) / 255.  # [N, 1, 28, 28] data in [0,1]
+        self.labels = labels  # [N]
 
         # Normalize data with given mean and std
-        self.mean = torch.tensor([0.130925])
-        self.std = torch.tensor([0.308449])
-        self.X = transforms.Normalize(self.mean, self.std)(self.X)
+        # if you want gaussian data
+        # self.mean = torch.tensor([0.130925])
+        # self.std = torch.tensor([0.308449])
+        # if you want data in [-1,1]
+        # self.mean = torch.tensor([0.5])
+        # self.std = torch.tensor([0.5])
+        # self.X = transforms.Normalize(self.mean, self.std)(self.X)
 
     def __len__(self):
-        return self.X.shape[0]  # 70000
+        return self.images.shape[0]  # 70000
 
     def __getitem__(self, idx):
         """
@@ -44,7 +54,7 @@ class MyMNIST(Dataset):
             X: [C, W, H] (tensor)
             y: [] (tensor)
         """
-        image, target = self.X[idx], self.y[idx]
+        image, target = self.images[idx], self.labels[idx]
         return image, target
 
 
@@ -54,12 +64,12 @@ class MyAugmentedMNIST(MyMNIST):
     def __init__(self, opts):
         super().__init__(opts, train=True)
         self.augmentation_pipeline = v2.Compose([
-            v2.RandomAffine(degrees=15, translate=(
-                0.1, 0.1), scale=(0.9, 1.1)),
+            v2.RandomAffine(
+                degrees=15, translate=(0.1, 0.1), scale=(0.9, 1.1)),
         ])
 
     def __getitem__(self, idx):
-        return self.augmentation_pipeline(self.X[idx]), self.y[idx]
+        return self.augmentation_pipeline(self.images[idx]), self.labels[idx]
 
 
 class MyCIFAR10(Dataset):
@@ -71,22 +81,26 @@ class MyCIFAR10(Dataset):
 
         dataset = datasets.CIFAR10(
             root="./data", train=train, download=True)
-        X, y = dataset.data, dataset.targets  # ndarray, list
+        images, labels = dataset.data, dataset.targets  # ndarray, list
 
         # Prepare data
-        self.X = torch.from_numpy(X).permute(0, 3, 1, 2) / 255.  # [0,1]
+        self.images = torch.from_numpy(images).permute(0, 3, 1, 2) / 255.  # [0,1]
         if crop:
             margin = (32 - 28) // 2
-            self.X = self.X[:, :, margin:-margin, margin:-margin]
-        self.y = torch.tensor(y)
+            self.images = self.images[:, :, margin:-margin, margin:-margin]
+        self.labels = torch.tensor(labels)
 
         # Normalize data with given mean and std
-        self.mean = torch.tensor([0.489255, 0.475775, 0.439889])
-        self.std = torch.tensor([0.243047, 0.239315, 0.255997])
-        self.X = transforms.Normalize(self.mean, self.std)(self.X)
+        # if you want gaussian data
+        # self.mean = torch.tensor([0.489255, 0.475775, 0.439889])
+        # self.std = torch.tensor([0.243047, 0.239315, 0.255997])
+        # if you want data in [-1,1]
+        # self.mean = torch.tensor([0.5, 0.5, 0.5])
+        # self.std = torch.tensor([0.5, 0.5, 0.5])
+        # self.X = transforms.Normalize(self.mean, self.std)(self.X)
 
     def __len__(self):
-        return self.X.shape[0]
+        return self.images.shape[0]
 
     def __getitem__(self, idx):
         """
@@ -94,7 +108,7 @@ class MyCIFAR10(Dataset):
             X: [C, W, H] (tensor)
             y: [] (tensor)
         """
-        image, target = self.X[idx], self.y[idx]
+        image, target = self.images[idx], self.labels[idx]
         return image, target
 
 
@@ -109,7 +123,7 @@ class MyAugmentedCIFAR10(MyCIFAR10):
         ])
 
     def __getitem__(self, idx):
-        return self.augmentation_pipeline(self.X[idx]), self.y[idx]
+        return self.augmentation_pipeline(self.images[idx]), self.labels[idx]
 
 
 class MakeDataLoaders:
@@ -164,7 +178,7 @@ def main_mnist(opts):
     std = torch.std(X, dim=(0, 2, 3))  # original data std
     print(f"Dataset size: X={X.shape}, y={y.shape}")
     torch.set_printoptions(precision=6)
-    print(f"Mean: {mean}, Std: {std}")
+    print(f"Mean: {mean}, Std: {std}\nMin: {X.min()}, Max: {X.max()}")
     print()
 
     # Custom datasets
@@ -173,13 +187,13 @@ def main_mnist(opts):
     valset = MyMNIST(opts, train=False)
 
     # Check dataset statistics channel-wise
-    X = torch.cat((trainset_original.X, valset.X))
-    y = torch.cat((trainset_original.y, valset.y))
+    X = torch.cat((trainset_original.images, valset.images))
+    y = torch.cat((trainset_original.labels, valset.labels))
     mean = torch.mean(X, dim=(0, 2, 3))  # original data mean
     std = torch.std(X, dim=(0, 2, 3))  # original data std
     print("MNIST custom datasets")
     print(f"Dataset size: X={X.shape}, y={y.shape}")
-    print(f"Mean: {mean}, Std: {std}")
+    print(f"Mean: {mean}, Std: {std}\nMin: {X.min()}, Max: {X.max()}")
 
     # Data loaders
     mnist_original = MakeDataLoaders(opts, trainset_original, valset)
@@ -189,7 +203,7 @@ def main_mnist(opts):
 
     # Check first batch
     X_orig, y_orig = next(iter(train_loader))
-    X_aug, y_aug = next(iter(train_loader_aug))
+    X_aug, _ = next(iter(train_loader_aug))
     print("Data shape:", f"X={X_orig.shape}", f"y={y_orig.shape}")
 
     # Print first batch
@@ -229,7 +243,7 @@ def main_cifar10(opts):
     std = torch.std(X, dim=(0, 2, 3))  # original data std
     print(f"Dataset size: X={X.shape}, y={y.shape}")
     torch.set_printoptions(precision=6)
-    print(f"Mean: {mean}, Std: {std}")
+    print(f"Mean: {mean}, Std: {std}\nMin: {X.min()}, Max: {X.max()}")
     print()
 
     # Custom datasets
@@ -238,13 +252,13 @@ def main_cifar10(opts):
     valset = MyCIFAR10(opts, train=False)
 
     # Check dataset statistics channel-wise
-    X = torch.cat((trainset_original.X, valset.X))
-    y = torch.cat((trainset_original.y, valset.y))
+    X = torch.cat((trainset_original.images, valset.images))
+    y = torch.cat((trainset_original.labels, valset.labels))
     mean = torch.mean(X, dim=(0, 2, 3))  # original data mean
     std = torch.std(X, dim=(0, 2, 3))  # original data std
     print("CIFAR10 custom datasets")
     print(f"Dataset size: X={X.shape}, y={y.shape}")
-    print(f"Mean: {mean}, Std: {std}")
+    print(f"Mean: {mean}, Std: {std}\nMin: {X.min()}, Max: {X.max()}")
 
     # Data loaders
     cifar10_original = MakeDataLoaders(opts, trainset_original, valset)
@@ -254,7 +268,7 @@ def main_cifar10(opts):
 
     # Check first batch
     X_orig, y_orig = next(iter(train_loader))
-    X_aug, y_aug = next(iter(train_loader_aug))
+    X_aug, _ = next(iter(train_loader_aug))
     print("Data shape:", f"X={X_orig.shape}", f"y={y_orig.shape}")
 
     # Print first batch
