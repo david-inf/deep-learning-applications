@@ -6,7 +6,7 @@ checkpoint_every: 20
 comet_project: deep-learning-applications
 config: lab1/configs/CNN/MediumCNNskip.yaml
 dataset: CIFAR10
-device: cuda
+device: cuda:1
 do_early_stopping: false
 experiment_name: MediumCNNskip
 learning_rate: 0.01

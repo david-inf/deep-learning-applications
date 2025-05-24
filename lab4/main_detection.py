@@ -85,8 +85,8 @@ if __name__ == "__main__":
                         choices=["max_logit", "max_softmax", "mse"])
     parser.add_argument("--temp", type=float, default=1.0,
                         help="Temperature for softmax (default: 1.0)")
-    parser.add_argument("--model_configs", type=str, default="lab1/configs/CNN/LargeCNNskip.yaml",
-                        help="Model configuration file (default: LargeCNNskip)")
+    parser.add_argument("--model_configs", type=str,
+                        help="Model configuration file")
     args = parser.parse_args()
     args.seed = 42
     try:

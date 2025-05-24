@@ -16,7 +16,7 @@ sys.path.append(os.path.dirname(
 from lab1.utils import LOG, set_seeds
 from lab1.utils.train import N, AverageMeter, save_checkpoint
 from lab1.utils.misc import visualize
-from lab4.mydata import get_train_loader
+from lab4.mydata import get_loaders
 from lab4.models import AutoEncoder
 
 
@@ -75,7 +75,7 @@ def main(opts):
     set_seeds(opts.seed)
     # Loaders
     # make sure the data is in [0,1]
-    train_loader = get_train_loader(opts)
+    train_loader = get_loaders(opts, True)
 
     # Model and Optimizer
     model = AutoEncoder(opts.num_filters).to(opts.device)

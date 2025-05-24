@@ -108,7 +108,7 @@ class MyCIFAR10(Dataset):
             X: [C, W, H] (tensor)
             y: [] (tensor)
         """
-        image, target = self.images[idx], self.images[idx]
+        image, target = self.images[idx], self.labels[idx]
         return image, target
 
 
