@@ -182,6 +182,7 @@ lab1/plots/make_plot.py
 # lab3/configs/generate_config.py
 lab3/models/mlp.py
 lab3/feature_extractors.py
+/lab3/results/lora/
 
 .~lock.runs.ods\#
 runs.ods
