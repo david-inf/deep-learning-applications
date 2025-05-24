@@ -123,6 +123,6 @@ if __name__ == "__main__":
         else:
             view_model(opts)
     except Exception:
-        import ipdb, traceback, sys
+        import ipdb, traceback
         traceback.print_exc()
         ipdb.post_mortem(sys.exc_info()[2])

@@ -1,12 +1,23 @@
 """Train the AutoEncoder"""
 
+import sys
+import os
 import time
 from tqdm import tqdm
 
 import torch
+from torch.optim import Adam
+from torch.backends import cudnn
 
-from lab1.utils import LOG
-from lab1.utils.train_utils import N, save_checkpoint, AverageMeter
+# Ensure the parent directory is in the path for module imports
+sys.path.append(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))))  # Add parent directory to path
+
+from lab1.utils import LOG, set_seeds
+from lab1.utils.train_utils import N, AverageMeter, save_checkpoint
+from lab1.utils.misc_utils import visualize
+from lab4.mydata import get_train_loader
+from lab4.models import AutoEncoder
 
 
 def train_loop(opts, model, optimizer, train_loader):
@@ -14,6 +25,7 @@ def train_loop(opts, model, optimizer, train_loader):
     step = 0
     start_time = time.time()
 
+    save_checkpoint(opts, model)
     for epoch in range(1, opts.num_epochs + 1):
 
         step = train_epoch(opts, model, optimizer, train_loader, step, epoch)
@@ -36,12 +48,12 @@ def train_epoch(opts, model, optimizer, train_loader, step, epoch):
             tepoch.set_description(f"{epoch:02d}")
 
             # move data to device
-            X = X.to(opts.device)
+            X = X.to(opts.device)  # [N, 3, 28, 28]
             # forward pass
-            z, X_r = model(X)  # outputs latent and reconstruction
+            X_r = model(X)  # outputs reconstruction
             loss = criterion(X, X_r)
             # metrics
-            losses.update(N(loss). X.size(0))
+            losses.update(N(loss), X.size(0))
             # backward pass
             optimizer.zero_grad()
             loss.backward()
@@ -56,3 +68,52 @@ def train_epoch(opts, model, optimizer, train_loader, step, epoch):
                 step += 1
 
     return step
+
+
+def main(opts):
+    """AutoEncoder training"""
+    set_seeds(opts.seed)
+    # Loaders
+    # make sure the data is in [0,1]
+    train_loader = get_train_loader(opts)
+
+    # Model and Optimizer
+    model = AutoEncoder(opts.num_filters).to(opts.device)
+    optimizer = Adam(model.parameters(), lr=opts.learning_rate)
+
+    # Training
+    cudnn.benchmark = True
+    LOG.info("experiment_name=%s", opts.experiment_name)
+    train_loop(opts, model, optimizer, train_loader)
+
+
+def view_model(opts):
+    """AutoEncoder inspection"""
+    opts.device = "cpu"
+    model = AutoEncoder().to(opts.device)
+    input_data = torch.randn(opts.batch_size, 3, 28, 28)
+    visualize(model, "AutoEncoder", input_data)
+
+
+if __name__ == "__main__":
+    import argparse
+    import yaml
+    from types import SimpleNamespace
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", help="YAML configuration file")
+    parser.add_argument("--view", action="store_true")
+    args = parser.parse_args()
+    with open(args.config, "r", encoding="utf-8") as f:
+        configs = yaml.safe_load(f)  # dict
+    opts = SimpleNamespace(**configs)
+
+    try:
+        if not args.view:
+            main(opts)
+        else:
+            view_model(opts)
+    except Exception:
+        import ipdb, traceback
+        traceback.print_exc()
+        ipdb.post_mortem(sys.exc_info()[2])

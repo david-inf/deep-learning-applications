@@ -15,6 +15,7 @@ sys.path.append(os.path.dirname(
 
 from lab4.mydata import get_loaders
 from lab4.utils.detection import compute_scores
+from lab4.models import AutoEncoder
 
 from lab1.main_train import get_model
 from lab1.utils.train_utils import load_checkpoint
@@ -55,9 +56,16 @@ def main(opts):
     with open(opts.model_configs, "r", encoding="utf-8") as f:
         model_configs = yaml.safe_load(f)
     model_opts = SimpleNamespace(**model_configs)
+    opts.device = model_opts.device
 
     # Load model
-    model = get_model(model_opts)
+    if model_opts.model == "CNN":
+        model = get_model(model_opts)
+    elif model_opts.model == "AutoEncoder":
+        model = AutoEncoder(model_opts.num_filters)
+        model = model.to(model_opts.device)
+    else:
+        raise ValueError(f"Unknown model {model_opts.model}")
     load_checkpoint(model_opts.checkpoint, model)
 
     # Load data
@@ -72,10 +80,9 @@ def main(opts):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="OOD detection pipeline")
-    parser.add_argument("--device", type=str, default="cuda", help="Device to use (default: cuda)")
     parser.add_argument("--score_fun", type=str, default="max_logit",
                         help="Score function to use (default: max_logit)",
-                        choices=["max_logit", "max_softmax"])
+                        choices=["max_logit", "max_softmax", "mse"])
     parser.add_argument("--temp", type=float, default=1.0,
                         help="Temperature for softmax (default: 1.0)")
     parser.add_argument("--model_configs", type=str, default="lab1/configs/CNN/LargeCNNskip.yaml",

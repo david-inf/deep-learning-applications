@@ -12,6 +12,7 @@ from torch.utils.data import Dataset, Subset, DataLoader
 import matplotlib.pyplot as plt
 
 from lab1.utils import set_seeds
+from lab1.mydata import MyCIFAR10
 
 
 ID_CLASSES = (  # CIFAR10
@@ -20,24 +21,26 @@ OOD_CLASSES = (  # CIFAR100 aquatic mammals
     "beaver", "dolphin", "otter", "seal", "whale")
 
 
-# TODO: get this class from lab1
-class MyCIFAR10(Dataset):
-    """Wrapper for CIFAR10 Dataset class"""
+class AECIFAR10(Dataset):
+    """Wrapper for CIFAR10 Dataset class for AutoEncoder"""
 
-    def __init__(self, train=True):
+    def __init__(self, opts, crop=True, train=True):
+        self.opts = opts
         self.num_classes = 10
 
-        transform = transforms.Compose([
-            transforms.CenterCrop(28),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=(0.489255, 0.475775, 0.439889),
-                                 std=(0.243047, 0.239315, 0.255997)),
-        ])
-        self.dataset = datasets.CIFAR10(
-            root="./data", train=train, download=True, transform=transform)
+        dataset = datasets.CIFAR10(
+            root="./data", train=train, download=True)
+        X, y = dataset.data, dataset.targets  # ndarray, list
+
+        # Prepare data
+        self.X = torch.from_numpy(X).permute(0, 3, 1, 2) / 255.  # [0,1]
+        if crop:
+            margin = (32 - 28) // 2
+            self.X = self.X[:, :, margin:-margin, margin:-margin]
+        self.y = torch.tensor(y)
 
     def __len__(self):
-        return len(self.dataset)
+        return self.X.shape[0]
 
     def __getitem__(self, idx):
         """
@@ -45,7 +48,7 @@ class MyCIFAR10(Dataset):
             X: [C, W, H] (tensor)
             y: [] (tensor)
         """
-        image, target = self.dataset[idx]
+        image, target = self.X[idx], self.y[idx]
         return image, target
 
 
@@ -98,10 +101,18 @@ def make_loader(opts, dataset):
     return loader
 
 
+def get_train_loader(opts):
+    """Get the train loader for the autoencoder"""
+    # the autoencoder needs data in range [0,1]
+    trainset = AECIFAR10(opts, train=True)
+    loader = make_loader(opts, trainset)
+    return loader
+
+
 def get_loaders(opts):
-    """Get data loaders for ID and OOD data"""
+    """Get data loaders for ID and OOD data evaluation"""
     # ID testset
-    id_testset = MyCIFAR10(train=False)
+    id_testset = MyCIFAR10(opts, train=False)
     id_loader = make_loader(opts, id_testset)
 
     # OOD testset

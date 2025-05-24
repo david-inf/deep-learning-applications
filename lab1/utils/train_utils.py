@@ -38,7 +38,7 @@ def save_checkpoint(opts, model: torch.nn.Module, fname=None):
 
     # Update yaml file with checkpoint name
     update_yaml(opts, "checkpoint", output_path)
-    LOG.info("Saved model at path=%s", opts.checkpoint)
+    LOG.info("Saved model at path=%s", {opts.checkpoint})
 
 
 def load_checkpoint(ckpt_path: str, model: torch.nn.Module):

@@ -1,0 +1,15 @@
+batch_size: 128
+checkpoint: lab4/ckpts/autoencoder.pt
+checkpoint_dir: lab4/ckpts
+checkpoint_every: 5
+config: lab4/ckpts/autoencoder.yaml
+dataset: CIFAR10
+device: cuda
+experiment_name: autoencoder
+learning_rate: 0.0001
+log_every: 20
+model: AutoEncoder
+num_epochs: 10
+num_filters: 32
+num_workers: 4
+seed: 42
