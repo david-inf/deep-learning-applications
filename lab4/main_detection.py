@@ -18,7 +18,7 @@ from lab4.utils.detection import compute_scores
 from lab4.models import AutoEncoder
 
 from lab1.main_train import get_model
-from lab1.utils.train_utils import load_checkpoint
+from lab1.utils.train import load_checkpoint
 from lab1.utils import set_seeds, LOG
 
 

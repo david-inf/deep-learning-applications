@@ -11,8 +11,8 @@ from torch.optim.lr_scheduler import LRScheduler
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from lab1.utils.misc_utils import LOG
-from lab1.utils.train_utils import N, accuracy, save_checkpoint, AverageMeter
+from lab1.utils.misc import LOG
+from lab1.utils.train import N, accuracy, save_checkpoint, AverageMeter
 from lab1.train import test
 
 

@@ -17,7 +17,7 @@ from lab1.mydata import MyMNIST, MyAugmentedMNIST
 from lab1.mydata import MyCIFAR10, MyAugmentedCIFAR10, MakeDataLoaders
 from lab1.models import build_mlp, build_cnn
 from lab1.train import train_loop
-from lab1.utils.misc_utils import LOG, set_seeds, visualize, compute_flops
+from lab1.utils.misc import LOG, set_seeds, visualize, compute_flops
 
 
 def get_loaders(opts):

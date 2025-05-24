@@ -2,7 +2,7 @@
 
 from main_train import get_loaders, get_model
 from utils import LOG
-from utils.train_utils import load_checkpoint
+from lab1.utils.train import load_checkpoint
 from train import test
 
 

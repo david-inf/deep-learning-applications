@@ -12,7 +12,7 @@ from torch.backends import cudnn
 sys.path.append(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))  # Add parent directory to path
 
-from lab1.utils.misc_utils import LOG, set_seeds
+from lab1.utils.misc import LOG, set_seeds
 from lab1.main_train import get_loaders, get_model, get_optimization
 from lab1.distill import train_loop_distill
 

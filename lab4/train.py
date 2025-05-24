@@ -14,8 +14,8 @@ sys.path.append(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))  # Add parent directory to path
 
 from lab1.utils import LOG, set_seeds
-from lab1.utils.train_utils import N, AverageMeter, save_checkpoint
-from lab1.utils.misc_utils import visualize
+from lab1.utils.train import N, AverageMeter, save_checkpoint
+from lab1.utils.misc import visualize
 from lab4.mydata import get_train_loader
 from lab4.models import AutoEncoder
 
