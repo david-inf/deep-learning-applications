@@ -2,7 +2,7 @@
 import torch
 from torch import nn
 
-from models.cnn import conv3x3, BasicBlock
+from lab1.models.cnn import conv3x3, BasicBlock
 
 
 class ResNet(nn.Module):

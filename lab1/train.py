@@ -9,8 +9,8 @@ from torch.nn import Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 
-from utils.misc_utils import LOG
-from utils.train_utils import N, accuracy, save_checkpoint, AverageMeter, EarlyStopping
+from lab1.utils.misc_utils import LOG
+from lab1.utils.train_utils import N, accuracy, save_checkpoint, AverageMeter, EarlyStopping
 
 
 def test(opts, model, loader):

@@ -228,6 +228,9 @@ Inside the `lab4/` folder there are the following programs
 
 ### :one: OOD detection pipeline
 
+<details>
+<summary>ID and OOD samples</summary>
+
 We choose as in-distribution (ID) dataset CIFAR10 (10000 samples from test split), and out-of-distribution (OOD) dataset the **aquatic mammals** subset from CIFAR100 (2500 samples from train split).
 
 <p align="middle">
@@ -235,3 +238,20 @@ We choose as in-distribution (ID) dataset CIFAR10 (10000 samples from test split
   &nbsp;
   <img src="lab4/plots/ood_imgs.png" alt="OOD samples" width="30%">
 </p>
+
+</details>
+
+<details open>
+<summary>Pipeline</summary>
+
+`python lab4/main_detection.py --help`
+
+<p align="middle">
+  <img src="lab4/plots/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="30%">
+  &nbsp;
+  <img src="lab4/plots/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="30%">
+  &nbsp;
+  <img src="lab4/plots/scores_autoencoder.svg" alt="Scores from CNN using max_logit", width="30%">
+</p>
+
+</details>

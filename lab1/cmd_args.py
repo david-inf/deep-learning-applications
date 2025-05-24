@@ -3,8 +3,8 @@
 from types import SimpleNamespace
 import argparse
 import yaml
-import torch
-from utils import LOG
+
+from lab1.utils import LOG
 
 
 parser = argparse.ArgumentParser(

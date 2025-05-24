@@ -1,47 +1,91 @@
 """OOD detection and performance evaluation"""
 
+# Update imports to use relative or absolute paths
+import sys
+import os
 from types import SimpleNamespace
-import yaml
 
-from lab1.utils.misc_utils import set_seeds
+import yaml
+from torch.nn import Module
+import matplotlib.pyplot as plt
+
+# Ensure the parent directory is in the path for module imports
+sys.path.append(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))))  # Add parent directory to path
+
+from lab4.mydata import get_loaders
+from lab4.utils.detection import compute_scores
+
 from lab1.main_train import get_model
 from lab1.utils.train_utils import load_checkpoint
+from lab1.utils import set_seeds, LOG
 
-from mydata import get_loaders
+
+def score_distrib(opts, model: Module, id_loader, ood_loader, path):
+    """Plot the scores distribution for ID and OOD samples"""
+    fig, axs = plt.subplots(1, 2, figsize=(8, 4))
+    fig.suptitle(f"Scores using {opts.score_fun}")
+
+    id_lab = "ID samples"
+    scores_id = compute_scores(opts, model, id_loader)
+    ood_lab = "OOD samples"
+    scores_ood = compute_scores(opts, model, ood_loader)
+
+    axs[0].plot(sorted(scores_id.cpu()), label=id_lab)
+    axs[0].plot(sorted(scores_ood.cpu()), label=ood_lab)
+    axs[0].set_xlabel("Ordered samples")
+    axs[0].set_ylabel("Scores")
+    axs[0].legend()
+
+    axs[1].hist(scores_id.cpu(), density=True, alpha=0.5, bins=25, label=id_lab)
+    axs[1].hist(scores_ood.cpu(), density=True, alpha=0.5, bins=25, label=ood_lab)
+    axs[1].set_xlabel("Scores")
+    axs[1].set_ylabel("Density")
+    axs[1].legend()
+
+    plt.tight_layout()
+    plt.savefig(path)
+    LOG.info("Scores distribution at path=%s", {path})
 
 
 def main(opts):
+    """OOD detection pipeline"""
     set_seeds(opts.seed)
     # Load model checkpoint
     with open(opts.model_configs, "r", encoding="utf-8") as f:
         model_configs = yaml.safe_load(f)
     model_opts = SimpleNamespace(**model_configs)
+
+    # Load model
     model = get_model(model_opts)
-    load_checkpoint(opts.ckpt, model)
+    load_checkpoint(model_opts.checkpoint, model)
 
     # Load data
-    id_loader, ood_loader = get_loaders(opts)
+    id_loader, ood_loader = get_loaders(model_opts)
 
-    # Evaluate on testset (ID)
-
-
-    # Evaluate on fakeset (OOD)
-
+    # Distribution on ID and OOD samples
+    output_dir = "lab4/plots"
+    path = os.path.join(output_dir, f"scores_{opts.score_fun}_{model_opts.model}.svg")
+    score_distrib(opts, model, id_loader, ood_loader, path)
 
 
 if __name__ == "__main__":
-    configs = {
-        "seed": 42,
-        "ckpt": "lab1/ckpts/CNN/LargeCNNskip.pt",
-        "model_configs": "lab1/configs/CNN/LargeCNNskip.yaml",
-    }
-    opts = SimpleNamespace(**configs)
+    import argparse
+    parser = argparse.ArgumentParser(description="OOD detection pipeline")
+    parser.add_argument("--device", type=str, default="cuda", help="Device to use (default: cuda)")
+    parser.add_argument("--score_fun", type=str, default="max_logit",
+                        help="Score function to use (default: max_logit)",
+                        choices=["max_logit", "max_softmax"])
+    parser.add_argument("--temp", type=float, default=1.0,
+                        help="Temperature for softmax (default: 1.0)")
+    parser.add_argument("--model_configs", type=str, default="lab1/configs/CNN/LargeCNNskip.yaml",
+                        help="Model configuration file (default: LargeCNNskip)")
+    args = parser.parse_args()
+    args.seed = 42
     try:
-        main(opts)
+        main(args)
     except Exception:
         import ipdb
         import traceback
-        import sys
         traceback.print_exc()
         ipdb.post_mortem(sys.exc_info()[2])
-

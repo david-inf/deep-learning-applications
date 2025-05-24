@@ -1,15 +1,20 @@
 """ Main script for distillation """
 
 import os
+import sys
 from types import SimpleNamespace
 
 from comet_ml import start
 import torch
 from torch.backends import cudnn
 
-from utils.misc_utils import LOG, set_seeds
-from main_train import get_loaders, get_model, get_optimization
-from distill import train_loop_distill
+# Ensure the parent directory is in the path for module imports
+sys.path.append(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))))  # Add parent directory to path
+
+from lab1.utils.misc_utils import LOG, set_seeds
+from lab1.main_train import get_loaders, get_model, get_optimization
+from lab1.distill import train_loop_distill
 
 
 def get_teacher(teacher_opts):

@@ -1,10 +1,10 @@
 
 import torch
-from models.mlp import MLP
-from models.cnn import CNN
-from models.resnet import ResNet
-from models.wideresnet import WideResNet
-from utils.misc_utils import LOG
+from lab1.models.mlp import MLP
+from lab1.models.cnn import CNN
+from lab1.models.resnet import ResNet
+from lab1.models.wideresnet import WideResNet
+from lab1.utils.misc_utils import LOG
 
 
 def build_mlp(opts):

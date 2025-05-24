@@ -1,7 +1,7 @@
 
 import torch
 import torch.nn as nn
-from models.cnn import conv1x1, conv3x3
+from lab1.models.cnn import conv1x1, conv3x3
 
 
 class Shortcut(nn.Module):

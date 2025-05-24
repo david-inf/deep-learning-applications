@@ -11,7 +11,7 @@ from torch.utils.data import Dataset, Subset, DataLoader
 
 import matplotlib.pyplot as plt
 
-from utils import set_seeds
+from lab1.utils import set_seeds
 
 
 ID_CLASSES = (  # CIFAR10
@@ -20,6 +20,7 @@ OOD_CLASSES = (  # CIFAR100 aquatic mammals
     "beaver", "dolphin", "otter", "seal", "whale")
 
 
+# TODO: get this class from lab1
 class MyCIFAR10(Dataset):
     """Wrapper for CIFAR10 Dataset class"""
 

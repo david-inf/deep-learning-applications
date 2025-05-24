@@ -3,7 +3,7 @@
 import os
 import torch
 import numpy as np
-from utils import LOG, update_yaml
+from lab1.utils import LOG, update_yaml
 
 
 def N(x: torch.Tensor):
@@ -48,7 +48,7 @@ def load_checkpoint(ckpt_path: str, model: torch.nn.Module):
             f"Checkpoint file not found: {ckpt_path}")
 
     # load from given checkpoint path
-    LOG.info("Loading checkpoint=%s", ckpt_path)
+    LOG.info("Loading checkpoint=%s", {ckpt_path})
     # checkpoint = torch.load(checkpoint_path, map_location="cuda")
     checkpoint = torch.load(ckpt_path)
 

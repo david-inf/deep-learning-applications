@@ -9,11 +9,11 @@ from torch.nn import Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 import torch.nn.functional as F
-
 from tqdm import tqdm
-from utils.misc_utils import LOG
-from utils.train_utils import N, accuracy, save_checkpoint, AverageMeter
-from train import test
+
+from lab1.utils.misc_utils import LOG
+from lab1.utils.train_utils import N, accuracy, save_checkpoint, AverageMeter
+from lab1.train import test
 
 
 def train_loop_distill(opts, teacher: Module, student: Module, optimizer: Optimizer, scheduler: LRScheduler, train_loader, val_loader, experiment: Experiment):
