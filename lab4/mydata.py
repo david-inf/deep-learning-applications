@@ -48,6 +48,7 @@ class MyCIFAR100(Dataset):
         indices = [i for i, label in enumerate(
             dataset.targets) if label in ood_labels]
         self.aquatic_mammals = Subset(dataset, indices)
+        # TODO: map labels in 0-9
 
     def __len__(self):
         return len(self.aquatic_mammals)
@@ -88,10 +89,10 @@ def get_loaders(opts, train=False):
         id_loader = make_loader(opts, id_set)
 
         # 1) CIFAR100 aquatic mammals subset or other subsets
-        # ood_set = MyCIFAR100(train=True)  # 2500 samples
+        ood_set = MyCIFAR100(train=True)  # 2500 samples
         # 2) FakeData (gaussian data)
-        transform = transforms.Compose([transforms.ToTensor()])
-        ood_set = datasets.FakeData(2500, (3, 28, 28), transform=transform)
+        # transform = transforms.Compose([transforms.ToTensor()])
+        # ood_set = datasets.FakeData(2500, (3, 28, 28), transform=transform)
 
         ood_loader = make_loader(opts, ood_set)
 
@@ -109,7 +110,8 @@ def main(opts):
     train_imgs, train_lab = next(iter(train_loader))
     print("Train data for AutoEncoder (CIFAR10 trainset)")
     print(train_imgs.shape, train_lab.shape)
-    print(f"Min: {train_imgs.min()}, Max: {train_imgs.max()}")
+    print(f"Images: min={train_imgs.min()}, max={train_imgs.max()}")
+    print(f"Labels min={train_lab.min()}, max={train_lab.max()}")
     print()
 
     # Inspect ID data
@@ -122,7 +124,8 @@ def main(opts):
     output_path = "lab4/plots/id_imgs.png"
     plt.savefig(output_path)
     print(f"Printed img={output_path}")
-    print(f"Min: {id_imgs.min()}, Max: {id_imgs.max()}")
+    print(f"Images: min={id_imgs.min()}, max={id_imgs.max()}")
+    print(f"Labels min={id_lab.min()}, max={id_lab.max()}")
     print()
 
     # Inspect OOD data
@@ -135,7 +138,8 @@ def main(opts):
     output_path = "lab4/plots/ood_imgs.png"
     plt.savefig(output_path)
     print(f"Printed img={output_path}")
-    print(f"Min: {ood_imgs.min()}, Max: {ood_imgs.max()}")
+    print(f"Images: min={ood_imgs.min()}, max={ood_imgs.max()}")
+    print(f"Labels min={ood_lab.min()}, max={ood_lab.max()}")
 
 
 if __name__ == "__main__":

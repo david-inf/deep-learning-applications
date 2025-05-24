@@ -6,8 +6,10 @@ import os
 from types import SimpleNamespace
 
 import yaml
+import torch
 from torch.nn import Module
 import matplotlib.pyplot as plt
+from sklearn.metrics import RocCurveDisplay, PrecisionRecallDisplay
 
 # Ensure the parent directory is in the path for module imports
 sys.path.append(os.path.dirname(
@@ -38,8 +40,10 @@ def score_distrib(opts, model: Module, id_loader, ood_loader, path):
     axs[0].set_ylabel("Scores")
     axs[0].legend()
 
-    axs[1].hist(scores_id.cpu(), density=True, alpha=0.5, bins=25, label=id_lab)
-    axs[1].hist(scores_ood.cpu(), density=True, alpha=0.5, bins=25, label=ood_lab)
+    axs[1].hist(scores_id.cpu(), density=True,
+                alpha=0.5, bins=25, label=id_lab)
+    axs[1].hist(scores_ood.cpu(), density=True,
+                alpha=0.5, bins=25, label=ood_lab)
     axs[1].set_xlabel("Scores")
     axs[1].set_ylabel("Density")
     axs[1].legend()
@@ -47,6 +51,29 @@ def score_distrib(opts, model: Module, id_loader, ood_loader, path):
     plt.tight_layout()
     plt.savefig(path)
     LOG.info("Scores distribution at path=%s", {path})
+
+    return scores_id, scores_ood
+
+
+def evaluate(scores_id, scores_ood):
+    """Plot ROC and PR curves"""
+    pred = torch.cat((scores_id, scores_ood))
+    gt = torch.cat((torch.ones_like(scores_id), torch.zeros_like(scores_ood)))
+
+    fig, axs = plt.subplots(1, 2, figsize=(8, 4))
+    # ROC curve
+    RocCurveDisplay.from_predictions(gt.numpy(), pred.numpy(), ax=axs[0])
+    axs[0].set_title("ROC Curve")
+
+    # PR curve
+    PrecisionRecallDisplay.from_predictions(gt.numpy(), pred.numpy(), ax=axs[1])
+    axs[1].set_title("Precision-Recall Curve")
+    
+    plt.tight_layout()
+    
+    path = "lab4/plots/scores_roc_pr.svg"
+    plt.savefig(path)
+    LOG.info("ROC and PR curves at path=%s", {path})
 
 
 def main(opts):
@@ -56,7 +83,7 @@ def main(opts):
     with open(opts.model_configs, "r", encoding="utf-8") as f:
         model_configs = yaml.safe_load(f)
     model_opts = SimpleNamespace(**model_configs)
-    opts.device = model_opts.device
+    model_opts.device = opts.device
 
     # Load model
     if model_opts.model == "CNN":
@@ -66,7 +93,7 @@ def main(opts):
         model = model.to(model_opts.device)
     else:
         raise ValueError(f"Unknown model {model_opts.model}")
-    load_checkpoint(model_opts.checkpoint, model)
+    load_checkpoint(model_opts.checkpoint, model, opts.device)
 
     # Load data
     id_loader, ood_loader = get_loaders(model_opts)
@@ -74,7 +101,10 @@ def main(opts):
     # Distribution on ID and OOD samples
     output_dir = "lab4/plots"
     path = os.path.join(output_dir, f"scores_{opts.score_fun}_{model_opts.model}.svg")
-    score_distrib(opts, model, id_loader, ood_loader, path)
+    out = score_distrib(opts, model, id_loader, ood_loader, path)
+
+    # Performance evaluation
+    evaluate(out[0], out[1])
 
 
 if __name__ == "__main__":
@@ -83,6 +113,8 @@ if __name__ == "__main__":
     parser.add_argument("--score_fun", type=str, default="max_logit",
                         help="Score function to use (default: max_logit)",
                         choices=["max_logit", "max_softmax", "mse"])
+    parser.add_argument("--device", type=str, default="cuda",
+                        help="Device to use (default: cuda)")
     parser.add_argument("--temp", type=float, default=1.0,
                         help="Temperature for softmax (default: 1.0)")
     parser.add_argument("--model_configs", type=str,

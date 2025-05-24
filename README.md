@@ -267,27 +267,33 @@ OOD detection pipeline for all the OOD datasets chosen, see `python lab4/main_de
 - `python lab4/main_detection.py --score_fun mse --model_configs lab4/ckpts/autoencoder.yaml`
 
 <p align="middle">
-  <img src="lab4/plots/aquatic/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="30%">
+  <img src="lab4/plots/aquatic/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="22%">
   &nbsp;
-  <img src="lab4/plots/aquatic/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="30%">
+  <img src="lab4/plots/aquatic/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="22%">
   &nbsp;
-  <img src="lab4/plots/aquatic/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="30%">
+  <img src="lab4/plots/aquatic/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="22%">
+  &nbsp;
+  <img src="lab4/plots/aquatic/scores_roc_pr.svg" alt="ROC and PR curves", width="22%">
 </p>
 
 <p align="middle">
-  <img src="lab4/plots/people/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="30%">
+  <img src="lab4/plots/people/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="22%">
   &nbsp;
-  <img src="lab4/plots/people/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="30%">
+  <img src="lab4/plots/people/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="22%">
   &nbsp;
-  <img src="lab4/plots/people/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="30%">
+  <img src="lab4/plots/people/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="22%">
+  &nbsp;
+  <img src="lab4/plots/people/scores_roc_pr.svg" alt="ROC and PR curves", width="22%">
 </p>
 
 <p align="middle">
-  <img src="lab4/plots/noise/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="30%">
+  <img src="lab4/plots/noise/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="22%">
   &nbsp;
-  <img src="lab4/plots/noise/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="30%">
+  <img src="lab4/plots/noise/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="22%">
   &nbsp;
-  <img src="lab4/plots/noise/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="30%">
+  <img src="lab4/plots/noise/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="22%">
+  &nbsp;
+  <img src="lab4/plots/noise/scores_roc_pr.svg" alt="ROC and PR curves", width="22%">
 </p>
 
 </details>

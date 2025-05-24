@@ -29,7 +29,7 @@ def compute_scores(opts, model, loader):
             else:
                 raise ValueError(f"Unknown score function {opts.score_fun}")
 
-            scores.append(scores_b)
+            scores.append(scores_b.cpu())
 
     return torch.cat(scores)
 

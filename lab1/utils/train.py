@@ -41,7 +41,7 @@ def save_checkpoint(opts, model: torch.nn.Module, fname=None):
     LOG.info("Saved model at path=%s", {opts.checkpoint})
 
 
-def load_checkpoint(ckpt_path: str, model: torch.nn.Module):
+def load_checkpoint(ckpt_path: str, model: torch.nn.Module, device="cuda"):
     """Load a model checkpoint to resume training"""
     if not os.path.isfile(ckpt_path):
         raise FileNotFoundError(
@@ -50,7 +50,7 @@ def load_checkpoint(ckpt_path: str, model: torch.nn.Module):
     # load from given checkpoint path
     LOG.info("Loading checkpoint=%s", {ckpt_path})
     # checkpoint = torch.load(checkpoint_path, map_location="cuda")
-    checkpoint = torch.load(ckpt_path)
+    checkpoint = torch.load(ckpt_path, map_location=device)
 
     # load weights and optimizer in those given
     # this means that the initialized model and optimizer are updated
