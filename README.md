@@ -129,7 +129,7 @@ Model  | #params
 
 Reproducing on a small scale the results from the ResNet paper on CIFAR10 dataset.
 
-> Deep Residual Learning for Image Recognition, Kaiming He and Xiangyu Zhang and Shaoqing Ren and Jian Sun, 2015. [Arxiv](https://arxiv.org/abs/1512.03385).
+> Deep Residual Learning for Image Recognition. He *et al*. [Arxiv](https://arxiv.org/abs/1512.03385).
 
 Deeper networks, i.e. more stacked layers, do not guarantee more reduction in training loss. So the point of this exercise is to abstract a model definition so that one can add a given number of layers (blocks), and then see how the performance are affected. The idea is to reproduce Figure 6 from the paper.
 
@@ -158,8 +158,7 @@ When adding further layers we see that "adding more layers reduces loss" holds n
 
 Reproducing on a small scale the results from the distillation paper on CIFAR10 dataset.
 
-> Distilling the Knowledge in a Neural Network, Geoffrey Hinton, Oriol Vinyals, Jeff Dean.
-[Arxiv](https://arxiv.org/abs/1503.02531).
+> Distilling the Knowledge in a Neural Network. Hinton *et al*. [Arxiv](https://arxiv.org/abs/1503.02531).
 
 <details>
 <summary>Learning algorithm</summary>
@@ -228,12 +227,14 @@ python install -r lab3.txt
 - `mydata.py` utilities for preprocessing and loading the `rotten_tomatoes` dataset from HuggingFace
 - `train.py` train loop
 
+Try `python lab3/main_extract.py --help` and `python lab3/main_ft.py --help`. You'll see that for `main_ft.py` there's the `--view` argument available, that allows to inspect a model given its configuration file via the `--config` argument.
+
 </details>
 
 
 ### :one: BERT as a feature extractor
 
-Train a simple classifier (LinearSVC and LogisticRegression) on top of BERT sentence representation for sentiment analysis task, this will be the stable baseline which we will try to improve with finetuning. See code in `main_extract.py`.
+Train a simple classifier (LinearSVC) on top of BERT sentence representation for sentiment analysis task, this will be the baseline which we will try to improve with finetuning. See code in `lab3/main_extract.py`.
 
 
 <details>
@@ -263,25 +264,64 @@ Being SBERT more suitable than DistilBERT for producing sentence embeddings, as 
 <details>
 <summary>Visualize embeddings</summary>
 
+Here we load the features extracted before and visualize them in a 2D space using the UMAP method, see `view_embeds()` function from `lab3/main_extract.py`.-
+
 ```bash
-python lab3/main_extract.py --extractor "distilbert"  --view
-python lab3/main_extract.py --extractor "sbert"  --view
+python lab3/main_extract.py --extractor distilbert --method cls  --view
+python lab3/main_extract.py --extractor sbert --method mpnet --view
 ```
+
+<p align="middle">
+  <img src="lab3/results/distilbert_embeds.svg" alt="Pretrained DistilBERT embeddings" width="45%">
+  &nbsp;
+  <img src="lab3/results/sbert_embeds.svg" alt="Best pretrained SentenceBERT embeddings" width="45%">
+</p>
+
+Here we see the expressive power of SBERT against DistilBERT :)
 
 </details>
 
 
 ### :two: BERT Finetuning
 
-The goal now is to improve over the baseline performance. For doing this we proceed with a full finetuning and see what happens. Then we seek for a more efficient way for finetuning BERT on the rotten tomatoes dataset using `PEFT` library.
+The goal now is to improve over the baseline performance. For doing this we proceed with a full finetuning and see what happens. Then we seek for a more efficient way for finetuning BERT on the rotten tomatoes dataset using `PEFT` library. See code in `lab3/main_ft.py`.
 
-The idea is to perform model selection on BERT-family models (full-finetuning and few LoRA configs) for the text classification task, then we deploy the best BERT on the test split.
+The idea is to perform model selection on BERT-family models (full-finetuning and few LoRA configs) for the text classification task, then we deploy the best BERT on the test split. So I'd like to reproduce results from figure 2 of the original LoRA paper
+
+> LoRA: Low-Rank Adaptation of Large Language Models. Hu *et al*. [Arxiv](https://arxiv.org/abs/2106.09685).
+
+<details>
+<summary>Finetuning settings</summary>
+
+So we compare the full-finetuning and few LoRA configurations, for defining these configurations we use the following matrix, since the two questions are (i) do we need to update all the parameters? (ii) how expressive should the updates be?
+
+| params/rank | 8            | 16            |
+| ----------- | ------------ | ------------- |
+| **q**       | `lora_q8`    | `lora_q16`    |
+| **qv**      | `lora_qv8`   | `lora_qv16`   |
+| **qkvo**    | `lora_qkvo8` | `lora_qkvo16` |
+
+
+| Model                    | #params (log10) | val_acc |
+| ------------------------ | --------------- | ------- |
+| `distilbert_full`        | 7.83            | 0.860   |
+| `distilbert_lora_q8`     | 5.82            | 0.853   |
+| `distilbert_lora_q16`    | 5.87            | 0.853   |
+| `distilbert_lora_qv8`    | 5.87            | 0.839   |
+| `distilbert_lora_qv16`   | 5.95            | 0.845   |
+| `distilbert_lora_qkvo8`  | 5.95            | 0.848   |
+| `distilbert_lora_qkvo16` | 6.07            | 0.850   |
+
+</details>
 
 <details>
 <summary>Results</summary>
 
+- `python lab3/main_ft.py --config lab3/configs/distilbert_full.yaml`
+- `python lab3/main_ft.py --config lab3/configs/distilbert_lora_q16.yaml`
+
 <p align="middle">
-  <img src="lab3/results/lora.svg" alt="LoRA against full-finetuning" width="60%">
+  <img src="lab3/results/lora.svg" alt="LoRA against full-finetuning" width="50%">
 </p>
 
 </details>

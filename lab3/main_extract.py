@@ -84,9 +84,11 @@ def view_embeds(opts):
     from sklearn.preprocessing import MinMaxScaler
     from umap import UMAP
     import matplotlib.pyplot as plt
+
+    output_dir = "data/rt_features"
     train_embeds = np.loadtxt(os.path.join(
-        "data/rt_features", opts.extractor + "_train.txt"))
-    train_labels = np.loadtxt("data/rt_features/train_labels.txt")
+        output_dir, opts.extractor, f"{opts.method}_train.txt"))
+    train_labels = np.loadtxt(os.path.join(output_dir, "train_labels.txt"))
 
     scaler = MinMaxScaler()
     scaled_train_embeds = scaler.fit_transform(train_embeds)
@@ -94,16 +96,19 @@ def view_embeds(opts):
     reducer = UMAP(n_components=2, metric="cosine")
     embeddings = reducer.fit_transform(scaled_train_embeds)
 
-    _, axs = plt.subplots(1, 2, figsize=(8, 4))
+    fig, axs = plt.subplots(1, 2, figsize=(8, 4), sharex=True, sharey=True)
+    fig.suptitle(f"UMAP projection of {opts.extractor} ({opts.method}) embeddings")
     axs = axs.flatten()
     colormaps = ["Blues", "Greens"]
     for label, (ax, color) in enumerate(zip(axs.flatten(), colormaps)):
         subset = embeddings[train_labels == label]
         ax.hexbin(subset[:, 0], subset[:, 1], gridsize=20, cmap=color)
         ax.set_title(f"Label: {label}")
-        ax.set_xticks([])
-        ax.set_yticks([])
-
+        # ax.set_xticks([])
+        # ax.set_yticks([])
+        ax.set_xlabel("UMAP 1")
+        ax.set_ylabel("UMAP 2")
+    plt.tight_layout()
     output_dir = os.path.join("lab3/results", opts.extractor + "_embeds.svg")
     plt.savefig(output_dir)
 
