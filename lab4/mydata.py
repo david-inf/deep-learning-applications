@@ -30,7 +30,7 @@ OOD2 = ("baby", "boy", "girl", "man", "woman")  # people
 class MyCIFAR100(Dataset):
     """CIFAR100: aquatic mammals subset"""
 
-    def __init__(self, train=True):
+    def __init__(self, train=True, ood_set=OOD1):
         self.num_classes = 5
 
         transform = transforms.Compose([
@@ -44,7 +44,7 @@ class MyCIFAR100(Dataset):
             root="./data", train=train, download=True, transform=transform)
 
         # Get the aquatic mammals subset
-        ood_labels = [dataset.class_to_idx[k] for k in OOD2]
+        ood_labels = [dataset.class_to_idx[k] for k in ood_set]
         indices = [i for i, label in enumerate(
             dataset.targets) if label in ood_labels]
         self.aquatic_mammals = Subset(dataset, indices)
@@ -88,11 +88,19 @@ def get_loaders(opts, train=False):
         id_set = MyCIFAR10(opts, train=False)
         id_loader = make_loader(opts, id_set)
 
-        # 1) CIFAR100 aquatic mammals subset or other subsets
-        # ood_set = MyCIFAR100(train=True)  # 2500 samples
-        # 2) FakeData (gaussian data)
-        transform = transforms.Compose([transforms.ToTensor()])
-        ood_set = datasets.FakeData(2500, (3, 28, 28), transform=transform)
+        if opts.ood_set == "aquatic":
+            # CIFAR100 aquatic mammals subset
+            ood_set = MyCIFAR100(train=True, ood_set=OOD1)  # 2500 samples
+        elif opts.ood_set == "people":
+            # CIFAR100 people subset
+            ood_set = MyCIFAR100(train=True, ood_set=OOD2)
+        elif opts.ood_set == "noise":
+            # FakeData (gaussian data)
+            # ToTensor() automatically puts data in [0,1]
+            transform = transforms.Compose([transforms.ToTensor()])
+            ood_set = datasets.FakeData(2500, (3, 28, 28), transform=transform)
+        else:
+            raise ValueError(f"Unknown ood set {opts.ood_set}")
 
         ood_loader = make_loader(opts, ood_set)
 
@@ -103,7 +111,7 @@ def main(opts):
     """Inspect ID and OOD data"""
     # Load data
     train_loader = get_loaders(opts, train=True)
-    id_loader, ood_loader = get_loaders(opts)
+    id_loader, ood_loader = get_loaders(opts, train=False)
     os.makedirs("lab4/plots", exist_ok=True)
 
     # Inspect train data for AutoEncoder
@@ -111,41 +119,51 @@ def main(opts):
     print("Train data for AutoEncoder (CIFAR10 trainset)")
     print(train_imgs.shape, train_lab.shape)
     print(f"Images: min={train_imgs.min()}, max={train_imgs.max()}")
-    print(f"Labels min={train_lab.min()}, max={train_lab.max()}")
+    print(f"Labels uniques={train_lab.unique()}")
     print()
 
+    output_dir = "lab4/plots"
     # Inspect ID data
     print("ID data (CIFAR10 testset)")
     id_imgs, id_lab = next(iter(id_loader))
     print(id_imgs.shape, id_lab.shape)
-    grid = make_grid(id_imgs, nrow=4, padding=2, normalize=True)
+    grid = make_grid(id_imgs, nrow=8, padding=2, normalize=True)
     plt.imshow(grid.permute(1, 2, 0))
     plt.axis("off")
-    output_path = "lab4/plots/id_imgs.png"
+    output_path = os.path.join(output_dir, "id_imgs.png")
+    plt.tight_layout()
     plt.savefig(output_path)
     print(f"Printed img={output_path}")
     print(f"Images: min={id_imgs.min()}, max={id_imgs.max()}")
-    print(f"Labels min={id_lab.min()}, max={id_lab.max()}")
+    print(f"Labels uniques={id_lab.unique()}")
     print()
 
     # Inspect OOD data
-    print("OOD data")
+    print(f"OOD data ({opts.ood_set})")
     ood_imgs, ood_lab = next(iter(ood_loader))
     print(ood_imgs.shape, ood_lab.shape)
-    grid = make_grid(ood_imgs, nrow=4, padding=2, normalize=True)
+    grid = make_grid(ood_imgs, nrow=8, padding=2, normalize=True)
     plt.imshow(grid.permute(1, 2, 0))
     plt.axis("off")
-    output_path = "lab4/plots/ood_imgs.png"
+    output_path = os.path.join(output_dir, opts.ood_set, "ood_imgs.png")
+    plt.tight_layout()
     plt.savefig(output_path)
     print(f"Printed img={output_path}")
     print(f"Images: min={ood_imgs.min()}, max={ood_imgs.max()}")
-    print(f"Labels min={ood_lab.min()}, max={ood_lab.max()}")
+    print(f"Labels uniques={ood_lab.unique()}")
 
 
 if __name__ == "__main__":
-    from types import SimpleNamespace
-    configs = {
-        "seed": 42, "batch_size": 32, "num_workers": 2
-    }
-    opts = SimpleNamespace(**configs)
-    main(opts)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ood_set", "--ood", type=str, default="noise",
+                        choices=["aquatic", "people", "noise"],
+                        help="Choose with OOD dataset to use")
+    args = parser.parse_args()
+    args.seed = 42
+    args.batch_size = 64
+    args.num_workers = 2
+    try:
+        main(args)
+    except Exception as e:
+        print(e)

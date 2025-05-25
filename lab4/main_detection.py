@@ -1,6 +1,5 @@
 """OOD detection and performance evaluation"""
 
-# Update imports to use relative or absolute paths
 import sys
 import os
 from types import SimpleNamespace
@@ -84,6 +83,7 @@ def main(opts):
         model_configs = yaml.safe_load(f)
     model_opts = SimpleNamespace(**model_configs)
     model_opts.device = opts.device
+    model_opts.ood_set = opts.ood_set
 
     # Load model
     if model_opts.model == "CNN":
@@ -100,11 +100,11 @@ def main(opts):
 
     # Distribution on ID and OOD samples
     output_dir = "lab4/plots"
-    path = os.path.join(output_dir, f"scores_{opts.score_fun}_{model_opts.model}.svg")
+    path = os.path.join(output_dir, opts.ood_set, f"scores_{opts.score_fun}_{model_opts.model}.svg")
     out = score_distrib(opts, model, id_loader, ood_loader, path)
 
     # Performance evaluation
-    path = os.path.join(output_dir, f"roc_pr_{opts.score_fun}_{model_opts.model}.svg")
+    path = os.path.join(output_dir, opts.ood_set, f"roc_pr_{opts.score_fun}_{model_opts.model}.svg")
     evaluate(out[0], out[1], path)
 
 
@@ -118,6 +118,9 @@ if __name__ == "__main__":
                         help="Device to use (default: cuda)")
     parser.add_argument("--temp", type=float, default=1.0,
                         help="Temperature for softmax (default: 1.0)")
+    parser.add_argument("--ood_set", "--ood", type=str, default="noise",
+                        choices=["aquatic", "people", "noise"],
+                        help="Choose with OOD dataset to use")
     parser.add_argument("--model_configs", type=str,
                         help="Model configuration file")
     args = parser.parse_args()

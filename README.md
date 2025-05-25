@@ -234,16 +234,17 @@ Inside the `lab4/` folder there are the following programs
 <summary>ID and OOD samples</summary>
 
 We choose as in-distribution (ID) dataset CIFAR10 (10000 samples from test split), and few out-of-distribution (OOD) datasets
-- **aquatic mammals** subset from CIFAR100 (2500 samples from train split)
-- **people** subset from CIFAR100
-- **noise** generate from FakeData dataset
+- **aquatic mammals** subset from CIFAR100 (2500 samples from train split) `python lab4/mydata --ood aquatic`
+- **people** subset from CIFAR100 `python lab4/mydata --ood people`
+- **noise** generate from FakeData dataset `python lab4/mydata --ood noise`
 
 <table>
+  <caption>CIFAR10, CIFAR100 (aquatic mammals), CIFAR100 (people), and FakeData
   <tr>
     <td><img src="lab4/plots/id_imgs.png" alt="ID samples" width="100%"></td>
-    <td><img src="lab4/plots/aquatic/aquatic_mammals.png" alt="OOD samples" width="100%"></td>
-    <td><img src="lab4/plots/people/people.png" alt="OOD samples" width="100%"></td>
-    <td><img src="lab4/plots/noise/noise.png" alt="OOD samples" width="100%"></td>
+    <td><img src="lab4/plots/aquatic/ood_imgs.png" alt="OOD samples" width="100%"></td>
+    <td><img src="lab4/plots/people/ood_imgs.png" alt="OOD samples" width="100%"></td>
+    <td><img src="lab4/plots/noise/ood_imgs.png" alt="OOD samples" width="100%"></td>
   </tr>
 </table>
 
@@ -259,13 +260,11 @@ The AE outputs with a sigmoid, so images needs to be in [0,1] already, as done i
 </details>
 
 <details>
-<summary>Pipeline</summary>
+<summary>OOD detection pipeline</summary>
 
 OOD detection pipeline for all the OOD datasets chosen, see `python lab4/main_detection.py --help`, plot data with `python lab4/mydata.py`. Do this by changing the code in `lab4/mydata.py` default: FakeData since is the only one dataset in which the AutoEncoder seems to work well. I would say that the method doesn't work on the two CIFAR100 subsets since CIFAR10 is a subset as well, and the distribution might be the same regardless of being different classes.
 
-- `python lab4/main_detection.py --score_fun max_logit --model_configs lab1/configs/CNN/LargeCNNskip.yaml`
-- `python lab4/main_detection.py --score_fun max_softmax --model_configs lab1/configs/CNN/LargeCNNskip.yaml`
-- `python lab4/main_detection.py --score_fun mse --model_configs lab4/ckpts/autoencoder.yaml`
+- `./lab4/detection_pipeline.sh`
 
 <table>
   <caption>Performance on CIAFR100 aquatic mammals subset</caption>
@@ -310,3 +309,8 @@ OOD detection pipeline for all the OOD datasets chosen, see `python lab4/main_de
 </table>
 
 </details>
+
+
+### :two: Enhancing robustness to adversarial attacks
+
+Enhancing the base model (LargeCNNskip) robustness to adversarial attacks, since in the previous exercise we saw that with `max_logit` and `max_softmax` alone can be easily fooled.
