@@ -89,10 +89,10 @@ def get_loaders(opts, train=False):
         id_loader = make_loader(opts, id_set)
 
         # 1) CIFAR100 aquatic mammals subset or other subsets
-        ood_set = MyCIFAR100(train=True)  # 2500 samples
+        # ood_set = MyCIFAR100(train=True)  # 2500 samples
         # 2) FakeData (gaussian data)
-        # transform = transforms.Compose([transforms.ToTensor()])
-        # ood_set = datasets.FakeData(2500, (3, 28, 28), transform=transform)
+        transform = transforms.Compose([transforms.ToTensor()])
+        ood_set = datasets.FakeData(2500, (3, 28, 28), transform=transform)
 
         ood_loader = make_loader(opts, ood_set)
 

@@ -40,6 +40,7 @@ class AutoEncoder(nn.Module):
             convt1x1(num_filters, 3, padding=1),
             nn.Sigmoid(),  # outputs pixels in [0,1]
         )
+        # TODO: use a linear layer for flattening the latent
 
     def forward(self, x):
         encoded = self.encoder(x)  # latent

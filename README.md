@@ -218,11 +218,13 @@ Efficient way for finetuning BERT on rotten tomatoes dataset using `PEFT` librar
 Inside the `lab4/` folder there are the following programs
 
 - `ckpts/`
-- `models/`
+- `models/` with `autoencoder.py`
 - `plots/`
-- `utils/`
-- `main_detection.py`
-- `mydata.py`
+  - Results from OOD detection on CIFAR100 subsets (aquatic mammals and people) and FakeData
+- `utils/` various utilities
+- `main_detection.py` main program for launching the OOD detection pipeline on the given dataset from `lab4/mydata.py`
+- `mydata.py` various datasets for OOD detection
+- `train.py` main program for training the AutoEncoder on CIFAR10 dataset
 
 </details>
 
@@ -236,22 +238,21 @@ We choose as in-distribution (ID) dataset CIFAR10 (10000 samples from test split
 - **people** subset from CIFAR100
 - **noise** generate from FakeData dataset
 
-<p align="middle">
-  <img src="lab4/plots/id_imgs.png" alt="ID samples" width="20%">
-  &nbsp;
-  <img src="lab4/plots/aquatic_mammals.png" alt="OOD samples" width="20%">
-  &nbsp;
-  <img src="lab4/plots/people.png" alt="OOD samples" width="20%">
-  &nbsp;
-  <img src="lab4/plots/noise.png" alt="OOD samples" width="20%">
-</p>
+<table>
+  <tr>
+    <td><img src="lab4/plots/id_imgs.png" alt="ID samples" width="100%"></td>
+    <td><img src="lab4/plots/aquatic/aquatic_mammals.png" alt="OOD samples" width="100%"></td>
+    <td><img src="lab4/plots/people/people.png" alt="OOD samples" width="100%"></td>
+    <td><img src="lab4/plots/noise/noise.png" alt="OOD samples" width="100%"></td>
+  </tr>
+</table>
 
 </details>
 
 <details>
 <summary>AutoEncoder</summary>
 
-`python lab4/train.py --config lab4/ckpts/autoencoder.yaml`
+Train the AE using `python lab4/train.py --config lab4/ckpts/autoencoder.yaml`. This autoencoder is trained to reconstruct ID samples, so when passing an OOD sample, the MSE computes like a distance from its ID version, hence higher the MSE, higher the chance of being OOD - this will be the metric for detecting OOD samples.
 
 The AE outputs with a sigmoid, so images needs to be in [0,1] already, as done in the lab1 exercises.
 
@@ -260,40 +261,52 @@ The AE outputs with a sigmoid, so images needs to be in [0,1] already, as done i
 <details>
 <summary>Pipeline</summary>
 
-OOD detection pipeline for all the OOD datasets chosen, see `python lab4/main_detection.py --help`, plot data with `python lab4/mydata.py`.
+OOD detection pipeline for all the OOD datasets chosen, see `python lab4/main_detection.py --help`, plot data with `python lab4/mydata.py`. Do this by changing the code in `lab4/mydata.py` default: FakeData since is the only one dataset in which the AutoEncoder seems to work well. I would say that the method doesn't work on the two CIFAR100 subsets since CIFAR10 is a subset as well, and the distribution might be the same regardless of being different classes.
 
 - `python lab4/main_detection.py --score_fun max_logit --model_configs lab1/configs/CNN/LargeCNNskip.yaml`
 - `python lab4/main_detection.py --score_fun max_softmax --model_configs lab1/configs/CNN/LargeCNNskip.yaml`
 - `python lab4/main_detection.py --score_fun mse --model_configs lab4/ckpts/autoencoder.yaml`
 
-<p align="middle">
-  <img src="lab4/plots/aquatic/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="22%">
-  &nbsp;
-  <img src="lab4/plots/aquatic/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="22%">
-  &nbsp;
-  <img src="lab4/plots/aquatic/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="22%">
-  &nbsp;
-  <img src="lab4/plots/aquatic/scores_roc_pr.svg" alt="ROC and PR curves", width="22%">
-</p>
+<table>
+  <caption>Performance on CIAFR100 aquatic mammals subset</caption>
+  <tr>
+    <td><img src="lab4/plots/aquatic/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="lab4/plots/aquatic/roc_pr_max_logit_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/roc_pr_max_softmax_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
+  </tr>
+</table>
 
-<p align="middle">
-  <img src="lab4/plots/people/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="22%">
-  &nbsp;
-  <img src="lab4/plots/people/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="22%">
-  &nbsp;
-  <img src="lab4/plots/people/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="22%">
-  &nbsp;
-  <img src="lab4/plots/people/scores_roc_pr.svg" alt="ROC and PR curves", width="22%">
-</p>
+<table>
+  <caption>Performance on CIFAR100 people subset</caption>
+  <tr>
+    <td><img src="lab4/plots/people/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/people/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
+    <td><img src="lab4/plots/people/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="lab4/plots/people/roc_pr_max_logit_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/people/roc_pr_max_softmax_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/people/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
+  </tr>
+</table>
 
-<p align="middle">
-  <img src="lab4/plots/noise/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="22%">
-  &nbsp;
-  <img src="lab4/plots/noise/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="22%">
-  &nbsp;
-  <img src="lab4/plots/noise/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="22%">
-  &nbsp;
-  <img src="lab4/plots/noise/scores_roc_pr.svg" alt="ROC and PR curves", width="22%">
-</p>
+<table>
+  <caption>Performance on FakeData</caption>
+  <tr>
+    <td><img src="lab4/plots/noise/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/noise/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
+    <td><img src="lab4/plots/noise/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="lab4/plots/noise/roc_pr_max_logit_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/noise/roc_pr_max_softmax_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/noise/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
+  </tr>
+</table>
 
 </details>

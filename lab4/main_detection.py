@@ -55,12 +55,13 @@ def score_distrib(opts, model: Module, id_loader, ood_loader, path):
     return scores_id, scores_ood
 
 
-def evaluate(scores_id, scores_ood):
-    """Plot ROC and PR curves"""
+def evaluate(scores_id, scores_ood, path):
+    """Plot ROC and PR curves p(y=1|x) of being OOD associated with higher score"""
     pred = torch.cat((scores_id, scores_ood))
-    gt = torch.cat((torch.ones_like(scores_id), torch.zeros_like(scores_ood)))
+    gt = torch.cat((torch.zeros_like(scores_id), torch.ones_like(scores_ood)))
 
     fig, axs = plt.subplots(1, 2, figsize=(8, 4))
+    fig.suptitle("OOD detection performance")
     # ROC curve
     RocCurveDisplay.from_predictions(gt.numpy(), pred.numpy(), ax=axs[0])
     axs[0].set_title("ROC Curve")
@@ -70,8 +71,7 @@ def evaluate(scores_id, scores_ood):
     axs[1].set_title("Precision-Recall Curve")
     
     plt.tight_layout()
-    
-    path = "lab4/plots/scores_roc_pr.svg"
+
     plt.savefig(path)
     LOG.info("ROC and PR curves at path=%s", {path})
 
@@ -104,7 +104,8 @@ def main(opts):
     out = score_distrib(opts, model, id_loader, ood_loader, path)
 
     # Performance evaluation
-    evaluate(out[0], out[1])
+    path = os.path.join(output_dir, f"roc_pr_{opts.score_fun}_{model_opts.model}.svg")
+    evaluate(out[0], out[1], path)
 
 
 if __name__ == "__main__":
