@@ -1,4 +1,4 @@
-"""CIFAR10 and CIFAR100 wrappers"""
+"""ID and OOD datasets wrappers"""
 
 import sys
 import os
@@ -48,7 +48,6 @@ class MyCIFAR100(Dataset):
         indices = [i for i, label in enumerate(
             dataset.targets) if label in ood_labels]
         self.aquatic_mammals = Subset(dataset, indices)
-        # TODO: map labels in 0-9
 
     def __len__(self):
         return len(self.aquatic_mammals)

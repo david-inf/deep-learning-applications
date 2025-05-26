@@ -215,6 +215,10 @@ Efficient way for finetuning BERT on rotten tomatoes dataset using `PEFT` librar
 <details>
 <summary>Code organization</summary>
 
+```bash
+pip install -r lab1.txt
+```
+
 Inside the `lab4/` folder there are the following programs
 
 - `ckpts/`
@@ -227,6 +231,7 @@ Inside the `lab4/` folder there are the following programs
 - `train.py` main program for training the AutoEncoder on CIFAR10 dataset
 
 </details>
+
 
 ### :one: OOD detection pipeline
 
@@ -311,6 +316,26 @@ OOD detection pipeline for all the OOD datasets chosen, see `python lab4/main_de
 </details>
 
 
-### :two: Enhancing robustness to adversarial attacks
+### :two: Adversarial samples
+
+Now we move to adversarial samples
+
+<details open>
+<summary>Untargeted attacks</summary>
+
+
+
+</details>
+
+
+<details open>
+<summary>Targeted attacks</summary>
+
+
+
+</details>
+
+
+### :three: Enhancing robustness to adversarial attacks
 
 Enhancing the base model (LargeCNNskip) robustness to adversarial attacks, since in the previous exercise we saw that with `max_logit` and `max_softmax` alone can be easily fooled.

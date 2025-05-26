@@ -114,8 +114,8 @@ if __name__ == "__main__":
     parser.add_argument("--score_fun", type=str, default="max_logit",
                         help="Score function to use (default: max_logit)",
                         choices=["max_logit", "max_softmax", "mse"])
-    parser.add_argument("--device", type=str, default="cuda",
-                        help="Device to use (default: cuda)")
+    parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu",
+                        help="Device to run the model on")
     parser.add_argument("--temp", type=float, default=1.0,
                         help="Temperature for softmax (default: 1.0)")
     parser.add_argument("--ood_set", "--ood", type=str, default="noise",
