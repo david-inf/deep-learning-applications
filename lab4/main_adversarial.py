@@ -7,7 +7,6 @@ import random
 
 import torch
 import yaml
-# from torchvision.utils import make_grid
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -25,11 +24,11 @@ from lab1.utils import set_seeds, LOG, N
 def attack(pred: int, gt: int, image, model, eps, target=None):
     """Do a targeted or untargeted adversarial attack"""
     pred_x = pred  # prediction with original image
+    n = 0  # amount of budget spent
     if pred_x.item() != gt.item() or gt.item() == target:
         print("Classifier is already wrong ot target label same as GT!")
     else:
         done = False
-        n = 0  # amount of budget spent
         loss_fn = torch.nn.CrossEntropyLoss()
         while not done:
             image.retain_grad()  # ??
@@ -63,23 +62,24 @@ def attack(pred: int, gt: int, image, model, eps, target=None):
             if target is None and pred != gt:
                 # did the prediction change?
                 budget = int(255*n*eps)
-                print(f'Untargeted attack success! budget:{budget}/255')
+                print(f'Untargeted attack success! budget: {budget}/255')
                 done = True
 
             if target is not None and pred == target:
                 # l'idea è di farlo andare verso la classe specificata
                 budget = int(255*n*eps)
                 print(f"Targeted attack ({ID_CLASSES[pred]})"
-                      f" success! budget:{budget}/255")
+                      f" success! budget: {budget}/255")
                 done = True
 
-    return image, pred
+    return image, pred, n
 
 
 def adversarials(opts, model, loader):
     """Generate adversarial examples"""
     from rich.console import Console
     from rich.table import Table
+    set_seeds(opts.seed)
     n_samples = 5
     images, labels = next(iter(loader))
     # TODO: put on device just the images and labels needed
@@ -97,18 +97,19 @@ def adversarials(opts, model, loader):
     pred_x = model(images_orig).argmax(1)  # [n]
     pred_adv = 15+torch.zeros_like(pred_x)  # [n]
     corrupted = []
+    iters_list = []
     for i, sample_id in enumerate(samples):
         if opts.target is None:
             target = None
         else:
             target = torch.tensor(ID_CLASSES.index(opts.target)).to(opts.device)
-        image, pred = attack(
+        image, pred, iters = attack(
             pred_x[i], labels[sample_id], images_adv[i],
             model, opts.budget/255, target)
         # images_adv[i] = image
         corrupted.append(image.detach().cpu().unsqueeze(0))
         pred_adv[i] = pred
-
+        iters_list.append(iters)
 
     # print results
     table = Table(title="Adversarial attacks")
@@ -116,10 +117,11 @@ def adversarials(opts, model, loader):
     table.add_column("gt")  # groundtruth, actual label
     table.add_column("pred x")  # model prediction on original image
     table.add_column("pred x'")  # model prediction on attacked image
+    table.add_column("iters")
 
     for i, sample_id in enumerate(samples):
         gt = ID_CLASSES[N(labels)[sample_id]]
-        table.add_row(str(sample_id), gt, str(pred_x[i].item()), str(pred_adv[i].item()))
+        table.add_row(str(sample_id), gt, str(pred_x[i].item()), str(pred_adv[i].item()), str(iters_list[i]))
     console = Console()
     console.print(table)
 
@@ -127,32 +129,33 @@ def adversarials(opts, model, loader):
     advs = torch.cat(corrupted)
     images_orig = images_orig.detach().cpu()
     diff = images_orig - advs
-    fig, axs = plt.subplots(n_samples, 3)
-    plt.tight_layout()
+    fig, axs = plt.subplots(n_samples, 5, layout="constrained")
     for i in range(n_samples):
+        for ax in axs.flatten():
+            ax.axis("off")
+        # original image
         axs[i, 0].imshow(images_orig[i].permute(1,2,0))
         axs[i, 0].set_title(f"pred: {ID_CLASSES[pred_x[i]]}")
-        axs[i, 0].axis("off")
+        # attacked image
         axs[i, 1].imshow(torch.clamp(advs[i].permute(1,2,0), 0., 1.))
         axs[i, 1].set_title(f"pred: {ID_CLASSES[pred_adv[i]]}")
-        axs[i, 1].axis("off")
-        axs[i, 2].imshow(torch.clamp(diff[i].permute(1,2,0), 0., 1.))
+        # difference, with 3 channels
+        axs[i, 2].imshow(torch.clamp(diff[i], 0., 1.).permute(1,2,0))
         axs[i, 2].set_title("diff")
-        axs[i, 2].axis("off")
+        # difference, reducted on 1 channel
+        axs[i, 3].imshow(torch.clamp(diff[i], 0., 1.).squeeze().mean(0), cmap=plt.get_cmap('PuOr'))
+        # axs[i, 3].set_title("Channel reduction heatmap")
+        # attack magnitude distribution
+        axs[i, 4].hist(diff[i].flatten(), density=True)
+        # axs[i, 4].set_xlabel("Attack magnitude")
 
-    # grid = make_grid(torch.cat((images_orig, advs, diff), dim=0),
-    #                  nrow=3, padding=3, normalize=True)
-    # plt.imshow(grid.permute(1, 2, 0))
-    # plt.axis("off")
     output_path = os.path.join("lab4/plots/adversarial", f"{opts.attack}.svg")
-    plt.tight_layout()
     plt.savefig(output_path)
     print(f"Printed img={output_path}")
 
 
 def main(opts):
     """Main function to generate adversarial examples"""
-    set_seeds(opts.seed)
     # Load model checkpoint
     with open(opts.model_configs, "r", encoding="utf-8") as f:
         model_configs = yaml.safe_load(f)
@@ -177,6 +180,7 @@ def main(opts):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
+    parser.add_argument("--seed", type=int, default=42, help="Seed for changing images")
     parser.add_argument("--model_configs", type=str,
                         help="Path to model configuration file")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu",
@@ -187,7 +191,6 @@ if __name__ == "__main__":
                         help="Class that the model should predict")
     parser.add_argument("--budget", type=int, default=1, help="Budget per each step")
     args = parser.parse_args()
-    args.seed = 42
 
     try:
         main(args)
