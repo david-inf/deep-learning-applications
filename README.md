@@ -301,6 +301,10 @@ So we compare the full-finetuning and few LoRA configurations, for defining thes
 | **qv**      | `lora_qv8`   | `lora_qv16`   |
 | **qkvo**    | `lora_qkvo8` | `lora_qkvo16` |
 
+Launch finetuning with commands like
+
+- `python lab3/main_ft.py --config lab3/configs/distilbert_full.yaml`
+- `python lab3/main_ft.py --config lab3/configs/distilbert_lora_q16.yaml`
 
 | Model                    | #params (log10) | val_acc |
 | ------------------------ | --------------- | ------- |
@@ -314,14 +318,26 @@ So we compare the full-finetuning and few LoRA configurations, for defining thes
 
 </details>
 
+
 <details>
 <summary>Results</summary>
-
-- `python lab3/main_ft.py --config lab3/configs/distilbert_full.yaml`
-- `python lab3/main_ft.py --config lab3/configs/distilbert_lora_q16.yaml`
 
 <p align="middle">
   <img src="lab3/results/lora.svg" alt="LoRA against full-finetuning" width="50%">
 </p>
+
+</details>
+
+
+<details>
+<summary>Deploy on onseen data</summary>
+
+Obviously the full-finetuned DistilBERT has the better performance, and since the finetuning isn't that expensive yet, `distilbert_full` will be deployed on unseed data from rotten tomatoes dataset, i.e. the test split.
+
+```bash
+python lab3/load_and_eval.py --split test --config lab3/configs/distilbert_full.yaml
+```
+
+
 
 </details>
