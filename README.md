@@ -269,7 +269,10 @@ The AE outputs with a sigmoid, so images needs to be in [0,1] already, as done i
 
 OOD detection pipeline for all the OOD datasets chosen, see `python lab4/main_detection.py --help`, plot data with `python lab4/mydata.py`. Do this by changing the code in `lab4/mydata.py` default: FakeData since is the only one dataset in which the AutoEncoder seems to work well. I would say that the method doesn't work on the two CIFAR100 subsets since CIFAR10 is a subset as well, and the distribution might be the same regardless of being different classes.
 
-- `./lab4/detection_pipeline.sh`
+```bash
+chmod +x ./lab4/detection_pipeline.sh
+./lab4/detection_pipeline.sh
+```
 
 <table>
   <caption>Performance on CIAFR100 aquatic mammals subset</caption>
@@ -316,22 +319,27 @@ OOD detection pipeline for all the OOD datasets chosen, see `python lab4/main_de
 </details>
 
 
-### :two: Adversarial samples
+### :two: Adversarial attacks
 
-Now we move to adversarial samples
+Now we move to adversarial attacks by visualizing few attacks
 
-<details open>
-<summary>Untargeted attacks</summary>
+<details>
+<summary>Attacks</summary>
 
+Run the shell script that contains commands for running an untargeted and targeted attacks
 
+```bash
+chmod +x ./lab4/adversarial.sh
+./lab4/adversarial.sh
+```
 
-</details>
-
-
-<details open>
-<summary>Targeted attacks</summary>
-
-
+<table>
+  <caption>Targeted and untarged attacks
+  <tr>
+    <td><img src="lab4/plots/adversarial/untargeted.svg"></td>
+    <td><img src="lab4/plots/adversarial/targeted.svg"></td>
+  </tr>
+</table>
 
 </details>
 

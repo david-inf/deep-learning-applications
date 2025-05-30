@@ -74,14 +74,18 @@ def make_loader(opts, dataset):
     return loader
 
 
-def get_loaders(opts, train=False):
+def get_loaders(opts, train=False, get_dataset=False):
     """Get data loaders for ID and OOD data"""
     if train:
         # return the trainset for the AutoEncoder
         trainset = MyCIFAR10(opts, train=True)
         train_loader = make_loader(opts, trainset)
 
-        return train_loader
+        if get_dataset:
+            # this step is needed for viewing adversarial attacks
+            return trainset
+        else:
+            return train_loader
     else:
         # ID testset
         id_set = MyCIFAR10(opts, train=False)

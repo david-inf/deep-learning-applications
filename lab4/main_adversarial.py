@@ -7,18 +7,17 @@ import random
 
 import torch
 import yaml
-import matplotlib.pyplot as plt
-import numpy as np
 
 # Ensure the parent directory is in the path for module imports
 sys.path.append(os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))))  # Add parent directory to path
 
-from lab4.mydata import get_loaders, ID_CLASSES
-
 from lab1.main_train import get_model
 from lab1.utils.train import load_checkpoint
 from lab1.utils import set_seeds, LOG, N
+
+from lab4.mydata import get_loaders, ID_CLASSES
+from lab4.utils.adversarial import plot_attacked_images, print_summary_table
 
 
 def attack(pred: int, gt: int, image, model, eps, target=None):
@@ -27,6 +26,7 @@ def attack(pred: int, gt: int, image, model, eps, target=None):
     n = 0  # amount of budget spent
     if pred_x.item() != gt.item() or gt.item() == target:
         print("Classifier is already wrong ot target label same as GT!")
+        pred = N(pred)
     else:
         done = False
         loss_fn = torch.nn.CrossEntropyLoss()
@@ -75,83 +75,47 @@ def attack(pred: int, gt: int, image, model, eps, target=None):
     return image, pred, n
 
 
-def adversarials(opts, model, loader):
+def adversarials(opts, model, dataset):
     """Generate adversarial examples"""
-    from rich.console import Console
-    from rich.table import Table
     set_seeds(opts.seed)
-    n_samples = 5
-    images, labels = next(iter(loader))
-    # TODO: put on device just the images and labels needed
-    images, labels = images.to(opts.device), labels.to(opts.device)
-    samples = [random.randint(0, images.size(0)) for _ in range(n_samples)]  # n
+    samples = [dataset[random.randint(0, len(dataset))]
+               for _ in range(opts.n_samples)]  # list of (image, label)
 
-    # original images
-    images_orig = images[samples]  # [n]
-    # images to be corrupted
-    images_adv = images_orig.clone()  # [n]
-    images_adv.requires_grad = True  # compute the gradient over these
+    images_orig = []  # original images
+    preds_orig = []  # predictions on original images
+    images_adv = []  # attacked images
+    preds_adv = []  # predictions on attacked images
 
     # do as many steps as needed for making the classifier do a wrong prediction
     model.eval()
-    pred_x = model(images_orig).argmax(1)  # [n]
-    pred_adv = 15+torch.zeros_like(pred_x)  # [n]
-    corrupted = []
     iters_list = []
-    for i, sample_id in enumerate(samples):
+
+    for i, (image, label) in enumerate(samples):
         if opts.target is None:
             target = None
         else:
             target = torch.tensor(ID_CLASSES.index(opts.target)).to(opts.device)
+
+        image, label = image.to(opts.device), label.to(opts.device)
+        image.requires_grad = True  # already tensor in [0,1]
+
+        images_orig.append(N(image))
+        output = model(image.unsqueeze(0))  # needs the batch dimension
+        pred = output.argmax()
+        preds_orig.append(N(pred))
+
         image, pred, iters = attack(
-            pred_x[i], labels[sample_id], images_adv[i],
+            pred, label, image.clone(),
             model, opts.budget/255, target)
-        # images_adv[i] = image
-        corrupted.append(image.detach().cpu().unsqueeze(0))
-        pred_adv[i] = pred
+        images_adv.append(N(image))
+        preds_adv.append(pred)
         iters_list.append(iters)
 
-    # print results
-    table = Table(title="Adversarial attacks")
-    table.add_column("id", justify="right")  # sample_id, image
-    table.add_column("gt")  # groundtruth, actual label
-    table.add_column("pred x")  # model prediction on original image
-    table.add_column("pred x'")  # model prediction on attacked image
-    table.add_column("iters")
+    # Print summary table with attack results
+    print_summary_table(samples, preds_orig, preds_adv, iters_list)
 
-    for i, sample_id in enumerate(samples):
-        gt = ID_CLASSES[N(labels)[sample_id]]
-        table.add_row(str(sample_id), gt, str(pred_x[i].item()), str(pred_adv[i].item()), str(iters_list[i]))
-    console = Console()
-    console.print(table)
-
-    # Print adversarial examples
-    advs = torch.cat(corrupted)
-    images_orig = images_orig.detach().cpu()
-    diff = images_orig - advs
-    fig, axs = plt.subplots(n_samples, 5, layout="constrained")
-    for i in range(n_samples):
-        for ax in axs.flatten():
-            ax.axis("off")
-        # original image
-        axs[i, 0].imshow(images_orig[i].permute(1,2,0))
-        axs[i, 0].set_title(f"pred: {ID_CLASSES[pred_x[i]]}")
-        # attacked image
-        axs[i, 1].imshow(torch.clamp(advs[i].permute(1,2,0), 0., 1.))
-        axs[i, 1].set_title(f"pred: {ID_CLASSES[pred_adv[i]]}")
-        # difference, with 3 channels
-        axs[i, 2].imshow(torch.clamp(diff[i], 0., 1.).permute(1,2,0))
-        axs[i, 2].set_title("diff")
-        # difference, reducted on 1 channel
-        axs[i, 3].imshow(torch.clamp(diff[i], 0., 1.).squeeze().mean(0), cmap=plt.get_cmap('PuOr'))
-        # axs[i, 3].set_title("Channel reduction heatmap")
-        # attack magnitude distribution
-        axs[i, 4].hist(diff[i].flatten(), density=True)
-        # axs[i, 4].set_xlabel("Attack magnitude")
-
-    output_path = os.path.join("lab4/plots/adversarial", f"{opts.attack}.svg")
-    plt.savefig(output_path)
-    print(f"Printed img={output_path}")
+    # Plot attacked images
+    plot_attacked_images(opts, images_orig, images_adv, preds_orig, preds_adv, iters_list)
 
 
 def main(opts):
@@ -169,10 +133,11 @@ def main(opts):
     # Load data
     # train split so we have garauntees that the model will
     # be predicting the correct labels with original images
-    loader = get_loaders(model_opts, train=True)
+    # TODO: try with test split??
+    trainset = get_loaders(model_opts, train=True, get_dataset=True)
 
     # Generate adversarial examples
-    adversarials(opts, model, loader)
+    adversarials(opts, model, trainset)
     
     print("Adversarial examples generated and saved successfully.")
 
@@ -190,6 +155,8 @@ if __name__ == "__main__":
     parser.add_argument("--target", type=str, default=None,
                         help="Class that the model should predict")
     parser.add_argument("--budget", type=int, default=1, help="Budget per each step")
+    parser.add_argument("--n_samples", type=int, default=5,
+                        help="Number of samples to attack and visualize")
     args = parser.parse_args()
 
     try:
