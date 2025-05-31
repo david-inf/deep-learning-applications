@@ -25,7 +25,7 @@ def gen_configs_distil(new_params):
         "do_early_stopping": False,
         "comet_project": "deep-learning-applications",
 
-        "temp": 5, "weight_stloss": 5., "weight_labloss": 0.5,
+        "temp": 5, "weight_stloss": 10., "weight_labloss": 0.5,
     }
     configs.update(new_params)
 
@@ -146,28 +146,28 @@ if __name__ == "__main__":
 
         # {"dataset": "CIFAR10",
         #  "teacher": {
-        #      "model": "ResNet", "dataset": "CIFAR10", "num_filters": NUM_FILTERS, "num_blocks": 5,
-        #      "skip": True, "ckpt": "lab1/ckpts/ResNet/ResNet32.pt", "device": "cuda",
+        #      "model": "ResNet", "dataset": "CIFAR10", "num_filters": NUM_FILTERS, "num_blocks": 9,
+        #      "skip": True, "ckpt": "lab1/ckpts/ResNet/ResNet56.pt", "device": "cuda",
         #  },
         #  "student": {
-        #      "model": "CNN", "dataset": "CIFAR10", "num_filters": NUM_FILTERS, "num_blocks": 1,
+        #      "model": "CNN", "dataset": "CIFAR10", "num_filters": 32, "num_blocks": 1,
         #      "skip": True, "device": "cuda", "weight_decay": 5e-4, "learning_rate": 0.01, "momentum": 0.9,
         #      "scheduler": {"type": "exponential", "gamma": 0.95},
         #  },
-        #  "experiment_name": "DistilCNN_RN32",
-        #  }
+        #  "experiment_name": "DistilCNN_RN56",
+        #  },
 
         # {"dataset": "CIFAR10",
         #  "teacher": {
-        #      "model": "WideResNet", "dataset": "CIFAR10", "num_filters": NUM_FILTERS, "num_blocks": 2,
-        #      "widen_factor": 2, "ckpt": "lab1/ckpts/WideResNet/WideResNet14-2.pt", "device": "cuda",
+        #      "model": "WideResNet", "dataset": "CIFAR10", "num_filters": NUM_FILTERS, "num_blocks": 4,
+        #      "skip": True, "widen_factor": 4, "ckpt": "lab1/ckpts/WideResNet/WideResNet26-4.pt", "device": "cuda",
         #  },
         #  "student": {
-        #      "model": "CNN", "dataset": "CIFAR10", "num_filters": NUM_FILTERS, "num_blocks": 1,
+        #      "model": "CNN", "dataset": "CIFAR10", "num_filters": 32, "num_blocks": 1,
         #      "skip": True, "device": "cuda", "weight_decay": 5e-4, "learning_rate": 0.01, "momentum": 0.9,
         #      "scheduler": {"type": "exponential", "gamma": 0.95},
         #  },
-        #  "experiment_name": "DistilCNN_WRN14-2",
+        #  "experiment_name": "DistilCNN_WRN26-4",
         #  }
 
     ]

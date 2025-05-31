@@ -22,7 +22,7 @@ def get_teacher(teacher_opts):
     # Load model
     if not os.path.isfile(teacher_opts.ckpt):
         raise FileNotFoundError(f"Teacher checkpoint not found: {teacher_opts.ckpt}")
-    LOG.info("Loading teacher from checkpoint=%s", teacher_opts.ckpt)
+    LOG.info("Loading teacher from checkpoint=%s", {teacher_opts.ckpt})
     ckpt = torch.load(teacher_opts.ckpt)
 
     model = get_model(teacher_opts)  # already on device

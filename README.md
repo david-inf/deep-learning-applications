@@ -64,7 +64,7 @@ python lab1/main_distil.py --config lab1/configs/Distil/DistilCNN_RN32.yaml
 </details>
 
 
-### :zero: Warming up on MNIST
+### :zero: Warming up with MNIST
 
 Train a MLP and a two CNNs on the MNIST dataset. I chose to train two CNNs because one has fewer params than the dataset samples, the other has more, as the MLP. Maybe something shows up idk.
 
@@ -95,7 +95,7 @@ self.classifier = nn.Linear(layer_sizes[-1], num_classes)
 This architecture follows the concept of the ResNet in which we have "macro-layers" each one with a variable number of blocks.
 
 - `input_adapter`: conv + batchnorm + relu that exits with `num_filters`
-- `blocks`: fixed number of layers with variable `BasicBlock` blocks
+- `blocks`: fixed number (2) of layers with variable `BasicBlock` blocks
   - Each `BasicBlock` contains two modules of conv + batchnorm + relu
   - Each layer contains $n$ `BasicBlock`, in the default version $n=1$ (this is specified via the `num_blocks` argument)
   - Optional skip connection in each block by setting `skip=True` (for residual learning comparison)
@@ -154,9 +154,42 @@ When adding further layers we see that "adding more layers reduces loss" holds n
 </details>
 
 
-### :two: Knowledge Distillation
+### :two: Improving over ResNet with WideResNet
 
-Reproducing on a small scale the results from the distillation paper on CIFAR10 dataset.
+Now we need to find our flagship model that will be used later for knowledge distillation. We take a step forward from the previous CNNs by adding one more macro-layer as in the ResNet paper, and we do a comparison with another model, namely the WideResNet.
+
+> Wide Residual Networks. Zagoruyko *et al*. [Axiv](https://arxiv.org/abs/1605.07146).
+
+<details>
+<summary>RN and WRN architectures</summary>
+
+As said the RN is the same as the previous CNN with one more macro-layer
+
+- `input_adapter`: conv + batchnorm + relu that exits with `num_filters`
+- `blocks`: fixed number (3) of layers with variable `BasicBlock` blocks
+  - Each `BasicBlock` contains two modules of conv + batchnorm + relu
+  - Each layer contains $n$ `BasicBlock`, in the default version $n=1$ (this is specified via the `num_blocks` argument)
+  - Optional skip connection in each block by setting `skip=True` (for residual learning comparison)
+- `avgpool`: ends with a `(num_filters*2) x 1 x 1` feature map
+- `classifier`: classification head
+
+The WRN has the same general architecture except for the `BasicBlock` where we have the so called pre-activation, that is batchnorm + relu + conv. More than this, the *wide* lies the `k` parameter that multiplies the `num_filter` parameter results in `k` more filters than the RN in each layers. This allows to grow the network in width rather than in depth.
+
+</details>
+
+<details>
+<summary>Results</summary>
+
+<p align="middle">
+  <img src="lab1/plots/rn_wrn.svg" alt="WRN vs RN", width="60%">
+</p>
+
+</details>
+
+
+### :three: Knowledge Distillation
+
+Reproducing on a small scale the results from the distillation paper on CIFAR10 dataset. Having two flagship models (), since we want to one more comparison between Rn and WRN.
 
 > Distilling the Knowledge in a Neural Network. Hinton *et al*. [Arxiv](https://arxiv.org/abs/1503.02531).
 
@@ -193,15 +226,12 @@ We define another CNN, named BaseCNN, with skip connections and to have more #pa
 | `DistilCNN_WRN14-2`  | 1            | 32            | 1              | 0.08M   | 6      | 0.8007  |
 
 <p align="middle">
-  <img src="lab1/plots/rn_wrn.svg" alt="WRN vs RN", width="45%">
-  &nbsp;
-  <img src="lab1/plots/distil.svg" alt="learning" width="45%">
+  <img src="lab1/plots/distil.svg" alt="learning" width="60%">
 </p>
 
 The distilled model is able to achieve a higher train accuracy earlier. Mostly similar performance on the validation set, however the distilled model stays on top of the base one. The small model trained with distillation has better performance than the same trained in the classical way! And WideResNet outperforms ResNet on both comparisons.
 
 </details>
-
 
 
 ## :test_tube: Lab3 - Transformers and NLP

@@ -1,4 +1,6 @@
 
+import os
+import sys
 import time
 
 from comet_ml import Experiment
