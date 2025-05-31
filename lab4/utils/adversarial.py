@@ -23,7 +23,7 @@ def print_summary_table(samples, preds_orig, preds_adv, iters_list):
     table.add_column("iters")
 
     for i, (_, label) in enumerate(samples):
-        gt = ID_CLASSES[label]  # string
+        gt = ID_CLASSES[label] + f" ({label.item()})"  # string
         table.add_row(str(i), gt, str(preds_orig[i]), str(preds_adv[i]), str(iters_list[i]))
     console = Console()
     console.print(table)

@@ -1,0 +1,27 @@
+augmentation: true
+batch_size: 128
+budget: 1
+checkpoint: lab4/ckpts/RobustCNN.pt
+checkpoint_dir: lab4/ckpts
+checkpoint_every: 3
+config: lab4/ckpts/cnn_robust.yaml
+dataset: CIFAR10
+device: cuda
+do_early_stopping: false
+experiment_name: RobustCNN
+fraction: 0.2
+learning_rate: 0.01
+log_every: 20
+model: CNN
+momentum: 0.9
+num_blocks: 7
+num_epochs: 20
+num_filters: 16
+num_workers: 4
+scheduler:
+  gamma: 0.95
+  type: exponential
+seed: 42
+skip: true
+visualize: false
+weight_decay: 0.0005

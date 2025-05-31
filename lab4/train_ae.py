@@ -100,10 +100,12 @@ if __name__ == "__main__":
     import yaml
     from types import SimpleNamespace
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", help="YAML configuration file")
+    parser = argparse.ArgumentParser(
+        description="Train a AutoEncoder to reconstruct in-distribution images")
+    parser.add_argument("--config", help="AutoEncoder YAML configuration file")
     parser.add_argument("--view", action="store_true")
     args = parser.parse_args()
+
     with open(args.config, "r", encoding="utf-8") as f:
         configs = yaml.safe_load(f)  # dict
     opts = SimpleNamespace(**configs)

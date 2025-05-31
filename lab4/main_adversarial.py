@@ -14,63 +14,58 @@ sys.path.append(os.path.dirname(
 
 from lab1.main_train import get_model
 from lab1.utils.train import load_checkpoint
-from lab1.utils import set_seeds, LOG, N
+from lab1.utils import set_seeds, N
+from lab1.mydata import MyCIFAR10
 
-from lab4.mydata import get_loaders, ID_CLASSES
+from lab4.mydata import ID_CLASSES
 from lab4.utils.adversarial import plot_attacked_images, print_summary_table
 
 
-def attack(pred: int, gt: int, image, model, eps, target=None):
+def attack(gt: int, image, model, eps, target=None):
     """Do a targeted or untargeted adversarial attack"""
-    pred_x = pred  # prediction with original image
     n = 0  # amount of budget spent
-    if pred_x.item() != gt.item() or gt.item() == target:
-        print("Classifier is already wrong ot target label same as GT!")
-        pred = N(pred)
-    else:
-        done = False
-        loss_fn = torch.nn.CrossEntropyLoss()
-        while not done:
-            image.retain_grad()  # ??
-            output = model(image.unsqueeze(0))  # [1, K]
+    done = False
+    loss_fn = torch.nn.CrossEntropyLoss()
 
-            if target is None:
-                # proceed with untargeted attack
-                yt = gt.unsqueeze(0)
-            else:
-                # proceed with targeted attack
-                yt = target.unsqueeze(0)
+    while not done:
+        image.retain_grad()  # ??
+        output = model(image.unsqueeze(0))  # [1, K]
 
-            model.zero_grad()
-            loss = loss_fn(output, yt)
-            loss.backward()
+        if target is None:
+            # proceed with untargeted attack
+            yt = gt.unsqueeze(0)
+        else:
+            # proceed with targeted attack
+            yt = target.unsqueeze(0)
 
-            if target is None:
-                # untargeted FGSM
-                # image += eps * torch.sign(image.grad)
-                image = image + eps * torch.sign(image.grad)
-            else:
-                # targeted FGSM
-                image = image - eps * torch.sign(image.grad)
+        model.zero_grad()
+        loss = loss_fn(output, yt)
+        loss.backward()
 
-            # TODO: do again prediction
-            output = model(image.unsqueeze(0))  # [1, K]
-            pred = N(output).argmax()  # prediction with corrupted image
+        if target is None:
+            # untargeted FGSM
+            # image += eps * torch.sign(image.grad)
+            image = image + eps * torch.sign(image.grad)
+        else:
+            # targeted FGSM
+            image = image - eps * torch.sign(image.grad)
 
-            n += 1
+        output = model(image.unsqueeze(0))  # [1, K]
+        pred = N(output).argmax()  # prediction with corrupted image
+        n += 1
 
-            if target is None and pred != gt:
-                # did the prediction change?
-                budget = int(255*n*eps)
-                print(f'Untargeted attack success! budget: {budget}/255')
-                done = True
+        if target is None and pred != gt:
+            # did the prediction change?
+            budget = int(255*n*eps)
+            # print(f'Untargeted attack success! budget: {budget}/255')
+            done = True
 
-            if target is not None and pred == target:
-                # l'idea è di farlo andare verso la classe specificata
-                budget = int(255*n*eps)
-                print(f"Targeted attack ({ID_CLASSES[pred]})"
-                      f" success! budget: {budget}/255")
-                done = True
+        if target is not None and pred == target:
+            # l'idea è di farlo andare verso la classe specificata
+            budget = int(255*n*eps)
+            # print(f"Targeted attack ({ID_CLASSES[pred]})"
+            #         f" success! budget: {budget}/255")
+            done = True
 
     return image, pred, n
 
@@ -101,19 +96,36 @@ def adversarials(opts, model, dataset):
 
         images_orig.append(N(image))
         output = model(image.unsqueeze(0))  # needs the batch dimension
-        pred = output.argmax()
+        pred = output.argmax()  # prediction
         preds_orig.append(N(pred))
 
-        image, pred, iters = attack(
-            pred, label, image.clone(),
-            model, opts.budget/255, target)
+        # attack current image
+        if pred.item() != label.item():
+            print(f"Image {i} classifier is already wrong")
+            pred = N(pred)
+            iters = 0
+            # image remains unchanged
+        elif label.item() == target:
+            print(f"Image {i} target label same as GT")
+            pred = N(pred)
+            iters = 0
+            # image remains unchanged
+        # if pred.item() != label.item() or label.item() == target:
+        #     print("Classifier is already wrong or target label same as GT!")
+        #     pred = N(pred)
+        #     iters = 0
+        #     # image remains unchanged
+        else:
+            image, pred, iters = attack(
+                label, image.clone(),
+                model, opts.budget/255, target)
+
         images_adv.append(N(image))
         preds_adv.append(pred)
         iters_list.append(iters)
 
     # Print summary table with attack results
     print_summary_table(samples, preds_orig, preds_adv, iters_list)
-
     # Plot attacked images
     plot_attacked_images(opts, images_orig, images_adv, preds_orig, preds_adv, iters_list)
 
@@ -131,14 +143,10 @@ def main(opts):
     load_checkpoint(model_opts.checkpoint, model, opts.device)    
 
     # Load data
-    # train split so we have garauntees that the model will
-    # be predicting the correct labels with original images
-    # TODO: try with test split??
-    trainset = get_loaders(model_opts, train=True, get_dataset=True)
+    id_set = MyCIFAR10(model_opts, train=False)  # in-distribution data
 
     # Generate adversarial examples
-    adversarials(opts, model, trainset)
-    
+    adversarials(opts, model, id_set)
     print("Adversarial examples generated and saved successfully.")
 
 

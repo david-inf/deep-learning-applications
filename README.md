@@ -346,4 +346,13 @@ chmod +x ./lab4/adversarial.sh
 
 ### :three: Enhancing robustness to adversarial attacks
 
-Enhancing the base model (LargeCNNskip) robustness to adversarial attacks, since in the previous exercise we saw that with `max_logit` and `max_softmax` alone can be easily fooled.
+Enhancing the base model robustness to adversarial attacks, the idea is to train again the base model but this time the dataset is augmented with untargeted adversarial attacks. By doing this the base model robustness to adversarial attacks, as we saw in :one:, should increase and with `max_logit` and `max_softmax` the model should be able to detect adversarial examples.
+
+<details>
+<summary>Results</summary>
+
+```bash
+python lab4/main_robust.py --config lab4/ckpts/cnn_robust.yaml
+```
+
+</details>
