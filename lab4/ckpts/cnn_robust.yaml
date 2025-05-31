@@ -11,7 +11,7 @@ do_early_stopping: true
 early_stopping:
   min_delta: 0.001
   patience: 3
-experiment_name: RobustCNN
+experiment_name: RLargeCNNskip
 fraction: 0.2
 learning_rate: 0.01
 log_every: 80

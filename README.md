@@ -414,42 +414,48 @@ chmod +x ./lab4/detection_pipeline.sh
 <table>
   <caption>Performance on CIFAR100 aquatic mammals subset</caption>
   <tr>
-    <td><img src="lab4/plots/aquatic/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="100%"></td>
-    <td><img src="lab4/plots/aquatic/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/scores_max_logit_LargeCNNskip.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/scores_max_softmax_LargeCNNskip.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
     <td><img src="lab4/plots/aquatic/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/scores_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
   </tr>
   <tr>
-    <td><img src="lab4/plots/aquatic/roc_pr_max_logit_CNN.svg" alt="ROC and PR curves", width="100%"></td>
-    <td><img src="lab4/plots/aquatic/roc_pr_max_softmax_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/roc_pr_max_logit_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/roc_pr_max_softmax_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
     <td><img src="lab4/plots/aquatic/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/roc_pr_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
   </tr>
 </table>
 
 <table>
   <caption>Performance on CIFAR100 people subset</caption>
   <tr>
-    <td><img src="lab4/plots/people/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="100%"></td>
-    <td><img src="lab4/plots/people/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
+    <td><img src="lab4/plots/people/scores_max_logit_LargeCNNskip.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/people/scores_max_softmax_LargeCNNskip.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
     <td><img src="lab4/plots/people/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/people/scores_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
   </tr>
   <tr>
-    <td><img src="lab4/plots/people/roc_pr_max_logit_CNN.svg" alt="ROC and PR curves", width="100%"></td>
-    <td><img src="lab4/plots/people/roc_pr_max_softmax_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/people/roc_pr_max_logit_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/people/roc_pr_max_softmax_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
     <td><img src="lab4/plots/people/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/people/roc_pr_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
   </tr>
 </table>
 
 <table>
   <caption>Performance on FakeData</caption>
   <tr>
-    <td><img src="lab4/plots/noise/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="100%"></td>
-    <td><img src="lab4/plots/noise/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
+    <td><img src="lab4/plots/noise/scores_max_logit_LargeCNNskip.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/noise/scores_max_softmax_LargeCNNskip.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
     <td><img src="lab4/plots/noise/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/noise/scores_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
   </tr>
   <tr>
-    <td><img src="lab4/plots/noise/roc_pr_max_logit_CNN.svg" alt="ROC and PR curves", width="100%"></td>
-    <td><img src="lab4/plots/noise/roc_pr_max_softmax_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/noise/roc_pr_max_logit_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/noise/roc_pr_max_softmax_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
     <td><img src="lab4/plots/noise/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/noise/roc_pr_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
   </tr>
 </table>
 
