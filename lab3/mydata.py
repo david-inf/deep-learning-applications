@@ -8,7 +8,7 @@ from transformers import set_seed, DataCollatorWithPadding, PreTrainedTokenizer
 from datasets import load_dataset, Dataset
 
 from utils import LOG
-from models.distilbert import get_distilbert
+from models import get_bert
 
 
 class MakeDataLoaders:
@@ -84,7 +84,7 @@ def get_loaders(opts, tokenizer: PreTrainedTokenizer):
 
 def main(opts):
     # Get tokenizer
-    tokenizer: PreTrainedTokenizer = get_distilbert(opts)[0]
+    tokenizer: PreTrainedTokenizer = get_bert(opts)[0]
     # Get loaders
     train_loader, val_loader, _ = get_loaders(opts, tokenizer)
 

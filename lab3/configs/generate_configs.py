@@ -1,3 +1,4 @@
+"""Generate YAML configuration files"""
 
 import os
 import yaml
@@ -14,7 +15,7 @@ def gen_configs(new_params):
     # Experiment naming
     if configs.get("experiment_name") is None:
         _ft = configs["ft_setting"]["ftname"]
-        exp_name = f"{configs["model"]}_{_ft}_{configs["dataset"]}"
+        exp_name = f"{configs["model"]}_{_ft}"
         configs["experiment_name"] = exp_name
 
     # Checkpoint directory
@@ -41,25 +42,26 @@ if __name__ == "__main__":
     MODEL = "distilbert"
     DATASET = "rotten_tomatoes"
     NUM_EPOCHS = 50
-    ALPHA = 16
+    ALPHA = 32
+    EARLY_STOPPING = {"patience": 8, "min_delta": 0.001}
     new_configs = [
         # DistilBERT full-finetuning
-        {"model": MODEL, "num_epochs": NUM_EPOCHS, "learning_rate": 5e-5,
-         "dataset": DATASET, "weight_decay": 0.01, "warmup": 0.05,
-         "early_stopping": {"patience": 5, "min_delta": 0.002},
-         "ft_setting": {
-             "type": "full", "ftname": "full", "lr_head": 0.0001
-         }
-         },
+        # {"model": MODEL, "num_epochs": NUM_EPOCHS, "dataset": DATASET,
+        #  "early_stopping": EARLY_STOPPING,
+        #  "ft_setting": {
+        #      "type": "full", "ftname": "full", "lr_head": 5e-5,
+        #      "lr_backbone": 1e-5, "weight_decay": 0.001, "warmup": 0.05,
+        #  }
+        #  },
         # DistilBERT LoRA
-        {"model": MODEL, "num_epochs": NUM_EPOCHS, "learning_rate": 5e-5,
-         "dataset": DATASET, "weight_decay": 0.01, "warmup": 0.05,
-         "early_stopping": {"patience": 5, "min_delta": 0.002},
-         "ft_setting": {
-             "type": "lora", "rank": 4, "alpha": ALPHA, "target_modules": ["q_lin"],
-             "lr_head": 0.0001, "ftname": "lora_q_4"
-         },
-         },
+        # {"model": MODEL, "num_epochs": NUM_EPOCHS, "dataset": DATASET,
+        #  "early_stopping": EARLY_STOPPING,
+        #  "ft_setting": {
+        #      "type": "lora", "rank": 32, "alpha": ALPHA, "target_modules": ["q_lin", "v_lin", "k_lin", "out_lin"],
+        #      "lr_backbone": 1e-5, "lr_head": 5e-5, "weight_decay": 0.001,
+        #      "warmup": 0.05, "ftname": "lora_qkvo8",
+        #  },
+        #  },
     ]
 
     for params_dict in new_configs:
