@@ -1,5 +1,6 @@
 
 import torch
+
 from lab1.models.mlp import MLP
 from lab1.models.cnn import CNN
 from lab1.models.resnet import ResNet

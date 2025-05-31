@@ -14,14 +14,11 @@ class MLP(nn.Module):
 
         self.flatten = nn.Flatten()
 
-        self.input_adapter = nn.Sequential(
-            nn.Linear(input_size, layer_sizes[0]),
-            nn.ReLU(inplace=True)
-        )
-
         layers = []
-        for i in range(len(layer_sizes)-1):
-            layers.append(nn.Linear(layer_sizes[i], layer_sizes[i+1]))
+        layers.append(nn.Linear(input_size, layer_sizes[0]))
+        layers.append(nn.ReLU(inplace=True))
+        for i in range(len(layer_sizes) - 1):
+            layers.append(nn.Linear(layer_sizes[i], layer_sizes[i + 1]))
             layers.append(nn.ReLU(inplace=True))
         self.mlp = nn.Sequential(*layers)
 
@@ -29,9 +26,6 @@ class MLP(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = self.flatten(x)
-
-        x = self.input_adapter(x)  # hidden_size
         x = self.mlp(x)  # blocks
-
         x = self.classifier(x)  # logits
         return x

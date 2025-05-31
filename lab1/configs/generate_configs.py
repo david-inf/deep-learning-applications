@@ -99,6 +99,16 @@ if __name__ == "__main__":
     NUM_FILTERS = 16
     train_new_configs = [  # list of params (dict)
 
+        # MLP
+        # {"model": "MLP", "dataset": "MNIST", "layers": [512, 512, 512],
+        #  "scheduler": {"type": "multi-step", "steps": [50, 100], "gamma": 0.1},
+        #  "experiment_name": "MLP_mnist"},
+        # CNN
+        # {"model": "CNN", "skip": False, "dataset": "MNIST", "num_filters": 32,
+        #  "num_blocks": 2, "experiment_name": "CNN1_mnist"},
+        #  {"model": "CNN", "skip": False, "dataset": "MNIST", "num_filters": 64,
+        #  "num_blocks": 2, "experiment_name": "CNN2_mnist"},
+
         # SmallCNN
         # {"model": "CNN", "skip": False, "num_filters": NUM_FILTERS, "num_blocks": 1,
         #  "experiment_name": "SmallCNN"},
@@ -125,9 +135,9 @@ if __name__ == "__main__":
         #  "experiment_name": "ResNet32",
         #  },
         # WideResNet
-        # {"model": "WideResNet", "num_filters": NUM_FILTERS, "num_blocks": 2, "widen_factor": 2,
-        #  "num_epoch": 50, "early_stopping": {"patience": 4, "min_delta": 0.002}, "do_early_stopping": True,
-        #  "experiment_name": "WideResNet14-2",
+        # {"model": "WideResNet", "num_filters": NUM_FILTERS, "num_blocks": 2, "widen_factor": 4,
+        #  "num_epochs": 100, "early_stopping": {"patience": 7, "min_delta": 0.002}, "do_early_stopping": True,
+        #  "experiment_name": "WideResNet14-4",
         #  },
 
     ]

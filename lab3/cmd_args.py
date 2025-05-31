@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 import argparse
 import yaml
-from utils.misc_utils import LOG
+from utils import LOG
 
 
 parser = argparse.ArgumentParser()

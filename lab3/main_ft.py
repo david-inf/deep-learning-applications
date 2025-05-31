@@ -1,6 +1,8 @@
 """Main program for finetuning BERT for sentiment analysis"""
 
 import os
+from types import SimpleNamespace
+
 import torch
 from torch.optim import AdamW
 from torch.backends import cudnn
@@ -8,15 +10,15 @@ from accelerate import Accelerator
 from transformers import set_seed, get_cosine_schedule_with_warmup, PreTrainedModel
 
 from mydata import get_loaders
-from models.distilbert import get_distilbert
-from utils.misc_utils import LOG, visualize, update_yaml
+from models import get_bert
+from utils.misc import LOG, visualize, update_yaml
 from train import train_loop
 
 
 def get_model(opts):
     """Get model to finetune"""
-    if opts.model == "distilbert":
-        tokenizer, model = get_distilbert(opts)
+    if opts.model in ("distilbert", "sbert"):
+        tokenizer, model = get_bert(opts)
     else:
         raise ValueError(f"Unknown model {opts.model}")
     return tokenizer, model
@@ -24,25 +26,25 @@ def get_model(opts):
 
 def get_optimization(opts, model: PreTrainedModel, train_loader):
     """Optimizer and LRScheduler settings"""
-    configs = opts.ft_setting  # dict
+    configs = SimpleNamespace(**opts.ft_setting)  # dict
     head_params = [p for name, p in model.named_parameters()
                    if "classifier" in name]
     backbone_params = [
         p for name, p in model.named_parameters() if "classifier" not in name]
     params = [
-        {"params": head_params, "lr": configs["lr_head"]},
+        {"params": head_params, "lr": configs.lr_head},
         {"params": backbone_params},
     ]
     optimizer = AdamW(
         params,
-        lr=opts.learning_rate,
-        weight_decay=opts.weight_decay
+        lr=configs.lr_backbone,
+        weight_decay=configs.weight_decay
     )
 
     total_steps = opts.num_epochs * len(train_loader)
     scheduler = get_cosine_schedule_with_warmup(
         optimizer,
-        int(opts.warmup*total_steps),
+        int(configs.warmup*total_steps),
         total_steps
     )
 
@@ -50,6 +52,7 @@ def get_optimization(opts, model: PreTrainedModel, train_loader):
 
 
 def main(opts):
+    """BERT-family model finetuning"""
     set_seed(opts.seed)
 
     # Checkpointing

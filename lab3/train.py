@@ -9,8 +9,8 @@ from torch.optim.lr_scheduler import LRScheduler
 from transformers import PreTrainedModel
 from accelerate import Accelerator
 
-from utils.misc_utils import N, LOG
-from utils.train_utils import accuracy, AverageMeter, EarlyStopping
+from utils.misc import N, LOG
+from utils.train import accuracy, AverageMeter, EarlyStopping
 
 
 def test(model: PreTrainedModel, accelerator: Accelerator, loader):
