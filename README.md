@@ -324,6 +324,8 @@ Being the full-finetuning not that much expensive to train, this will be the fin
 <details>
 <summary>LoRA and full-finetuning</summary>
 
+Efficient way for finetuning BERT on rotten tomatoes dataset using `PEFT` library
+
 <p align="middle">
   <img src="lab3/results/lora.svg" alt="LoRA against full-finetuning" width="50%">
 </p>
@@ -341,5 +343,153 @@ python lab3/load_and_eval.py --split test --config lab3/configs/distilbert_full.
 ```
 
 This results in an accuracy value of `0.841`.
+
+</details>
+
+
+## :test_tube: Lab4 - Adversarial Learning
+
+<details>
+<summary>Code organization</summary>
+
+```bash
+pip install -r lab1.txt
+```
+
+Inside the `lab4/` folder there are the following programs
+
+- `ckpts/`
+- `models/` with `autoencoder.py`
+- `plots/`
+  - Results from OOD detection on CIFAR100 subsets (aquatic mammals and people) and FakeData
+- `utils/` various utilities
+- `main_detection.py` main program for launching the OOD detection pipeline on the given dataset from `lab4/mydata.py`
+- `mydata.py` various datasets for OOD detection
+- `train.py` main program for training the AutoEncoder on CIFAR10 dataset
+
+</details>
+
+
+### :one: OOD detection pipeline
+
+<details>
+<summary>ID and OOD samples</summary>
+
+We choose as in-distribution (ID) dataset CIFAR10 (10000 samples from test split), and few out-of-distribution (OOD) datasets
+- **aquatic mammals** subset from CIFAR100 (2500 samples from train split) `python lab4/mydata --ood aquatic`
+- **people** subset from CIFAR100 `python lab4/mydata --ood people`
+- **noise** generate from FakeData dataset `python lab4/mydata --ood noise`
+
+<table>
+  <caption>CIFAR10, CIFAR100 (aquatic mammals), CIFAR100 (people), and FakeData
+  <tr>
+    <td><img src="lab4/plots/id_imgs.png" alt="ID samples" width="100%"></td>
+    <td><img src="lab4/plots/aquatic/ood_imgs.png" alt="OOD samples" width="100%"></td>
+    <td><img src="lab4/plots/people/ood_imgs.png" alt="OOD samples" width="100%"></td>
+    <td><img src="lab4/plots/noise/ood_imgs.png" alt="OOD samples" width="100%"></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+<summary>AutoEncoder</summary>
+
+Train the AE using `python lab4/train.py --config lab4/ckpts/autoencoder.yaml`. This autoencoder is trained to reconstruct ID samples, so when passing an OOD sample, the MSE computes like a distance from its ID version, hence higher the MSE, higher the chance of being OOD - this will be the metric for detecting OOD samples.
+
+The AE outputs with a sigmoid, so images needs to be in [0,1] already, as done in the lab1 exercises.
+
+</details>
+
+<details>
+<summary>OOD detection pipeline</summary>
+
+OOD detection pipeline for all the OOD datasets chosen, see `python lab4/main_detection.py --help`, plot data with `python lab4/mydata.py`. Do this by changing the code in `lab4/mydata.py` default: FakeData since is the only one dataset in which the AutoEncoder seems to work well. I would say that the method doesn't work on the two CIFAR100 subsets since CIFAR10 is a subset as well, and the distribution might be the same regardless of being different classes.
+
+```bash
+chmod +x ./lab4/detection_pipeline.sh
+./lab4/detection_pipeline.sh
+```
+
+<table>
+  <caption>Performance on CIAFR100 aquatic mammals subset</caption>
+  <tr>
+    <td><img src="lab4/plots/aquatic/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="lab4/plots/aquatic/roc_pr_max_logit_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/roc_pr_max_softmax_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/aquatic/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
+  </tr>
+</table>
+
+<table>
+  <caption>Performance on CIFAR100 people subset</caption>
+  <tr>
+    <td><img src="lab4/plots/people/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/people/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
+    <td><img src="lab4/plots/people/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="lab4/plots/people/roc_pr_max_logit_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/people/roc_pr_max_softmax_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/people/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
+  </tr>
+</table>
+
+<table>
+  <caption>Performance on FakeData</caption>
+  <tr>
+    <td><img src="lab4/plots/noise/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <td><img src="lab4/plots/noise/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
+    <td><img src="lab4/plots/noise/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="lab4/plots/noise/roc_pr_max_logit_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/noise/roc_pr_max_softmax_CNN.svg" alt="ROC and PR curves", width="100%"></td>
+    <td><img src="lab4/plots/noise/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
+  </tr>
+</table>
+
+</details>
+
+
+### :two: Adversarial attacks
+
+Now we move to adversarial attacks by visualizing few attacks
+
+<details>
+<summary>Attacks</summary>
+
+Run the shell script that contains commands for running an untargeted and targeted attacks
+
+```bash
+chmod +x ./lab4/adversarial.sh
+./lab4/adversarial.sh
+```
+
+<table>
+  <caption>Targeted and untarged attacks
+  <tr>
+    <td><img src="lab4/plots/adversarial/untargeted.svg"></td>
+    <td><img src="lab4/plots/adversarial/targeted.svg"></td>
+  </tr>
+</table>
+
+</details>
+
+
+### :three: Enhancing robustness to adversarial attacks
+
+Enhancing the base model robustness to adversarial attacks, the idea is to train again the base model but this time the dataset is augmented with untargeted adversarial attacks. By doing this the base model robustness to adversarial attacks, as we saw in :one:, should increase and with `max_logit` and `max_softmax` the model should be able to detect adversarial examples.
+
+<details>
+<summary>Results</summary>
+
+```bash
+python lab4/main_robust.py --config lab4/ckpts/cnn_robust.yaml
+```
 
 </details>

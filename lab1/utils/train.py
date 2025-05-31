@@ -3,7 +3,7 @@
 import os
 import torch
 import numpy as np
-from utils import LOG, update_yaml
+from lab1.utils import LOG, update_yaml
 
 
 def N(x: torch.Tensor):
@@ -38,19 +38,19 @@ def save_checkpoint(opts, model: torch.nn.Module, fname=None):
 
     # Update yaml file with checkpoint name
     update_yaml(opts, "checkpoint", output_path)
-    LOG.info("Saved model at path=%s", opts.checkpoint)
+    LOG.info("Saved model at path=%s", {opts.checkpoint})
 
 
-def load_checkpoint(ckpt_path: str, model: torch.nn.Module):
+def load_checkpoint(ckpt_path: str, model: torch.nn.Module, device="cuda"):
     """Load a model checkpoint to resume training"""
     if not os.path.isfile(ckpt_path):
         raise FileNotFoundError(
             f"Checkpoint file not found: {ckpt_path}")
 
     # load from given checkpoint path
-    LOG.info("Loading checkpoint=%s", ckpt_path)
+    LOG.info("Loading checkpoint=%s", {ckpt_path})
     # checkpoint = torch.load(checkpoint_path, map_location="cuda")
-    checkpoint = torch.load(ckpt_path)
+    checkpoint = torch.load(ckpt_path, map_location=device)
 
     # load weights and optimizer in those given
     # this means that the initialized model and optimizer are updated

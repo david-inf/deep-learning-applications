@@ -9,8 +9,8 @@ from torch.nn import Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 
-from utils.misc import LOG
-from utils.train import N, accuracy, save_checkpoint, AverageMeter, EarlyStopping
+from lab1.utils.misc import LOG
+from lab1.utils.train import N, accuracy, save_checkpoint, AverageMeter, EarlyStopping
 
 
 def test(opts, model, loader):
@@ -42,10 +42,10 @@ def train_loop(opts, model: Module, optimizer: Optimizer, scheduler: LRScheduler
     start_epoch, step = 1, 0
     start_time = time.time()
 
-    # keeps the training objects and info from the best model
     if opts.do_early_stopping:
         early_stopping = EarlyStopping(opts)
 
+    save_checkpoint(opts, model)  # save initial checkpoint
     for epoch in range(start_epoch, opts.num_epochs + 1):
         experiment.log_current_epoch(epoch)
 

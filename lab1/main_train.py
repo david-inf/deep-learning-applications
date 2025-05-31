@@ -1,16 +1,23 @@
 """ Main script for training a single model """
 
+import os
+import sys
+
 from comet_ml import start
 import torch
 from torch import optim
 from torch.optim.lr_scheduler import ExponentialLR, MultiStepLR
 from torch.backends import cudnn
 
-from mydata import MyMNIST, MyAugmentedMNIST
-from mydata import MyCIFAR10, MyAugmentedCIFAR10, MakeDataLoaders
-from models import build_mlp, build_cnn
-from train import train_loop
-from utils.misc import LOG, set_seeds, visualize, compute_flops
+# Ensure the parent directory is in the path for module imports
+sys.path.append(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))))  # Add parent directory to path
+
+from lab1.mydata import MyMNIST, MyAugmentedMNIST
+from lab1.mydata import MyCIFAR10, MyAugmentedCIFAR10, MakeDataLoaders
+from lab1.models import build_mlp, build_cnn
+from lab1.train import train_loop
+from lab1.utils.misc import LOG, set_seeds, visualize, compute_flops
 
 
 def get_loaders(opts):
@@ -116,6 +123,6 @@ if __name__ == "__main__":
         else:
             view_model(opts)
     except Exception:
-        import ipdb, traceback, sys
+        import ipdb, traceback
         traceback.print_exc()
         ipdb.post_mortem(sys.exc_info()[2])

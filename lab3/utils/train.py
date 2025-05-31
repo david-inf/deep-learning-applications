@@ -27,6 +27,16 @@ def save_model(opts, model: PreTrainedModel, fname=None):
     LOG.info("Saved model at path=%s", opts.checkpoint)
 
 
+def load_model(ckpt_path, model: PreTrainedModel):
+    """Load a finetuned model"""
+    if not os.path.isdir(ckpt_path):
+        raise FileNotFoundError(
+            f"Checkpoint file not found: {ckpt_path}")
+
+    LOG.info("Loading checkpoint=%s", ckpt_path)
+    model.from_pretrained(ckpt_path, num_labels=2)
+
+
 class AverageMeter:
     """Computes and stores the average and current value"""
 

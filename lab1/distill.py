@@ -9,11 +9,15 @@ from torch.nn import Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 import torch.nn.functional as F
-
 from tqdm import tqdm
-from utils.misc import LOG
-from utils.train import N, accuracy, save_checkpoint, AverageMeter
-from train import test
+
+# Ensure the parent directory is in the path for module imports
+sys.path.append(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))))  # Add parent directory to path
+
+from lab1.utils.misc import LOG
+from lab1.utils.train import N, accuracy, save_checkpoint, AverageMeter
+from lab1.train import test
 
 
 def train_loop_distill(opts, teacher: Module, student: Module, optimizer: Optimizer, scheduler: LRScheduler, train_loader, val_loader, experiment: Experiment):
