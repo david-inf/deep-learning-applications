@@ -101,25 +101,34 @@ def train_epoch(opts, model, optimizer, train_loader, val_loader, step, epoch):
 
 
 def adversarial_augmentations(opts, model, images, labels, preds):
-    """Perform adversarial attacks"""
+    """
+    Perform adversarial attacks
+    1. take the images where the classifier is correct
+    2. from this subset take another subset of size opts.fraction
+    3. attack those images
+    this strategy ensures that no waste during augmentation pipeline
+    """
     success_count = 0
 
-    for i in range(images.size(0)):
-        if random.random() < opts.fraction:
-            if preds[i] != labels[i].item():
-                # classifier is wrong
-                continue
+    correct_idx = [i for i in range(images.size(0)) if preds[i] == labels[i].item()]
+    if not correct_idx:
+        # empty list, train_acc = 0 likely during the first batch
+        return images
 
-            # attack when classifier is correct
-            # so that the classifier can get robust to attacks
-            image = images[i].clone()
-            image.requires_grad = True
-            image, _, iters = attack(
-                labels[i], image,model, opts.budget/255)
-            image = image.detach()
-            images[i] = image
+    num_samples = max(1, int(opts.fraction * len(correct_idx)))
+    attack_indices = random.sample(correct_idx, num_samples)
 
-            if iters > 0:
-                success_count += 1
+    for i in attack_indices:
+        # we need to attack when the classifier is correct
+        # so that the classifier can get robust to attacks
+        image = images[i].clone()  # torch.Tensor copy-like
+        image.requires_grad = True  # pixels' gradient
+        image, _, iters = attack(
+            labels[i], image, model, opts.budget/255)
+        image = image.detach()  # no more gradient
+        images[i] = image
+
+        if iters > 0:
+            success_count += 1
 
     return images

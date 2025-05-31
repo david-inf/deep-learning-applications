@@ -23,6 +23,8 @@ def get_loaders(opts):
     """Get train-val loaders"""
     trainset = MyCIFAR10(opts, train=True)
 
+    # taking a subset allows to do early stopping
+    # since the OOD detection will be on the test split
     N = len(trainset)
     indices = list(range(N))
     random.shuffle(indices)
@@ -66,16 +68,20 @@ if __name__ == "__main__":
         description="Train a CNN with adversarial-augmented dataset")
     parser.add_argument("--config", help="CNN YAML configuration file")
     parser.add_argument("--view", action="store_true")
+    parser.add_argument("--device", type=str, default="cuda:0",
+                        help="Device to use for training (default: cuda:0)")
     # TODO: add arguments for adversarial attacks
     parser.add_argument("--fraction", type=float, default=0.2,
                         help="Fraction of samples to attack")
+    parser.add_argument("--budget", type=int, default=1,
+                        help="Budget for the attack (default: 1)")
     args = parser.parse_args()
 
     with open(args.config, "r", encoding="utf-8") as f:
         configs = yaml.safe_load(f)  # dict
     opts = SimpleNamespace(**configs)
     opts.fraction = args.fraction
-    opts.budget = 1
+    opts.budget = args.budget
 
     try:
         if not args.view:

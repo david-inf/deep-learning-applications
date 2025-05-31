@@ -84,6 +84,7 @@ def main(opts):
     model_opts = SimpleNamespace(**model_configs)
     model_opts.device = opts.device
     model_opts.ood_set = opts.ood_set
+    LOG.info("experiment_name=%s", model_opts.experiment_name)
 
     # Load model
     if model_opts.model == "CNN":
@@ -98,13 +99,12 @@ def main(opts):
     # Load data
     id_loader, ood_loader = get_loaders(model_opts)
 
-    # Distribution on ID and OOD samples
     output_dir = "lab4/plots"
-    path = os.path.join(output_dir, opts.ood_set, f"scores_{opts.score_fun}_{model_opts.model}.svg")
+    # Distribution on ID and OOD samples
+    path = os.path.join(output_dir, opts.ood_set, f"scores_{opts.score_fun}_{model_opts.experiment_name}.svg")
     out = score_distrib(opts, model, id_loader, ood_loader, path)
-
     # Performance evaluation
-    path = os.path.join(output_dir, opts.ood_set, f"roc_pr_{opts.score_fun}_{model_opts.model}.svg")
+    path = os.path.join(output_dir, opts.ood_set, f"roc_pr_{opts.score_fun}_{model_opts.experiment_name}.svg")
     evaluate(out[0], out[1], path)
 
 

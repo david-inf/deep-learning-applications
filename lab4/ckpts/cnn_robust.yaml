@@ -6,12 +6,15 @@ checkpoint_dir: lab4/ckpts
 checkpoint_every: 3
 config: lab4/ckpts/cnn_robust.yaml
 dataset: CIFAR10
-device: cuda
-do_early_stopping: false
-experiment_name: RobustCNN
+device: cuda:0
+do_early_stopping: true
+early_stopping:
+  min_delta: 0.001
+  patience: 3
+experiment_name: RLargeCNNskip
 fraction: 0.2
 learning_rate: 0.01
-log_every: 20
+log_every: 80
 model: CNN
 momentum: 0.9
 num_blocks: 7
