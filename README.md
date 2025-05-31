@@ -258,7 +258,7 @@ We choose as in-distribution (ID) dataset CIFAR10 (10000 samples from test split
 <details>
 <summary>AutoEncoder</summary>
 
-Train the AE using `python lab4/train.py --config lab4/ckpts/autoencoder.yaml`. This autoencoder is trained to reconstruct ID samples, so when passing an OOD sample, the MSE computes like a distance from its ID version, hence higher the MSE, higher the chance of being OOD - this will be the metric for detecting OOD samples.
+Train the AE using `python lab4/train_ae.py --config lab4/ckpts/autoencoder.yaml`. This autoencoder is trained to reconstruct ID samples, so when passing an OOD sample, the MSE computes like a distance from its ID version, hence higher the MSE, higher the chance of being OOD - this will be the metric for detecting OOD samples.
 
 The AE outputs with a sigmoid, so images needs to be in [0,1] already, as done in the lab1 exercises.
 
@@ -275,7 +275,7 @@ chmod +x ./lab4/detection_pipeline.sh
 ```
 
 <table>
-  <caption>Performance on CIAFR100 aquatic mammals subset</caption>
+  <caption>Performance on CIFAR100 aquatic mammals subset</caption>
   <tr>
     <td><img src="lab4/plots/aquatic/scores_max_logit_CNN.svg" alt="Scores from CNN using max_logit", width="100%"></td>
     <td><img src="lab4/plots/aquatic/scores_max_softmax_CNN.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
@@ -352,7 +352,9 @@ Enhancing the base model robustness to adversarial attacks, the idea is to train
 <summary>Results</summary>
 
 ```bash
-python lab4/main_robust.py --config lab4/ckpts/cnn_robust.yaml
+chmod +x ./lab4/adversarial_training.sh
 ```
+
+This script runs the full pipeline that comprises the adversarial training to obtain the model `RobustCNN` then the OOD detection pipeline.
 
 </details>
