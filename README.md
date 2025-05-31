@@ -370,7 +370,47 @@ Inside the `lab4/` folder there are the following programs
 </details>
 
 
-### :one: OOD detection pipeline
+### :one: Adversarial attacks
+
+Now we move to adversarial attacks by visualizing what these attacks are about
+
+<details>
+<summary>Attacks</summary>
+
+Run the shell script that contains commands for running an untargeted and targeted attacks
+
+```bash
+python lab4/main_robust.py --config lab4/ckpts/cnn_robust.yaml
+```
+
+<table>
+  <caption>Targeted and untarged attacks
+  <tr>
+    <td><img src="lab4/plots/adversarial/untargeted.svg"></td>
+    <td><img src="lab4/plots/adversarial/targeted.svg"></td>
+  </tr>
+</table>
+
+</details>
+
+
+### :two: Enhancing robustness to adversarial attacks
+
+We take a base model and enhance its robustness to these adversarial attacks. The idea is to train again this base model on a dataset that is augmented with untargeted adversarial attacks. By doing this the base model robustness to adversarial attacks, and will also be reflected in the ability to detect OOD examples.
+
+<details>
+<summary>Results</summary>
+
+```bash
+python lab4/main_robust.py --config lab4/ckpts/cnn_robust.yaml
+```
+
+This script runs the full pipeline that comprises the adversarial training to obtain the model `RobustCNN` then the OOD detection pipeline. The results are already displayed in the OOD detection pipeline.
+
+</details>
+
+
+### :three: OOD detection pipeline
 
 <details>
 <summary>ID and OOD samples</summary>
@@ -395,9 +435,13 @@ We choose as in-distribution (ID) dataset CIFAR10 (10000 samples from test split
 <details>
 <summary>AutoEncoder</summary>
 
-Train the AE using `python lab4/train_ae.py --config lab4/ckpts/autoencoder.yaml`. This autoencoder is trained to reconstruct ID samples, so when passing an OOD sample, the MSE computes like a distance from its ID version, hence higher the MSE, higher the chance of being OOD - this will be the metric for detecting OOD samples.
+```bash
+python lab4/train_ae.py --config lab4/ckpts/autoencoder.yaml
+```
 
-The AE outputs with a sigmoid, so images needs to be in [0,1] already, as done in the lab1 exercises.
+This autoencoder is trained to reconstruct ID samples, so when passing an OOD sample, the MSE computes like a distance from its ID version, hence higher the MSE, higher the chance of being OOD - this will be the metric for detecting OOD samples.
+
+The AE outputs with a sigmoid, so images needs to be in [0,1] already, as done in the `lab1/` exercises.
 
 </details>
 
@@ -414,90 +458,57 @@ chmod +x ./lab4/detection_pipeline.sh
 <table>
   <caption>Performance on CIFAR100 aquatic mammals subset</caption>
   <tr>
-    <td><img src="lab4/plots/aquatic/scores_max_logit_LargeCNNskip.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <!-- <td><img src="lab4/plots/aquatic/scores_max_logit_LargeCNNskip.svg" alt="Scores from CNN using max_logit", width="100%"></td> -->
     <td><img src="lab4/plots/aquatic/scores_max_softmax_LargeCNNskip.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
     <td><img src="lab4/plots/aquatic/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
-    <td><img src="lab4/plots/aquatic/scores_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
+    <!-- <td><img src="lab4/plots/aquatic/scores_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td> -->
+    <td><img src="lab4/plots/aquatic/scores_max_softmax_RLargeCNNskip.svg" alt="Scores from robust CNN using max_softmax", width="100%"></td>
   </tr>
   <tr>
-    <td><img src="lab4/plots/aquatic/roc_pr_max_logit_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
+    <!-- <td><img src="lab4/plots/aquatic/roc_pr_max_logit_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td> -->
     <td><img src="lab4/plots/aquatic/roc_pr_max_softmax_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
     <td><img src="lab4/plots/aquatic/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
-    <td><img src="lab4/plots/aquatic/roc_pr_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
+    <!-- <td><img src="lab4/plots/aquatic/roc_pr_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td> -->
+    <td><img src="lab4/plots/aquatic/roc_pr_max_softmax_RLargeCNNskip.svg" alt="Scores from robust CNN using max_softmax", width="100%"></td>
   </tr>
 </table>
 
 <table>
   <caption>Performance on CIFAR100 people subset</caption>
   <tr>
-    <td><img src="lab4/plots/people/scores_max_logit_LargeCNNskip.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <!-- <td><img src="lab4/plots/people/scores_max_logit_LargeCNNskip.svg" alt="Scores from CNN using max_logit", width="100%"></td> -->
     <td><img src="lab4/plots/people/scores_max_softmax_LargeCNNskip.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
     <td><img src="lab4/plots/people/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
-    <td><img src="lab4/plots/people/scores_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
+    <!-- <td><img src="lab4/plots/people/scores_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td> -->
+    <td><img src="lab4/plots/people/scores_max_softmax_RLargeCNNskip.svg" alt="Scores from robust CNN using max_softmax", width="100%"></td>
   </tr>
   <tr>
-    <td><img src="lab4/plots/people/roc_pr_max_logit_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
+    <!-- <td><img src="lab4/plots/people/roc_pr_max_logit_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td> -->
     <td><img src="lab4/plots/people/roc_pr_max_softmax_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
     <td><img src="lab4/plots/people/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
-    <td><img src="lab4/plots/people/roc_pr_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
+    <!-- <td><img src="lab4/plots/people/roc_pr_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td> -->
+    <td><img src="lab4/plots/people/roc_pr_max_softmax_RLargeCNNskip.svg" alt="Scores from robust CNN using max_softmax", width="100%"></td>
   </tr>
 </table>
 
 <table>
   <caption>Performance on FakeData</caption>
   <tr>
-    <td><img src="lab4/plots/noise/scores_max_logit_LargeCNNskip.svg" alt="Scores from CNN using max_logit", width="100%"></td>
+    <!-- <td><img src="lab4/plots/noise/scores_max_logit_LargeCNNskip.svg" alt="Scores from CNN using max_logit", width="100%"></td> -->
     <td><img src="lab4/plots/noise/scores_max_softmax_LargeCNNskip.svg" alt="Scores from CNN using max_softmax", width="100%"></td>
     <td><img src="lab4/plots/noise/scores_mse_AutoEncoder.svg" alt="Scores from CNN using max_logit", width="100%"></td>
-    <td><img src="lab4/plots/noise/scores_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
+    <!-- <td><img src="lab4/plots/noise/scores_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td> -->
+    <td><img src="lab4/plots/noise/scores_max_softmax_RLargeCNNskip.svg" alt="Scores from robust CNN using max_softmax", width="100%"></td>
   </tr>
   <tr>
-    <td><img src="lab4/plots/noise/roc_pr_max_logit_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
+    <!-- <td><img src="lab4/plots/noise/roc_pr_max_logit_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td> -->
     <td><img src="lab4/plots/noise/roc_pr_max_softmax_LargeCNNskip.svg" alt="ROC and PR curves", width="100%"></td>
     <td><img src="lab4/plots/noise/roc_pr_mse_AutoEncoder.svg" alt="ROC and PR curves", width="100%"></td>
-    <td><img src="lab4/plots/noise/roc_pr_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td>
+    <!-- <td><img src="lab4/plots/noise/roc_pr_max_logit_RLargeCNNskip.svg" alt="Scores from robust CNN using max_logit", width="100%"></td> -->
+    <td><img src="lab4/plots/noise/roc_pr_max_softmax_RLargeCNNskip.svg" alt="Scores from robust CNN using max_softmax", width="100%"></td>
   </tr>
 </table>
 
-</details>
-
-
-### :two: Adversarial attacks
-
-Now we move to adversarial attacks by visualizing few attacks
-
-<details>
-<summary>Attacks</summary>
-
-Run the shell script that contains commands for running an untargeted and targeted attacks
-
-```bash
-chmod +x ./lab4/adversarial.sh
-./lab4/adversarial.sh
-```
-
-<table>
-  <caption>Targeted and untarged attacks
-  <tr>
-    <td><img src="lab4/plots/adversarial/untargeted.svg"></td>
-    <td><img src="lab4/plots/adversarial/targeted.svg"></td>
-  </tr>
-</table>
-
-</details>
-
-
-### :three: Enhancing robustness to adversarial attacks
-
-Enhancing the base model robustness to adversarial attacks, the idea is to train again the base model but this time the dataset is augmented with untargeted adversarial attacks. By doing this the base model robustness to adversarial attacks, as we saw in :one:, should increase and with `max_logit` and `max_softmax` the model should be able to detect adversarial examples.
-
-<details>
-<summary>Results</summary>
-
-```bash
-chmod +x ./lab4/adversarial_training.sh
-```
-
-This script runs the full pipeline that comprises the adversarial training to obtain the model `RobustCNN` then the OOD detection pipeline.
+On the `lab4/plots/` folder you can find also the plots with the `max_logit` score that are not displayed here, since the `max_softmax` performs slightly better.
 
 </details>

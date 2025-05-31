@@ -23,10 +23,10 @@ from lab1.utils.train import load_checkpoint
 from lab1.utils import set_seeds, LOG
 
 
-def score_distrib(opts, model: Module, id_loader, ood_loader, path):
+def score_distrib(opts, model: Module, id_loader, ood_loader, path, title):
     """Plot the scores distribution for ID and OOD samples"""
     fig, axs = plt.subplots(1, 2, figsize=(8, 4))
-    fig.suptitle(f"Scores using {opts.score_fun}")
+    fig.suptitle(title)
 
     id_lab = "ID samples"
     scores_id = compute_scores(opts, model, id_loader)
@@ -54,13 +54,13 @@ def score_distrib(opts, model: Module, id_loader, ood_loader, path):
     return scores_id, scores_ood
 
 
-def evaluate(scores_id, scores_ood, path):
+def evaluate(scores_id, scores_ood, path, title):
     """Plot ROC and PR curves p(y=1|x) of being OOD associated with higher score"""
     pred = torch.cat((scores_id, scores_ood))
     gt = torch.cat((torch.zeros_like(scores_id), torch.ones_like(scores_ood)))
 
     fig, axs = plt.subplots(1, 2, figsize=(8, 4))
-    fig.suptitle("OOD detection performance")
+    fig.suptitle(title)
     # ROC curve
     RocCurveDisplay.from_predictions(gt.numpy(), pred.numpy(), ax=axs[0])
     axs[0].set_title("ROC Curve")
@@ -102,10 +102,12 @@ def main(opts):
     output_dir = "lab4/plots"
     # Distribution on ID and OOD samples
     path = os.path.join(output_dir, opts.ood_set, f"scores_{opts.score_fun}_{model_opts.experiment_name}.svg")
-    out = score_distrib(opts, model, id_loader, ood_loader, path)
+    out = score_distrib(opts, model, id_loader, ood_loader, path,
+                        title=f"Scores using {opts.score_fun} - {model_opts.experiment_name}")
     # Performance evaluation
     path = os.path.join(output_dir, opts.ood_set, f"roc_pr_{opts.score_fun}_{model_opts.experiment_name}.svg")
-    evaluate(out[0], out[1], path)
+    evaluate(out[0], out[1], path,
+             title=f"OOD detection performance - {model_opts.experiment_name}")
 
 
 if __name__ == "__main__":
