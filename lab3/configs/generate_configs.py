@@ -57,7 +57,7 @@ if __name__ == "__main__":
         # {"model": MODEL, "num_epochs": NUM_EPOCHS, "dataset": DATASET,
         #  "early_stopping": EARLY_STOPPING,
         #  "ft_setting": {
-        #      "type": "lora", "rank": 8, "alpha": ALPHA, "target_modules": ["q_lin", "v_lin", "k_lin", "out_lin"],
+        #      "type": "lora", "rank": 32, "alpha": ALPHA, "target_modules": ["q_lin", "v_lin", "k_lin", "out_lin"],
         #      "lr_backbone": 1e-5, "lr_head": 5e-5, "weight_decay": 0.001,
         #      "warmup": 0.05, "ftname": "lora_qkvo8",
         #  },
