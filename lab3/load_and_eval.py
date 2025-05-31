@@ -42,8 +42,8 @@ def main(opts):
         model, loader)
 
     # Evaluate
-    _, val_acc = test(model, accelerator, loader)
-    LOG.info("val_acc=%.3f", val_acc)
+    _, acc = test(model, accelerator, loader)
+    LOG.info("accuracy=%.3f", acc)
 
 
 if __name__ == "__main__":

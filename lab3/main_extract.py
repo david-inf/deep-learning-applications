@@ -1,14 +1,15 @@
+"""BERT as a feture extractor"""
 
 import os
 import numpy as np
 
 from sklearn.svm import LinearSVC
+from rich.console import Console
+from rich.table import Table
 
 from datasets import load_dataset
 from transformers import set_seed
 from models import get_distilbert_features, get_sbert_features
-
-from utils import LOG
 
 
 def get_dataset():
@@ -40,43 +41,39 @@ def main(opts):
         os.makedirs(path, exist_ok=True)
         os.makedirs(features_path, exist_ok=True)
         # Get train-val-test splits
-        rt_trainset, rt_valset, rt_testset = get_dataset()
+        rt_trainset, rt_valset, _ = get_dataset()
 
         train_labels = np.savetxt(os.path.join(
             path, "train_labels.txt"), np.array(rt_trainset["label"]))
         val_labels = np.savetxt(os.path.join(
             path, "val_labels.txt"), np.array(rt_valset["label"]))
-        test_labels = np.savetxt(os.path.join(
-            path, "test_labels.txt"), np.array(rt_testset["label"]))
 
         extract_features(opts, rt_trainset["text"], os.path.join(
             features_path, f"{opts.method}_train.txt"))
         extract_features(opts, rt_valset["text"], os.path.join(
             features_path, f"{opts.method}_val.txt"))
-        extract_features(opts, rt_testset["text"], os.path.join(
-            features_path, f"{opts.method}_test.txt"))
 
     train_features = np.loadtxt(os.path.join(
         features_path, f"{opts.method}_train.txt"))
     val_features = np.loadtxt(os.path.join(
         features_path, f"{opts.method}_val.txt"))
-    test_features = np.loadtxt(os.path.join(
-        features_path, f"{opts.method}_test.txt"))
 
     train_labels = np.loadtxt(os.path.join(path, "train_labels.txt"))
     val_labels = np.loadtxt(os.path.join(path, "val_labels.txt"))
-    test_labels = np.loadtxt(os.path.join(path, "test_labels.txt"))
 
     # Train classifier and do inference
     clf = LinearSVC()
     clf.fit(train_features, train_labels)
     train_acc = clf.score(train_features, train_labels)
     val_acc = clf.score(val_features, val_labels)
-    test_acc = clf.score(test_features, test_labels)
 
-    LOG.info("train_acc=%.3f", train_acc)
-    LOG.info("val_acc=%.3f", val_acc)
-    LOG.info("test_acc=%.3f", test_acc)
+    console = Console()
+    table = Table(title="LogisticRegression classifier")
+    table.add_column("Split")
+    table.add_column("Accuracy")
+    table.add_row("Train", str(train_acc))
+    table.add_row("Val", str(val_acc))
+    console.print(table)
 
 
 def view_embeds(opts):

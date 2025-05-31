@@ -221,9 +221,9 @@ python install -r lab3.txt
 - `results/` plotted stuffs
 - `utils/` module with various utilities inside `misc.py` and `train.py`
 - `cmd_args.py` main programs' arguments
-- `load_and_eval.py` load the test dataset and perform inference with a given model checkpoint
+- `load_and_eval.py` load the validation or testsplits  and perform inference with a given model checkpoint (you must train first)
 - `main_extract.py` main program for obtaining baseline results with a given pretrained extractor, i.e. a BERT-family model from the local `models` module
-- `main_ft.py` core of this lab that is the main program for finetuning a pretrained BERT-family model
+- `main_ft.py` core of this lab that is the main program for finetuning a pretrained BERT-family model given a configuration file
 - `mydata.py` utilities for preprocessing and loading the `rotten_tomatoes` dataset from HuggingFace
 - `train.py` train loop
 
@@ -242,19 +242,19 @@ Train a simple classifier (LinearSVC) on top of BERT sentence representation for
 
 We use the rotten tomatoes dataset with train-val-test splits, hence we use the BERT-family models as feature extractors, then we train a LinearSVC classifier on top of the representation. We compare DistilBERT (`[CLS]` token and mean pooling) and SentenceBERT (two models) extractors.
 
-- `python lab3/main_extract.py --extract --extractor distilbert --method cls`
-- `python lab3/main_extract.py --extract --extractor distilbert --method mean`
-- `python lab3/main_extract.py --extract --extractor sbert --method minilm`
-- `python lab3/main_extract.py --extract --extractor sbert --method mpnet`
+```bash
+chmod +x ./lab3/baseline.sh
+./lab3/baseline.sh
+```
 
 The `--extract` argument is needed for saving the features locally, this makes possible to train different classifiers on top of those features.
 
-| Extractor for LinearSVC                   | size  | `train_acc` | `val_acc` | `test_acc` |
-| ----------------------------------------  | ----- | ----------- | --------- | ---------- |
-| `distilbert-base-uncased` (`[CLS]` token) | 67M   | 0.849       | 0.822     | 0.798      |
-| `distilbert-base-uncased` (mean pooling)  | 67M   | 0.846       | 0.810     | 0.788      |
-| `sentence-transformers/all-MiniLM-L6-v2`  | 22.7M | 0.791       | 0.767     | 0.777      |
-| `sentence-transformers/all-mpnet-base-v2` | 109M  | 0.879       | 0.855     | 0.847      |
+| Extractor for LinearSVC                   | size  | `train_acc` | `val_acc` |
+| ----------------------------------------  | ----- | ----------- | --------- |
+| `distilbert-base-uncased` (`[CLS]` token) | 67M   | 0.849       | 0.822     |
+| `distilbert-base-uncased` (mean pooling)  | 67M   | 0.846       | 0.810     |
+| `sentence-transformers/all-MiniLM-L6-v2`  | 22.7M | 0.791       | 0.767     |
+| `sentence-transformers/all-mpnet-base-v2` | 109M  | 0.879       | 0.855     |
 
 Being SBERT more suitable than DistilBERT for producing sentence embeddings, as we expected the classifier on top of SBERT has better performance.
 
@@ -301,10 +301,10 @@ So we compare the full-finetuning and few LoRA configurations, for defining thes
 | **qv**      | `lora_qv8`   | `lora_qv16`   |
 | **qkvo**    | `lora_qkvo8` | `lora_qkvo16` |
 
-Launch finetuning with commands like
-
-- `python lab3/main_ft.py --config lab3/configs/distilbert_full.yaml`
-- `python lab3/main_ft.py --config lab3/configs/distilbert_lora_q16.yaml`
+```bash
+chmod +x ./lab3/finetuning.sh
+./lab3/finetuning.sh
+```
 
 | Model                    | #params (log10) | val_acc |
 | ------------------------ | --------------- | ------- |
@@ -316,11 +316,13 @@ Launch finetuning with commands like
 | `distilbert_lora_qkvo8`  | 5.95            | 0.848   |
 | `distilbert_lora_qkvo16` | 6.07            | 0.850   |
 
+Being the full-finetuning not that much expensive to train, this will be the final model to deploy on unseen data.
+
 </details>
 
 
 <details>
-<summary>Results</summary>
+<summary>LoRA and full-finetuning</summary>
 
 <p align="middle">
   <img src="lab3/results/lora.svg" alt="LoRA against full-finetuning" width="50%">
@@ -332,12 +334,12 @@ Launch finetuning with commands like
 <details>
 <summary>Deploy on onseen data</summary>
 
-Obviously the full-finetuned DistilBERT has the better performance, and since the finetuning isn't that expensive yet, `distilbert_full` will be deployed on unseed data from rotten tomatoes dataset, i.e. the test split.
+Obviously the full-finetuned DistilBERT has the better performance, and since the finetuning isn't that much expensive yet, `distilbert_full` will be deployed on unseed data from rotten tomatoes dataset, i.e. the test split.
 
 ```bash
 python lab3/load_and_eval.py --split test --config lab3/configs/distilbert_full.yaml
 ```
 
-
+This results in an accuracy value of `0.841`.
 
 </details>
