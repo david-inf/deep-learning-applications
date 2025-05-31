@@ -11,8 +11,10 @@ echo "CNN with max_softmax"
 python $FILE --score_fun max_softmax --model_configs $CNN --ood noise
 echo "AutoEncoder"
 python $FILE --score_fun mse --model_configs $AE --ood noise
-echo "Robust model"
+echo "Robust model with max_logit"
 python $FILE --score_fun max_logit --model_configs $RCNN --ood noise
+echo "Robust model with max_softmax"
+python $FILE --score_fun max_softmax --model_configs $RCNN --ood noise
 
 echo "OOD dataset: people subset"
 
@@ -22,8 +24,10 @@ echo "CNN with max_softmax"
 python $FILE --score_fun max_softmax --model_configs $CNN --ood people
 echo "AutoEncoder"
 python $FILE --score_fun mse --model_configs $AE --ood people
-echo "Robust model"
+echo "Robust model with max_logit"
 python $FILE --score_fun max_logit --model_configs $RCNN --ood people
+echo "Robust model with max_softmax"
+python $FILE --score_fun max_softmax --model_configs $RCNN --ood people
 
 echo "OOD dataset: aquatic mammals subset"
 
@@ -33,5 +37,7 @@ echo "CNN with max_softmax"
 python $FILE --score_fun max_softmax --model_configs $CNN --ood aquatic
 echo "AutoEncoder"
 python $FILE --score_fun mse --model_configs $AE --ood aquatic
-echo "Robust model"
+echo "Robust model with max_logit"
 python $FILE --score_fun max_logit --model_configs $RCNN --ood aquatic
+echo "Robust model with max_softmax"
+python $FILE --score_fun max_softmax --model_configs $RCNN --ood aquatic

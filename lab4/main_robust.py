@@ -72,7 +72,7 @@ if __name__ == "__main__":
                         help="Device to use for training (default: cuda:0)")
     # TODO: add arguments for adversarial attacks
     parser.add_argument("--fraction", type=float, default=0.2,
-                        help="Fraction of samples to attack")
+                        help="Fraction of samples to attack (default: 0.2)")
     parser.add_argument("--budget", type=int, default=1,
                         help="Budget for the attack (default: 1)")
     args = parser.parse_args()
