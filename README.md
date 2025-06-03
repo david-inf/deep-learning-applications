@@ -16,19 +16,31 @@ Inspect experiments from my [comet_ml](https://www.comet.com/david-inf/deep-lear
 pip install -r lab1.txt
 ```
 
-- `ckpts/` folder that will be automatically created for storing model checkpoints, this uses `torch.save()`
-- `configs/` folder that will be automatically created for storing `yaml` configurations files for each experiment
+- `lab1/ckpts/` folder that will be automatically created for storing model checkpoints, this uses `torch.save()`
+- `lab1/configs/` folder that will be automatically created for storing `yaml` configurations files for each experiment
   - `generate_configs.py` automatically generate a configuration file from a given params dict
   - Each model configuration will be stored in `configs/model/`
-- `models/` module with MLPs (`mlp.py`) and CNNs (`cnn.py` `resnet.py` `wideresnet.py`) definitions
-- `plots/` for results
-- `utils/` module with utilities (`misc.py` and `train.py`)
-- `cmd_args.py` arguments for main programs
-- `mydata.py` wrappers for MNIST and CIFAR10 datasets, augmentations are available too
-- `train.py` `distill.py` training utilities for standard training and knowledge distillation training
+- `lab1/models/` module with MLPs (`mlp.py`) and CNNs (`cnn.py` `resnet.py` `wideresnet.py`) definitions
+- `lab1/plots/` for results
+- `lab1/utils/` module with utilities (`misc.py` and `train.py`)
+- `lab1/cmd_args.py` arguments for main programs
+- `lab1/mydata.py` wrappers for MNIST and CIFAR10 datasets, augmentations are available too
+- `lab1/train.py` `lab1/distill.py` training utilities for standard training and knowledge distillation training
 - Main programs:
-  - `main_train.py` main script for training a single model, see `python lab1/main_train.py --help`
-  - `main_distill.py` main script for distilling knowledge, see `python lab1/main_distill.py --help`
+  - `lab1/main_train.py` main script for training a single model, see `python lab1/main_train.py --help`
+  - `lab1/main_distill.py` main script for distilling knowledge, see `python lab1/main_distill.py --help`
+
+Run the full lab with these two shell scripts
+
+```bash
+chmod +x ./lab1/commands1.sh
+./lab1/commands1.sh
+```
+
+```bash
+chmod +x ./lab1/commands2.sh
+./lab1/commands2.sh
+```
 
 </details>
 
@@ -104,19 +116,23 @@ This architecture follows the concept of the ResNet in which we have "macro-laye
 
 Here we use 2 macro-layers, resulting in `2*2*n+2` total layers.
 
-- `python lab1/main_train.py --config lab1/configs/CNN/CNN1.yaml --view` where `num_blocks=2` and `num_filters=32`
-- `python lab1/main_train.py --config lab1/configs/CNN/CNN2.yaml --view` where `num_blocks=2` and `num_filters=64`
+- `python lab1/main_train.py --config lab1/configs/CNN/CNN1_mnist.yaml --view` where `num_blocks=2` and `num_filters=32`
+- `python lab1/main_train.py --config lab1/configs/CNN/CNN2_mnist.yaml --view` where `num_blocks=2` and `num_filters=64`
 
 </details>
 
 <details>
 <summary>Results</summary>
 
-Model  | #params
------- | -----
-`MLP`  | 0.93M
-`CNN1` | 0.17M
-`CNN2` | 0.68M
+| Model  | #params | val_ac |
+| ------ | ------- | ------ |
+| `MLP`  | 0.93M   | 0.9866 |
+| `CNN1` | 0.17M   | 0.9956 |
+| `CNN2` | 0.68M   | 0.9958 |
+
+- `python lab1/main_train.py --config lab1/configs/MLP/MLP_mnist.yaml`
+- `python lab1/main_train.py --config lab1/configs/CNN/CNN1_mnist.yaml`
+- `python lab1/main_train.py --config lab1/configs/CNN/CNN2_mnist.yaml`
 
 <p align="middle">
   <img src="lab1/plots/mnist_warmup.svg" alt="Warming up on MNIST" width="60%">
@@ -180,6 +196,16 @@ The WRN has the same general architecture except for the `BasicBlock` where we h
 <details>
 <summary>Results</summary>
 
+| Name             | `num_blocks` | `num_filters` | `widen_factor` | #params | Layers | val_acc |
+| ---------------- | ------------ | ------------- | -------------- | ------- | ------ | ------- |
+| `ResNet32`       | 5            | 16            | 1              | 0.47M   | 32     | 0.8301  |
+| `ResNet44`       | 7            | 16            | 1              | 0.66M   | 44     | 0.8441  |
+| `ResNet56`       | 9            | 16            | 1              | 0.86M   | 56     | 0.8339  |
+| `WideResNet14-2` | 2            | 16            | 2              | 0.69M   | 14     | 0.8549  |
+| `WideresNet14-4` | 2            | 16            | 4              | 2.75M   | 14     | 0.8789  |
+| `WideResNet26-4` | 4            | 16            | 4              | 5.85M   | 26     | 0.8858  |
+
+
 <p align="middle">
   <img src="lab1/plots/rn_wrn.svg" alt="WRN vs RN", width="60%">
 </p>
@@ -207,9 +233,6 @@ Loss:
 As the teacher model we use the actual `ResNet` architecture with 3 blocks of `BasicBlock` blocks resulting in
 $3n+2$ total layers. Also the same algorithm is applied to the `WideResNet` model (same architecture with pre-activation `BasicBlock`).
 
-- `python lab1/main_train.py --config lab1/configs/ResNet/ResNet32.yaml --view`
-- `python lab1/main_train.py --config lab1/configs/WideResNet/WideResNet14-2.yaml --view`
-
 </details>
 
 <details>
@@ -217,13 +240,16 @@ $3n+2$ total layers. Also the same algorithm is applied to the `WideResNet` mode
 
 We define another CNN, named BaseCNN, with skip connections and to have more #params than dataset samples. Here we'd like to compare BaseCNN with standard training and knowledge distillation training. We compare also the two teachers (also warly stopping was applied).
 
+- `python lab1/main_distil.py --config lab1/configs/ResNet/ResNet56.yaml`
+- `python lab1/main_distil.py --config lab1/configs/WideResNet/WideResNet26-4.yaml`
+
 | Name                 | `num_blocks` | `num_filters` | `widen_factor` | #params | Layers | val_acc |
 | -------------------- | ------------ | ------------- | -------------- | ------- | ------ | ------- |
-| `ResNet32`           | 5            | 16            | 1              | 0.47M   | 32     | 0.8420  |
-| `WideResNet14-2`     | 2            | 16            | 2              | 0.69M   | 14     | 0.8500  |
-| `BaseCNN`            | 1            | 32            | 1              | 0.08M   | 6      | 0.7690  |
-| `DistilCNN_RN32`     | 1            | 32            | 1              | 0.08M   | 6      | 0.7116  |
-| `DistilCNN_WRN14-2`  | 1            | 32            | 1              | 0.08M   | 6      | 0.8007  |
+| `ResNet56`           | 9            | 16            | 1              | 0.86M   | 56     | 0.8339  |
+| `WideResNet26-4`     | 4            | 16            | 4              | 5.85M   | 26     | 0.8858  |
+| `BaseCNN`            | 1            | 32            | 1              | 0.08M   | 6      | 0.7608  |
+| `DistilCNN_RN56`     | 1            | 32            | 1              | 0.08M   | 6      | 0.7720  |
+| `DistilCNN_WRN26-4`  | 1            | 32            | 1              | 0.08M   | 6      | 0.6742  |
 
 <p align="middle">
   <img src="lab1/plots/distil.svg" alt="learning" width="60%">
@@ -245,17 +271,17 @@ Work with the `HuggingFace` ecosystem to adapt models to new tasks.
 python install -r lab3.txt
 ```
 
-- `ckpts/` model checkpoints using `.save_pretrained()` method
-- `configs/` configuration files automatically generated using `generate_configs.py` program
-- `models/` wrappers for BERT-family models
-- `results/` plotted stuffs
-- `utils/` module with various utilities inside `misc.py` and `train.py`
-- `cmd_args.py` main programs' arguments
-- `load_and_eval.py` load the validation or testsplits  and perform inference with a given model checkpoint (you must train first)
-- `main_extract.py` main program for obtaining baseline results with a given pretrained extractor, i.e. a BERT-family model from the local `models` module
-- `main_ft.py` core of this lab that is the main program for finetuning a pretrained BERT-family model given a configuration file
-- `mydata.py` utilities for preprocessing and loading the `rotten_tomatoes` dataset from HuggingFace
-- `train.py` train loop
+- `lab3/ckpts/` model checkpoints using `.save_pretrained()` method
+- `lab3/configs/` configuration files automatically generated using `generate_configs.py` program
+- `lab3/models/` wrappers for BERT-family models
+- `lab3/results/` plotted stuffs
+- `lab3/utils/` module with various utilities inside `misc.py` and `train.py`
+- `lab3/cmd_args.py` main programs' arguments
+- `lab3/load_and_eval.py` load the validation or testsplits  and perform inference with a given model checkpoint (you must train first)
+- `lab3/main_extract.py` main program for obtaining baseline results with a given pretrained extractor, i.e. a BERT-family model from the local `models` module
+- `lab3/main_ft.py` core of this lab that is the main program for finetuning a pretrained BERT-family model given a configuration file
+- `lab3/mydata.py` utilities for preprocessing and loading the `rotten_tomatoes` dataset from HuggingFace
+- `lab3/train.py` train loop
 
 Try `python lab3/main_extract.py --help` and `python lab3/main_ft.py --help`. You'll see that for `main_ft.py` there's the `--view` argument available, that allows to inspect a model given its configuration file via the `--config` argument.
 
@@ -388,14 +414,17 @@ pip install -r lab1.txt
 
 Inside the `lab4/` folder there are the following programs
 
-- `ckpts/`
-- `models/` with `autoencoder.py`
-- `plots/`
+- `lab4/ckpts/` checkpoints and configuration files
+- `lab4/models/` with `autoencoder.py`
+- `lab4/plots/`
   - Results from OOD detection on CIFAR100 subsets (aquatic mammals and people) and FakeData
-- `utils/` various utilities
-- `main_detection.py` main program for launching the OOD detection pipeline on the given dataset from `lab4/mydata.py`
-- `mydata.py` various datasets for OOD detection
-- `train.py` main program for training the AutoEncoder on CIFAR10 dataset
+- `lab4/utils/` various utilities
+- `lab4/main_adversarial.py` main program for experimenting with adversarial attacks
+- `lab4/main_detection.py` main program for launching the OOD detection pipeline on the given dataset from `lab4/mydata.py`
+- `lab4/main_robust.py` launch a training with adversarial augmentations, see configs in `lab4/ckpts/`
+- `lab4/mydata.py` various datasets for OOD detection
+- `lab4/train_ae.py` main program for training the AutoEncoder on CIFAR10 dataset
+- `lab4/train_ccn.py` utilities for the adversarial training
 
 </details>
 
@@ -410,7 +439,8 @@ Now we move to adversarial attacks by visualizing what these attacks are about
 Run the shell script that contains commands for running an untargeted and targeted attacks
 
 ```bash
-python lab4/main_robust.py --config lab4/ckpts/cnn_robust.yaml
+chmod +x ./lab4/adversarials.sh
+./lab4/adversarials.sh
 ```
 
 <table>
@@ -431,11 +461,23 @@ We take a base model and enhance its robustness to these adversarial attacks. Th
 <details>
 <summary>Results</summary>
 
+Inspect model via `python lab4/main_robust.py --config lab4/ckpts/cnn_robust.yaml --view` then launch training
+
 ```bash
 python lab4/main_robust.py --config lab4/ckpts/cnn_robust.yaml
 ```
 
 This script runs the full pipeline that comprises the adversarial training to obtain the model `RobustCNN` then the OOD detection pipeline. The results are already displayed in the OOD detection pipeline.
+
+Launch this script to evaluate the model on the CIFAR10 test split `python lab1/load_and_eval.py --config lab4/ckpts/cnn_robust.yaml` you will see the accuracy is at `0.662`. So, yeah the model might be robust to adversarial attacks, bu the accuracy is very low, comapared to its standard version `python lab1/load_and_eval.py --config lab1/configs/CNN/LargeCNNskip.yaml` at `0.798`.
+
+<table>
+  <caption>Targeted and untarged attacks
+  <tr>
+    <td><img src="lab4/plots/adversarial/untargeted_rcnn.svg"></td>
+    <td><img src="lab4/plots/adversarial/targeted_rcnn.svg"></td>
+  </tr>
+</table>
 
 </details>
 
@@ -464,6 +506,8 @@ We choose as in-distribution (ID) dataset CIFAR10 (10000 samples from test split
 
 <details>
 <summary>AutoEncoder</summary>
+
+Inspect model via `python lab4/train_ae.py --config lab4/ckpts/autoencoder.yaml --view` then launch training
 
 ```bash
 python lab4/train_ae.py --config lab4/ckpts/autoencoder.yaml

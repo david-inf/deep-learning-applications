@@ -161,8 +161,6 @@ cython_debug/
 
 /data/
 
-lab1/commands1.sh
-lab1/commands2.sh
 lab1/run_exps.sh
 
 lab1/plots/make_plot.py
