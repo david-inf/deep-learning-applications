@@ -446,8 +446,21 @@ chmod +x ./lab4/adversarials.sh
 <table>
   <caption>Targeted and untarged attacks
   <tr>
-    <td><img src="lab4/plots/adversarial/untargeted.svg"></td>
-    <td><img src="lab4/plots/adversarial/targeted.svg"></td>
+    <td><img src="lab4/plots/adversarial/untargeted1.svg"></td>
+    <td><img src="lab4/plots/adversarial/targeted1.svg"></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+<summary>More attacks</summary>
+
+<table>
+  <caption>Targeted and untarged attacks
+  <tr>
+    <td><img src="lab4/plots/adversarial/untargeted2.svg"></td>
+    <td><img src="lab4/plots/adversarial/targeted2.svg"></td>
   </tr>
 </table>
 
